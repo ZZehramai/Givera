@@ -40,7 +40,7 @@ Givera is a web-based fundraising platform that connects donors with verified fu
 ### Frontend
 
 * React
-* TypeScript
+* JavaScript
 * Tailwind CSS
 
 ### Backend
@@ -49,7 +49,7 @@ Givera is a web-based fundraising platform that connects donors with verified fu
 
 ### Database
 
-* PostgreSQL
+* SQLite3
 
 ### Other Tools
 
@@ -57,7 +57,6 @@ Givera is a web-based fundraising platform that connects donors with verified fu
 * Cloudinary
 * ReportLab
 * SMTP Email Service
-* OpenAI API
 
 ## 🚀 How to Run
 
