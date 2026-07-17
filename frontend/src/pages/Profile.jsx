@@ -1,9 +1,19 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
 function Profile() {
 
     const [user, setUser] = useState(null);
+    const navigate = useNavigate();
+    const logout = () => {
+
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("user");
+
+    navigate("/login");
+}
 
     useEffect(() => {
         const getProfile = async () => {
@@ -46,8 +56,9 @@ function Profile() {
             <p>
                 Role: {user.role}
             </p>
-
+          <button onClick={logout}>Logout</button>
         </div>
+
     );
 }
 
