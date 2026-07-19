@@ -12,6 +12,7 @@ import { Profile } from "./pages/public/Profile";
 import { Notifications } from "./pages/public/Notifications";
 import { CampaignList } from "./pages/public/CampaignList";
 import { Donate } from "./pages/public/Donate";
+
 import { RequestCampaign } from "./pages/public/RequestCampaign";
 import { History } from "./pages/public/History";
 import { Assistant } from "./pages/public/Assistant";
@@ -70,6 +71,7 @@ export function App() {
             } />
           
           <Route path="/donate" element={<Donate />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/request-campaign" element={<RequestCampaign />} />
           <Route path="/transparency" element={<Transparency />} />
           <Route path="/dashboard" element={<Dashboard />} />

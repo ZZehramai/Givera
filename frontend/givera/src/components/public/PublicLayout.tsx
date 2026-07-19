@@ -52,6 +52,12 @@ export function PublicLayout() {
             >
               Log in
             </Link>
+             <Link
+              to="/profile"
+              className="rounded-md border border-[#cfd1ca] px-3.5 py-2 text-[13px] font-semibold text-[#2b332e] transition-colors hover:bg-[#f5f6f3] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#16734e]"
+            >
+              Profile
+            </Link>
             <Link
               to="/donate"
               className="rounded-md bg-[#16734e] px-3.5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#125f40] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#16734e]"
