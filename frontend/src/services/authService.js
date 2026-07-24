@@ -1,27 +1,28 @@
 import api from "../api/axios";
 
+const saveSession = (data) => {
+  localStorage.setItem("access", data.access);
+  localStorage.setItem("refresh", data.refresh);
+  localStorage.setItem("user", JSON.stringify(data.user));
+};
+
 export const login = async (email, password) => {
-    const response = await api.post("/auth/login/", {
-        email,
-        password,
-    });
+  const response = await api.post("/auth/login/", {
+    email,
+    password,
+  });
 
-    localStorage.setItem(
-        "access",
-        response.data.access
-    );
+  saveSession(response.data);
+  return response.data;
+};
 
-    localStorage.setItem(
-        "refresh",
-        response.data.refresh
-    );
+export const loginWithGoogle = async (credential) => {
+  const response = await api.post("/auth/google/", {
+    id_token: credential,
+  });
 
-    localStorage.setItem(
-        "user",
-        JSON.stringify(response.data.user)
-    );
-
-    return response.data;
+  saveSession(response.data);
+  return response.data;
 };
 
 export const logout = () => {

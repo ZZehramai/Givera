@@ -2,6 +2,9 @@ import { useState } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 
+import { GoogleLogin } from "@react-oauth/google";
+import { loginWithGoogle } from "../services/authService";
+
 export function Login() {
     const navigate = useNavigate();
 
@@ -49,9 +52,22 @@ export function Login() {
         }
     };
 
-    const googleLogin = () => {
-        window.location.href =
-            "http://127.0.0.1:8000/api/accounts/google/login/";
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setLoading(true);
+        setError("");
+
+        try {
+            await loginWithGoogle(credentialResponse.credential);
+            navigate("/profile");
+        } catch (err) {
+            console.error(err.response?.data);
+            setError(
+            err.response?.data?.detail ||
+            "Google login failed. Please try again."
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -130,23 +146,14 @@ export function Login() {
                         <div className="flex-grow border-t"></div>
 
                     </div>
-
-                    <button
-                        onClick={googleLogin}
-                        className="w-full border hover:bg-gray-100 py-3 rounded-xl flex items-center justify-center gap-3 transition"
-                    >
-
-                        <img
-                            src="https://www.svgrepo.com/show/475656/google-color.svg"
-                            alt="Google"
-                            className="w-5 h-5"
-                        />
-
-                        <span className="font-medium">
-                            Continue with Google
-                        </span>
-
-                    </button>
+<div className="flex justify-center">
+  <GoogleLogin
+    onSuccess={handleGoogleSuccess}
+    onError={() => setError("Google login was cancelled or failed.")}
+    useOneTap={false}
+    width="368"
+  />
+</div>
 
                     <p className="text-center text-gray-600">
 

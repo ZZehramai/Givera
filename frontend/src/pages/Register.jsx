@@ -31,15 +31,10 @@ export function Register() {
         setError("");
 
         try {
-
             const response = await api.post("/auth/register/", form);
-
             alert("Registration successful!");
-
             console.log(response.data);
-
             navigate("/login");
-
         } catch (err) {
 
             console.log(err.response?.data);

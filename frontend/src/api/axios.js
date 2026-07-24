@@ -13,6 +13,7 @@ api.interceptors.request.use((config) => {
     const publicRoutes = [
         "/auth/login/",
         "/auth/register/",
+        "/auth/google/",
         "/auth/token/refresh/",
     ];
 
