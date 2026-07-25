@@ -20,9 +20,11 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name', 'role',
             'auth_provider', 'phone_number', 'profile_picture', 'country',
-            'bio', 'is_email_verified', 'created_at',
+            'bio', 'is_email_verified', 'is_staff', 'created_at',
         ]
-        read_only_fields = ['id', 'role', 'auth_provider', 'is_email_verified', 'created_at']
+        read_only_fields = [
+            'id', 'role', 'auth_provider', 'is_email_verified', 'is_staff', 'created_at'
+        ]
 
 
 class RegisterSerializer(serializers.ModelSerializer):
