@@ -4,27 +4,28 @@
 @theme {
   /* Material Design 3 Palette Map matching your code */
   --font-sans: 'Inter', sans-serif;
-  --color-primary: #6750A4;
+  --font-display: 'Inter', sans-serif;
+  --color-primary: #7657d9;
   --color-on-primary: #FFFFFF;
-  --color-primary-fixed: #EADDFF;
-  --color-primary-fixed-dim: #D0BCFF;
-  --color-secondary: #625B71;
-  --color-secondary-container: #E8DEF8;
-  --color-on-secondary-container: #1D192B;
-  --color-secondary-fixed: #E8DEF8;
-  --color-secondary-fixed-dim: #CCC2DC;
-  --color-on-secondary-fixed-variant: #49454F;
-  --color-tertiary: #7D5260;
-  --color-tertiary-container: #FFD8E4;
+  --color-primary-fixed: #e7ddff;
+  --color-primary-fixed-dim: #cbb7ff;
+  --color-secondary: #e2ad18;
+  --color-secondary-container: #fff0a8;
+  --color-on-secondary-container: #493500;
+  --color-secondary-fixed: #fff0a8;
+  --color-secondary-fixed-dim: #f7d55a;
+  --color-on-secondary-fixed-variant: #705300;
+  --color-tertiary: #2aa98f;
+  --color-tertiary-container: #c9f5e8;
   --color-on-tertiary: #FFFFFF;
-  --color-surface: #FEF7FF;
-  --color-on-surface: #1D1B20;
-  --color-on-surface-variant: #49454F;
-  --color-outline-variant: #CAC4D0;
+  --color-surface: #fffdfd;
+  --color-on-surface: #29233e;
+  --color-on-surface-variant: #6d6680;
+  --color-outline-variant: #e2dcef;
   --color-surface-container-lowest: #FFFFFF;
-  --color-surface-container-low: #F7F2FA;
-  --color-surface-container: #F3EDF7;
-  --color-surface-container-high: #ECE6F0;
+  --color-surface-container-low: #faf7ff;
+  --color-surface-container: #f3edff;
+  --color-surface-container-high: #ebe2ff;
 
   /* Custom Spacing & Layout */
   --spacing-margin-desktop: 24px;
@@ -50,13 +51,28 @@
 
 /* Custom Gradients and Structural Classes */
 @utility hero-mesh {
-  background-color: #FEF7FF;
-  background-image: radial-gradient(at 0% 0%, rgba(234, 221, 255, 0.3) 0px, transparent 50%),
-                    radial-gradient(at 100% 100%, rgba(232, 222, 248, 0.3) 0px, transparent 50%);
+  background-color: #fffdfd;
+  background-image: radial-gradient(at 0% 0%, rgba(231, 221, 255, 0.98) 0px, transparent 49%),
+                    radial-gradient(at 100% 100%, rgba(255, 240, 168, 0.78) 0px, transparent 52%);
 }
 
 @utility progress-gradient {
-  background: linear-gradient(90deg, #6750A4 0%, #D0BCFF 100%);
+  background: linear-gradient(90deg, #7657d9 0%, #f1c63b 100%);
+}
+
+html { scroll-behavior: smooth; }
+body { background: #fffdfd; }
+::selection { background: #e7ddff; color: #29233e; }
+h1, h2 { font-family: 'Inter', sans-serif; letter-spacing: -0.04em; }
+button, a, summary { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid rgba(79, 70, 229, 0.45); outline-offset: 3px; }
+summary::-webkit-details-marker { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .hero-mesh img { animation: gentle-float 7s ease-in-out infinite; }
+}
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(9px); }
 }
 
 @utility ambient-shadow {

@@ -1,4 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { ArrowUpRight } from "lucide-react";
 
 import { logout } from "../services/authService";
 
@@ -67,9 +68,10 @@ export default function AppHeader() {
           )}
           <Link
             to={user ? "/campaigns/create" : "/login"}
-            className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90"
           >
             Start a campaign
+            <ArrowUpRight size={16} aria-hidden="true" />
           </Link>
         </div>
       </nav>
