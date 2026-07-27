@@ -30,8 +30,8 @@ function Profile () {
         setFormData({
           username: response.data.username || "",
           email: response.data.email || "",
-          phone: response.data.phone || "",
-          address: response.data.address || "",
+          phone_number: response.data.phone_number || "",
+          country: response.data.country || "",
         });
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -153,7 +153,7 @@ function Profile () {
                   {isEditing ? (
                     <input
                       type="text"
-                      name="address"
+                      name="country"
                       value={formData.country}
                       onChange={handleChange}
                       className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
