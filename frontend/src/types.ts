@@ -5,22 +5,20 @@ export type UrgencyLevel = 'Emergency Priority' | 'High Priority' | 'Standard';
 export interface Campaign {
   id: string;
   title: string;
-  category: CategoryType;
-  description: string;
+  organizer: string;       // Add this line
+  organizerAvatar: string;
+  category: string;
   location: string;
-  urgency: UrgencyLevel;
-  goalAmount: number;
+  image: any; 
+  shortDescription: string;
+  fullStory: string;
   raisedAmount: number;
+  targetAmount: number;
   donorCount: number;
-  imageUrl: string;
-  isFeatured?: boolean;
-  status: 'Active' | 'Completed' | 'Closed';
+  daysLeft: number;
+  featured: boolean;
   createdAt: string;
-  deadline: string;
-  verifiedByAdmin: boolean;
-  createdBy?: string;
-  donationsCount?: number;
-  fundReport?: FundReport;
+  updatesCount: number;    // Add this too (it's on line 24 of your code)
 }
 
 export interface CampaignRequest {

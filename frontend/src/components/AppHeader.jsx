@@ -1,11 +1,26 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
-
+import { useState, useEffect } from "react";
 import { logout } from "../services/authService";
 
 export default function AppHeader() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const [user, setUser] = useState (() => JSON.parse(localStorage.getItem("user") || "null"));
+
+
+  useEffect(() => {
+    // 2. Create a function to refresh the user from storage
+    const syncUser = () => {
+      const updatedUser = JSON.parse(localStorage.getItem("user") || "null");
+      setUser(updatedUser);
+    };
+
+    // 3. Listen for the custom event we dispatched in Profile.jsx
+    window.addEventListener("userUpdated", syncUser);
+
+    // 4. Cleanup the listener when component unmounts
+    return () => window.removeEventListener("userUpdated", syncUser);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -48,8 +63,12 @@ export default function AppHeader() {
                 to="/profile"
                 className="hidden text-sm text-on-surface-variant sm:block"
               >
-                {user.first_name || user.username}
+              <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white text-1xl font-bold shadow-lg mb-0.2">
+                {user?.username?.charAt(0).toUpperCase()}
+              </div>
               </Link>
+
+            
               <button
                 type="button"
                 onClick={handleLogout}
