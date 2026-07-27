@@ -10,10 +10,12 @@ import Campaigns from "./pages/Campaigns";
 import CreateCampaign from "./pages/CreateCampaign";
 import MyCampaigns from "./pages/MyCampaigns";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AppHeader from "./components/AppHeader";
 
 function App() {
   return (
-    <>    
+    <>
+    
       <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<Register />} />

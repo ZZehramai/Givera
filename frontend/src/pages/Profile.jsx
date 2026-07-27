@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import AppHeader from "../components/AppHeader";
 
 function Profile () {
   const navigate = useNavigate();
@@ -78,7 +79,11 @@ function Profile () {
   if (loading) return <div className="p-20 text-center font-bold">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 md:p-20">
+
+    <div>
+      <AppHeader/>
+    <div className="min-h-screen bg-gray-50 p-6 md:p-5">
+      
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-800 mb-8">{user.username} Profile</h1>
 
@@ -139,7 +144,7 @@ function Profile () {
                       name="phone_number"
                       value={formData.phone_number}
                       onChange={handleChange}
-                      placeholder="e.g. +95 9..."
+                      placeholder="eg-+959....."
                       className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                     />
                   ) : (
@@ -203,6 +208,7 @@ function Profile () {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
