@@ -51,6 +51,11 @@ class CampaignSerializer(serializers.ModelSerializer):
     def get_owner_name(self, obj):
         return obj.owner.get_full_name() or obj.owner.username
 
+    def validate_cover_image(self, value):
+        if value and value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError("Cover image must be 5 MB or smaller.")
+        return value
+
     def validate_deadline(self, value):
         if value <= timezone.localdate():
             raise serializers.ValidationError("The deadline must be in the future.")

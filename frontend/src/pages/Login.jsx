@@ -33,7 +33,7 @@ export function Login() {
                 JSON.stringify(response.data.user)
             );
 
-            navigate("/profile");
+            navigate("/dashboard");
 
         } catch (err) {
 
@@ -58,7 +58,7 @@ export function Login() {
 
         try {
             await loginWithGoogle(credentialResponse.credential);
-            navigate("/profile");
+            navigate("/dashboard");
         } catch (err) {
             console.error(err.response?.data);
             setError(

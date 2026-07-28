@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const apiBaseUrl = (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api",
+    baseURL: apiBaseUrl,
 });
 
 
@@ -53,7 +55,7 @@ api.interceptors.response.use(
             try {
 
                 const response = await axios.post(
-                    `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}/auth/token/refresh/`,
+                    `${apiBaseUrl}/auth/token/refresh/`,
                     {
                         refresh,
                     }

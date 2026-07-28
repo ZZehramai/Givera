@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 
+import { mediaUrl } from "../utils/mediaUrl";
+
 const fallbackImage =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80";
 
@@ -17,7 +19,7 @@ export default function CampaignCard({ campaign }) {
     >
       <div className="relative h-52 overflow-hidden bg-surface-container">
         <img
-          src={campaign.cover_image || fallbackImage}
+          src={mediaUrl(campaign.cover_image, fallbackImage)}
           alt=""
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
         />

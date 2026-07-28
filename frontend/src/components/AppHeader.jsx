@@ -40,6 +40,11 @@ export default function AppHeader() {
             Givera
           </Link>
           <div className="hidden items-center gap-6 md:flex">
+            {user && (
+              <NavLink to="/dashboard" className={navClass}>
+                Dashboard
+              </NavLink>
+            )}
             <NavLink to="/campaigns" className={navClass}>
               Browse campaigns
             </NavLink>
