@@ -1,71 +1,63 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Check, ChevronRight, CircleUserRound, Edit3, LogOut, Mail, MapPin, Phone, ShieldCheck, UserRound, X } from "lucide-react";
+
 import api from "../api/axios";
 import AppHeader from "../components/AppHeader";
 
-function Profile () {
+const emptyProfile = { username: "", email: "", phone_number: "", country: "" };
+
+const profileFields = [
+  { label: "Name", name: "username", type: "text", icon: UserRound, placeholder: "Your full name" },
+  { label: "Email", name: "email", type: "email", icon: Mail, placeholder: "you@example.com" },
+  { label: "Phone", name: "phone_number", type: "tel", icon: Phone, placeholder: "+95 9 000 000 000" },
+  { label: "Location", name: "country", type: "text", icon: MapPin, placeholder: "City, country" },
+];
+
+export default function Profile() {
   const navigate = useNavigate();
-  
-  // States
   const [user, setUser] = useState(null);
+  const [formData, setFormData] = useState(emptyProfile);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
-  
-  // Form State (temp storage for edits)
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    phone_number: "",
-    country: "",
-  });
+  const [notice, setNotice] = useState("");
 
-  // 1. Fetch Profile Data on Load
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await api.get("/auth/profile/");
-        console.log("Fetched Data:", response.data);
-        setUser(response.data);
-        // Pre-fill the form with existing data
-        setFormData({
-          username: response.data.username || "",
-          email: response.data.email || "",
-          phone_number: response.data.phone_number || "",
-          country: response.data.country || "",
-        });
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
+    api.get("/auth/profile/")
+      .then(({ data }) => {
+        setUser(data);
+        setFormData({ username: data.username || "", email: data.email || "", phone_number: data.phone_number || "", country: data.country || "" });
+      })
+      .catch(() => setNotice("We couldn't load your profile. Please try again shortly."))
+      .finally(() => setLoading(false));
   }, []);
 
-  // 2. Handle Input Changes
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = ({ target }) => setFormData((current) => ({ ...current, [target.name]: target.value }));
+
+  const beginEditing = () => {
+    setNotice("");
+    setFormData({ username: user.username || "", email: user.email || "", phone_number: user.phone_number || "", country: user.country || "" });
+    setIsEditing(true);
   };
 
-  // 3. Save Changes to Backend
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setNotice("");
+  };
+
   const handleSave = async () => {
     setSaveLoading(true);
-    console.log("Sending to backend:", formData);
+    setNotice("");
     try {
-      // We use PATCH to only update specific fields
-      const response = await api.patch("/auth/profile/", formData);
-      localStorage.setItem("user", JSON.stringify(response.data));
+      const { data } = await api.patch("/auth/profile/", formData);
+      setUser(data);
+      localStorage.setItem("user", JSON.stringify(data));
       window.dispatchEvent(new Event("userUpdated"));
-      console.log("Backend response:", response.data);
-      setUser(response.data);
-      setIsEditing(false);    // Exit edit mode
-      alert("Profile updated successfully!");
-
-
-    } catch (error) {
-      console.error("Update failed:", error.response?.data);
-      alert("Failed to update profile.");
+      setIsEditing(false);
+      setNotice("Your profile has been updated.");
+    } catch {
+      setNotice("We couldn't save those changes. Please check your details and try again.");
     } finally {
       setSaveLoading(false);
     }
@@ -76,148 +68,65 @@ function Profile () {
     navigate("/login");
   };
 
-  if (loading) return <div className="p-20 text-center font-bold">Loading...</div>;
+  if (loading) return <div className="min-h-screen bg-surface"><AppHeader /><p className="py-32 text-center font-semibold text-on-surface-variant">Loading your profile…</p></div>;
+  if (!user) return <div className="min-h-screen bg-surface"><AppHeader /><main className="mx-auto max-w-xl px-6 py-24 text-center"><h1 className="text-2xl font-extrabold">Profile unavailable</h1><p className="mt-3 text-on-surface-variant">{notice || "Please refresh and try again."}</p></main></div>;
+
+  const initial = user.username?.trim().charAt(0).toUpperCase() || "G";
+  const noticeIsSuccess = notice === "Your profile has been updated.";
 
   return (
-
-    <div>
-      <AppHeader/>
-    <div className="min-h-screen bg-gray-50 p-6 md:p-5">
-      
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-8">{user.username} Profile</h1>
-
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="flex flex-col md:flex-row">
-            
-            {/* Left Column: Profile Picture Visual */}
-            <div className="w-full md:w-1/3 bg-indigo-50 p-10 flex flex-col items-center justify-center border-r border-gray-100">
-              <div className="w-32 h-32 bg-indigo-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg mb-4">
-                {user?.username?.charAt(0).toUpperCase()}
-              </div>
-              <p className="font-bold text-indigo-900">{user?.username}</p>
-              <p className="text-sm text-indigo-400">{user?.email}</p>
-            </div>
-
-            {/* Right Column: Information Fields */}
-            <div className="w-full md:w-2/3 p-8 md:p-12">
-              <div className="grid gap-6">
-                
-                {/* Username Field */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Full Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="username"
-                      value={formData.username}
-                      onChange={handleChange}
-                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                    />
-                  ) : (
-                    <p className="text-gray-700 font-medium">{user.username}</p>
-                  )}
-                </div>
-
-                {/* Email Field */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Email Address</label>
-                  {isEditing ? (
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
-                  ) : (
-                    <p className="text-gray-700 font-medium">{user.email}</p>
-                  )}
-                </div>
-
-                {/* Phone Field */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Phone Number</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="phone_number"
-                      value={formData.phone_number}
-                      onChange={handleChange}
-                      placeholder="eg-+959....."
-                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
-                  ) : (
-                    <p className="text-gray-700 font-medium">{user.phone_number || "No phone provided"}</p>
-                  )}
-                </div>
-
-                {/* Address Field */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Location</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="country"
-                      value={formData.country}
-                      onChange={handleChange}
-                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
-                  ) : (
-                    <p className="text-gray-700 font-medium">{user.country || "Yangon, Myanmar"}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                {isEditing ? (
-                  <>
-                    <button
-                      onClick={handleSave}
-                      disabled={saveLoading}
-                      className="flex-1 bg-indigo-600 text-white py-3 px-6 rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
-                    >
-                      {saveLoading ? "Saving..." : "Save Changes"}
-                    </button>
-                    <button
-                      onClick={() => setIsEditing(false)}
-                      className="flex-1 bg-gray-100 text-gray-600 py-3 px-6 rounded-xl font-bold hover:bg-gray-200 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="flex-1 bg-white border-2 border-indigo-600 text-indigo-600 py-3 px-6 rounded-xl font-bold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <EditIcon /> Edit Profile
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="flex-1 text-red-500 font-bold hover:bg-red-50 py-3 px-6 rounded-xl transition-colors"
-                    >
-                      Logout Account
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
+    <div className="min-h-screen bg-[#fbfaff] text-on-surface">
+      <AppHeader />
+      <main className="mx-auto max-w-6xl px-5 py-9 sm:px-6 md:py-14">
+        <div className="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Account centre</p>
+            <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.045em] md:text-4xl">Your profile</h1>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-on-surface-variant md:text-base">Manage the details Givera uses to personalize your account.</p>
           </div>
+          {!isEditing && <button type="button" onClick={beginEditing} className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white shadow-[0_10px_22px_rgba(118,87,217,0.25)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(118,87,217,0.32)]"><Edit3 size={16} aria-hidden="true" />Edit details</button>}
         </div>
-      </div>
-    </div>
+
+        <div className="grid items-start gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+          <aside className="overflow-hidden rounded-[1.75rem] bg-on-surface text-white shadow-[0_18px_42px_rgba(41,35,62,0.15)] lg:sticky lg:top-24">
+            <div className="relative overflow-hidden bg-primary px-7 pb-8 pt-7">
+              <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full border-[18px] border-white/15" />
+              <div className="relative grid h-20 w-20 place-items-center rounded-[1.35rem] bg-white text-3xl font-extrabold text-primary shadow-lg shadow-black/15">{initial}</div>
+              <h2 className="relative mt-5 truncate text-xl font-extrabold">{user.username}</h2>
+              <p className="relative mt-1 truncate text-sm text-white/70">{user.email}</p>
+            </div>
+            <div className="p-4">
+              <p className="px-3 pb-2 pt-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">Settings</p>
+              <div className="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-3 text-sm font-bold"><CircleUserRound size={18} className="text-secondary-fixed" aria-hidden="true" />Profile details<ChevronRight size={16} className="ml-auto text-white/50" aria-hidden="true" /></div>
+              <div className="mt-5 border-t border-white/10 pt-4">
+                <button type="button" onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold text-white/70 transition hover:bg-white/10 hover:text-white"><LogOut size={18} aria-hidden="true" />Log out</button>
+              </div>
+            </div>
+          </aside>
+
+          <section className="overflow-hidden rounded-[1.75rem] border border-outline-variant/50 bg-white shadow-[0_12px_34px_rgba(41,35,62,0.06)]">
+            <div className="flex flex-col gap-4 border-b border-outline-variant/60 px-6 py-6 sm:flex-row sm:items-center sm:justify-between md:px-9 md:py-7">
+              <div><h2 className="text-xl font-extrabold tracking-tight">Personal information</h2><p className="mt-1 text-sm text-on-surface-variant">{isEditing ? "Make your changes below, then save when you’re ready." : "Your basic contact and location details."}</p></div>
+              <div className="inline-flex w-fit items-center gap-2 rounded-full bg-tertiary-container px-3 py-1.5 text-xs font-bold text-[#176b5b]"><ShieldCheck size={15} aria-hidden="true" />Account verified</div>
+            </div>
+
+            <div className="px-6 py-3 md:px-9 md:py-5">
+              {profileFields.map(({ label, name, type, icon: Icon, placeholder }) => (
+                <div key={name} className="grid gap-2 border-b border-outline-variant/45 py-5 last:border-none md:grid-cols-[180px_minmax(0,1fr)] md:items-center md:gap-8">
+                  <div className="flex items-center gap-3 text-sm font-bold text-on-surface-variant"><span className="grid h-9 w-9 place-items-center rounded-lg bg-surface-container-low text-primary"><Icon size={17} aria-hidden="true" /></span>{label}</div>
+                  {isEditing ? (
+                    <input type={type} name={name} value={formData[name]} onChange={handleChange} placeholder={placeholder} className="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-sm font-semibold outline-none transition placeholder:font-normal placeholder:text-on-surface-variant/65 focus:border-primary focus:ring-4 focus:ring-primary/10" />
+                  ) : <p className="pl-12 text-sm font-semibold md:pl-0">{user[name] || <span className="font-medium text-on-surface-variant">Not provided</span>}</p>}
+                </div>
+              ))}
+            </div>
+
+            {notice && <p role="status" className={`mx-6 mb-2 rounded-xl px-4 py-3 text-sm font-semibold md:mx-9 ${noticeIsSuccess ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{notice}</p>}
+
+            {isEditing && <div className="flex flex-col-reverse gap-3 border-t border-outline-variant/60 bg-surface-container-low px-6 py-5 sm:flex-row sm:justify-end md:px-9"><button type="button" onClick={cancelEditing} disabled={saveLoading} className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-on-surface-variant transition hover:bg-white disabled:opacity-50"><X size={17} aria-hidden="true" />Discard changes</button><button type="button" onClick={handleSave} disabled={saveLoading} className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(118,87,217,0.22)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"><Check size={17} aria-hidden="true" />{saveLoading ? "Saving…" : "Save changes"}</button></div>}
+          </section>
+        </div>
+      </main>
     </div>
   );
-};
-
-// Small Inline Icon Component
-const EditIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-  </svg>
-);
-
-export default Profile;
+}

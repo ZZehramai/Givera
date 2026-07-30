@@ -7,16 +7,24 @@ import {
   BarChart3,
   ChevronRight,
   CircleDollarSign,
+  CircleUserRound,
   Compass,
+  Edit3,
   LayoutDashboard,
   Heart,
   LogOut,
+  Mail,
+  MapPin,
   Megaphone,
+  Phone,
   Plus,
   Search,
   Settings,
+  ShieldCheck,
   Target,
   UserRound,
+  Check,
+  X,
 } from "lucide-react";
 
 import api from "../api/axios";
@@ -231,8 +239,40 @@ function ProfilePanel({ onLogout }) {
   };
 
   if (!user) return <p className="py-20 text-center text-on-surface-variant">{message || "Loading profile…"}</p>;
-  const field = (label, name, type = "text") => <label className="block"><span className="mb-1 block text-xs font-bold uppercase tracking-wider text-on-surface-variant">{label}</span>{editing ? <input type={type} name={name} value={form[name]} onChange={(event) => setForm({ ...form, [name]: event.target.value })} className="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 outline-none focus:border-primary" /> : <p className="font-medium">{user[name] || (name === "country" ? "No location provided" : "No phone provided")}</p>}</label>;
-  return <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-4xl"><div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-on-surface via-[#3a2b6a] to-primary p-7 text-white shadow-[0_22px_45px_rgba(73,48,143,0.2)] md:p-10"><div className="absolute -right-12 -top-20 h-52 w-52 rounded-full bg-white/10 blur-2xl" /><p className="relative text-sm font-bold uppercase tracking-[0.16em] text-primary-fixed">Account</p><h1 className="relative mt-2 text-3xl font-extrabold md:text-4xl">Profile & settings</h1></div><div className="mt-7 overflow-hidden rounded-3xl border border-white/80 bg-white shadow-[0_18px_50px_rgba(40,35,62,0.08)]"><div className="flex flex-col md:flex-row"><div className="flex items-center justify-center bg-primary-fixed p-10 md:w-1/3 md:flex-col"><div className="grid h-28 w-28 place-items-center rounded-full bg-primary text-4xl font-extrabold text-white shadow-lg shadow-primary/30">{user.username?.charAt(0).toUpperCase()}</div><p className="mt-4 font-bold">{user.username}</p><p className="text-sm text-on-surface-variant">{user.email}</p></div><div className="flex-1 p-8 md:p-10"><div className="grid gap-6">{field("Full name", "username")}{field("Email address", "email", "email")}{field("Phone number", "phone_number")}{field("Location", "country")}</div>{message && <p className="mt-5 text-sm text-primary">{message}</p>}<div className="mt-10 flex flex-col gap-3 sm:flex-row">{editing ? <><button type="button" onClick={save} disabled={saving} className="flex-1 rounded-xl bg-primary px-6 py-3 font-bold text-white shadow-lg shadow-primary/20 disabled:opacity-50">{saving ? "Saving…" : "Save changes"}</button><button type="button" onClick={() => setEditing(false)} className="flex-1 rounded-xl bg-surface-container-high px-6 py-3 font-bold">Cancel</button></> : <><button type="button" onClick={() => setEditing(true)} className="flex-1 rounded-xl border-2 border-primary px-6 py-3 font-bold text-primary">Edit profile</button><button type="button" onClick={onLogout} className="flex-1 rounded-xl px-6 py-3 font-bold text-rose-600 hover:bg-rose-50">Log out</button></>}</div></div></div></div></motion.section>;
+  const fields = [
+    ["Name", "username", "text", UserRound],
+    ["Email", "email", "email", Mail],
+    ["Phone", "phone_number", "tel", Phone],
+    ["Location", "country", "text", MapPin],
+  ];
+  const initial = user.username?.trim().charAt(0).toUpperCase() || "G";
+  const success = message === "Profile updated successfully.";
+  const cancel = () => {
+    setForm({ username: user.username || "", email: user.email || "", phone_number: user.phone_number || "", country: user.country || "" });
+    setEditing(false);
+    setMessage("");
+  };
+
+  return (
+    <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-5xl">
+      <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div><p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Account centre</p><h1 className="mt-2 text-3xl font-extrabold tracking-[-0.045em] md:text-4xl">Your profile</h1><p className="mt-2 text-sm text-on-surface-variant">Manage the details connected to your Givera account.</p></div>
+        {!editing && <button type="button" onClick={() => { setMessage(""); setForm({ username: user.username || "", email: user.email || "", phone_number: user.phone_number || "", country: user.country || "" }); setEditing(true); }} className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white shadow-[0_10px_22px_rgba(118,87,217,0.25)]"><Edit3 size={16} />Edit details</button>}
+      </div>
+      <div className="grid items-start gap-6 md:grid-cols-[235px_minmax(0,1fr)]">
+        <aside className="overflow-hidden rounded-[1.75rem] bg-on-surface text-white shadow-[0_18px_42px_rgba(41,35,62,0.15)]">
+          <div className="relative overflow-hidden bg-primary px-6 pb-7 pt-6"><div className="absolute -right-9 -top-10 h-32 w-32 rounded-full border-[16px] border-white/15" /><div className="relative grid h-16 w-16 place-items-center rounded-2xl bg-white text-2xl font-extrabold text-primary">{initial}</div><h2 className="relative mt-4 truncate text-lg font-extrabold">{user.username}</h2><p className="relative mt-1 truncate text-sm text-white/70">{user.email}</p></div>
+          <div className="p-4"><p className="px-2 pb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">Profile settings</p><div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-3 text-sm font-bold"><CircleUserRound size={18} className="text-secondary-fixed" />Personal details</div><button type="button" onClick={onLogout} className="mt-4 flex w-full items-center gap-2 border-t border-white/10 px-2 pt-4 text-sm font-bold text-white/65 transition hover:text-white"><LogOut size={17} />Log out</button></div>
+        </aside>
+        <section className="overflow-hidden rounded-[1.75rem] border border-white/80 bg-white shadow-[0_12px_30px_rgba(40,35,62,0.06)]">
+          <div className="flex flex-col gap-3 border-b border-outline-variant/60 px-6 py-6 sm:flex-row sm:items-center sm:justify-between md:px-8"><div><h2 className="text-xl font-extrabold">Personal information</h2><p className="mt-1 text-sm text-on-surface-variant">{editing ? "Make your changes below, then save when you’re ready." : "Your basic contact and location details."}</p></div><div className="inline-flex w-fit items-center gap-2 rounded-full bg-tertiary-container px-3 py-1.5 text-xs font-bold text-[#176b5b]"><ShieldCheck size={15} />Account verified</div></div>
+          <div className="px-6 py-3 md:px-8">{fields.map(([label, name, type, Icon]) => <div key={name} className="grid gap-2 border-b border-outline-variant/45 py-5 last:border-none md:grid-cols-[145px_minmax(0,1fr)] md:items-center md:gap-6"><div className="flex items-center gap-3 text-sm font-bold text-on-surface-variant"><span className="grid h-9 w-9 place-items-center rounded-lg bg-surface-container-low text-primary"><Icon size={17} /></span>{label}</div>{editing ? <input type={type} name={name} value={form[name]} onChange={(event) => setForm({ ...form, [name]: event.target.value })} className="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-sm font-semibold outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10" /> : <p className="pl-12 text-sm font-semibold md:pl-0">{user[name] || <span className="font-medium text-on-surface-variant">Not provided</span>}</p>}</div>)}</div>
+          {message && <p role="status" className={`mx-6 mb-2 rounded-xl px-4 py-3 text-sm font-semibold md:mx-8 ${success ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{message}</p>}
+          {editing && <div className="flex flex-col-reverse gap-3 border-t border-outline-variant/60 bg-surface-container-low px-6 py-5 sm:flex-row sm:justify-end md:px-8"><button type="button" onClick={cancel} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-on-surface-variant transition hover:bg-white disabled:opacity-50"><X size={17} />Discard changes</button><button type="button" onClick={save} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(118,87,217,0.22)] disabled:opacity-50"><Check size={17} />{saving ? "Saving…" : "Save changes"}</button></div>}
+        </section>
+      </div>
+    </motion.section>
+  );
 }
 
 export default function Dashboard() {

@@ -64,7 +64,7 @@ export function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, ease: "easeOut" }}
             >
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white/75 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-primary shadow-sm backdrop-blur">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white/75 px-4 py-2 text-xs font-bold uppercase tracking-[0.01em] text-primary shadow-sm backdrop-blur">
               <Heart size={16} strokeWidth={2.5} aria-hidden="true" />
               A kinder way to fund change
             </div>
@@ -131,12 +131,12 @@ export function LandingPage() {
         <section id="campaigns" className="scroll-mt-28 bg-surface-container-low py-20">
           <div className="mx-auto max-w-container-max px-6">
             <div className="flex flex-wrap items-end justify-between gap-5">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Open your heart</p>
-                <h2 className="mt-2 text-3xl font-extrabold md:text-4xl">Stories seeking support</h2>
-                <p className="mt-3 text-on-surface-variant">Recently approved campaigns from people in the Givera community.</p>
+              <div className="w-full">
+                <p className="text-sm font-bold uppercase text-primary text-center">Open your heart</p>
+                <h2 className="mt-2 text-center text-4xl font-extrabold md:text-5xl">Stories seeking support</h2>
+                <p className="mt-3 text-on-surface-variant text-center">Recently approved campaigns from people in the Givera community.</p>
               </div>
-              <Link to="/campaigns" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-primary shadow-sm transition hover:shadow-md">
+              <Link to="/campaigns" className="ml-auto inline-flex self-start items-center gap-2 rounded-full px-5 py-3 font-bold text-on-surface-variant hover:text-primary text-sm transition ">
                 Browse all <ArrowRight size={18} aria-hidden="true" />
               </Link>
             </div>
