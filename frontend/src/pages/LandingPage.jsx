@@ -132,10 +132,46 @@ export function LandingPage() {
           <div className="mx-auto max-w-container-max px-6">
             <div className="flex flex-wrap items-end justify-between gap-5">
               <div>
-                <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Open your heart</p>
-                <h2 className="mt-2 text-3xl font-extrabold md:text-4xl">Stories seeking support</h2>
-                <p className="mt-3 text-on-surface-variant">Recently approved campaigns from people in the Givera community.</p>
+                
+                <h2 className="mt-2 text-3xl font-extrabold md:text-4xl">Underprivileged Campaigns</h2>
+                </div>
+              <Link to="/campaigns" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-primary shadow-sm transition hover:shadow-md">
+                Browse all <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+            </div>
+            {featured.length ? (
+              <div className="mt-10 grid gap-7 md:grid-cols-2 lg:grid-cols-3">
+                {featured.map((campaign, index) => (
+                  <motion.div
+                    key={campaign.id}
+                    initial={{ opacity: 0, y: 18 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ duration: 0.45, delay: index * 0.1 }}
+                    whileHover={{ y: -5 }}
+                  >
+                    <CampaignCard campaign={campaign} />
+                  </motion.div>
+                ))}
               </div>
+            ) : (
+              <div className="mt-10 rounded-[2rem] border border-outline-variant/50 bg-white px-6 py-14 text-center">
+                <span className="inline-grid rounded-full bg-primary-fixed p-4 text-primary"><Heart size={32} aria-hidden="true" /></span>
+                <h3 className="mt-5 text-2xl font-bold">Be the first story</h3>
+                <p className="mx-auto mt-3 max-w-lg leading-7 text-on-surface-variant">Create a campaign and invite your community to become part of something meaningful.</p>
+                <Link to="/campaigns/create" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-bold text-white">Create a campaign <ArrowUpRight size={18} aria-hidden="true" /></Link>
+              </div>
+            )}
+          </div>
+        </section>
+
+           <section id="campaigns" className="bg-surface-container-low py-20">
+          <div className="mx-auto max-w-container-max px-6">
+            <div className="flex flex-wrap items-end justify-between gap-5">
+              <div>
+                
+                <h2 className="mt-2 text-3xl font-extrabold md:text-4xl">Natural Disaster Campaigns</h2>
+                </div>
               <Link to="/campaigns" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-primary shadow-sm transition hover:shadow-md">
                 Browse all <ArrowRight size={18} aria-hidden="true" />
               </Link>

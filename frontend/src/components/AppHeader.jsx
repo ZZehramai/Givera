@@ -39,7 +39,10 @@ export default function AppHeader() {
           <Link to="/" className="text-2xl font-bold text-primary">
             Givera
           </Link>
+          
           <div className="hidden items-center gap-6 md:flex">
+            
+            
             <NavLink to="/campaigns" className={navClass}>
               Browse campaigns
             </NavLink>
