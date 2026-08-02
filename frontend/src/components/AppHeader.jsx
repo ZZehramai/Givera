@@ -37,30 +37,6 @@ export default function AppHeader() {
     "text-sm font-semibold text-on-surface-variant transition hover:text-primary";
 
   return (
-<<<<<<< HEAD
-    <header className="sticky top-0 z-40 border-b border-outline-variant/30 bg-white/90 backdrop-blur">
-      <nav className="mx-auto flex h-18 max-w-container-max items-center justify-between px-6">
-        <div className="flex items-center gap-8">
-          <Link to="/" className="text-2xl font-bold text-primary">
-            Givera
-          </Link>
-          
-          <div className="hidden items-center gap-6 md:flex">
-            
-            
-            <NavLink to="/campaigns" className={navClass}>
-              Browse campaigns
-            </NavLink>
-            {user && (
-              <NavLink to="/my-campaigns" className={navClass}>
-                My campaigns
-              </NavLink>
-            )}
-            {(user?.role === "admin" || user?.is_staff) && (
-              <NavLink to="/admin/campaigns" className={navClass}>
-                Review queue
-              </NavLink>
-=======
     <header className="sticky top-0 z-40 border-b border-outline-variant/30 bg-white/80 backdrop-blur">
       <nav className="relative mx-auto flex h-18 max-w-container-max items-center justify-between px-6">
         <Link to="/" className="text-2xl font-bold text-primary">
@@ -97,7 +73,6 @@ export default function AppHeader() {
                   </NavLink>
                 )}
               </>
->>>>>>> eacb4a06c31e74ad5f2bbd043c15a1ebe9d39189
             )}
           </div>
 
@@ -108,7 +83,7 @@ export default function AppHeader() {
                 to="/profile"
                 className="hidden text-sm text-on-surface-variant sm:block"
               >
-              <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white text-1xl font-bold shadow-lg mb-0.2">
+              <div className="bg-[#7047eb] text-white flex h-10 w-10 items-center justify-center rounded-full font-bold shadow-sm transition hover:bg-[#5b36d6]">
                 {user?.username?.charAt(0).toUpperCase()}
               </div>
               </Link>
