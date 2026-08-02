@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 
+import { mediaUrl } from "../utils/mediaUrl";
+
 const fallbackImage =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80";
 
@@ -13,13 +15,17 @@ export default function CampaignCard({ campaign }) {
   return (
     <Link
       to={`/campaigns/${campaign.id}`}
-      className="group overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+      className="group block h-full overflow-hidden rounded-2xl border-2 border-white bg-white shadow-[0_14px_32px_rgba(40,35,62,0.14)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(40,35,62,0.20)]"
     >
       <div className="relative h-52 overflow-hidden bg-surface-container">
         <img
-          src={campaign.cover_image || fallbackImage}
+          src={mediaUrl(campaign.cover_image, fallbackImage)}
           alt=""
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = fallbackImage;
+          }}
         />
         <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-primary backdrop-blur">
           {campaign.category_label}

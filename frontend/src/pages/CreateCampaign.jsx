@@ -12,7 +12,7 @@ const initialForm = {
   beneficiary: "",
   location: "",
   goal_amount: "",
-  cover_image: "",
+  cover_image: null,
   deadline: "",
 };
 
@@ -23,10 +23,22 @@ const minimumDeadline = tomorrow.toISOString().split("T")[0];
 export default function CreateCampaign() {
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
+  const [imagePreview, setImagePreview] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const update = (event) => {
+    if (event.target.name === "cover_image") {
+      const file = event.target.files?.[0] || null;
+      if (file && file.size > 5 * 1024 * 1024) {
+        setError("Cover image must be 5 MB or smaller.");
+        event.target.value = "";
+        return;
+      }
+      setForm((current) => ({ ...current, cover_image: file }));
+      setImagePreview(file ? URL.createObjectURL(file) : "");
+      return;
+    }
     setForm((current) => ({
       ...current,
       [event.target.name]: event.target.value,
@@ -38,7 +50,13 @@ export default function CreateCampaign() {
     setSaving(true);
     setError("");
     try {
-      await api.post("/campaigns/", form);
+      const payload = new FormData();
+      Object.entries(form).forEach(([key, value]) => {
+        if (value !== null && value !== "") {
+          payload.append(key, value);
+        }
+      });
+      await api.post("/campaigns/", payload);
       navigate("/my-campaigns", {
         state: { message: "Campaign submitted for admin review." },
       });
@@ -182,15 +200,25 @@ export default function CreateCampaign() {
               />
             </label>
             <label>
-              <span className="mb-2 block text-sm font-bold">Cover image URL</span>
+              <span className="mb-2 block text-sm font-bold">Cover image</span>
               <input
-                type="url"
+                required
+                accept="image/jpeg,image/png,image/webp"
+                type="file"
                 name="cover_image"
-                value={form.cover_image}
                 onChange={update}
-                className={inputClass}
-                placeholder="https://..."
+                className="w-full rounded-xl border border-dashed border-outline-variant bg-surface px-4 py-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:font-bold file:text-white"
               />
+              <span className="mt-1 block text-xs text-on-surface-variant">
+                JPG, PNG, or WebP · maximum 5 MB
+              </span>
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="Selected campaign cover preview"
+                  className="mt-4 h-36 w-full rounded-xl object-cover"
+                />
+              )}
             </label>
           </div>
 

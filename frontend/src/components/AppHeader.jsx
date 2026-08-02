@@ -1,10 +1,12 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { logout } from "../services/authService";
 
 export default function AppHeader() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isLandingPage = location.pathname === "/";
   const [user, setUser] = useState (() => JSON.parse(localStorage.getItem("user") || "null"));
 
 
@@ -31,8 +33,11 @@ export default function AppHeader() {
     `text-sm font-semibold transition ${
       isActive ? "text-primary" : "text-on-surface-variant hover:text-primary"
     }`;
+  const sectionClass =
+    "text-sm font-semibold text-on-surface-variant transition hover:text-primary";
 
   return (
+<<<<<<< HEAD
     <header className="sticky top-0 z-40 border-b border-outline-variant/30 bg-white/90 backdrop-blur">
       <nav className="mx-auto flex h-18 max-w-container-max items-center justify-between px-6">
         <div className="flex items-center gap-8">
@@ -55,9 +60,46 @@ export default function AppHeader() {
               <NavLink to="/admin/campaigns" className={navClass}>
                 Review queue
               </NavLink>
+=======
+    <header className="sticky top-0 z-40 border-b border-outline-variant/30 bg-white/80 backdrop-blur">
+      <nav className="relative mx-auto flex h-18 max-w-container-max items-center justify-between px-6">
+        <Link to="/" className="text-2xl font-bold text-primary">
+          Givera
+        </Link>
+          <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex">
+            {isLandingPage ? (
+              <>
+                <a href="#campaigns" className={sectionClass}>Campaigns</a>
+                <a href="#how-it-works" className={sectionClass}>How it works</a>
+                <a href="#faq" className={sectionClass}>FAQ</a>
+                {user && (
+                  <NavLink to="/dashboard" className={navClass}>Dashboard</NavLink>
+                )}
+              </>
+            ) : (
+              <>
+                {user && (
+                  <NavLink to="/dashboard" className={navClass}>
+                    Dashboard
+                  </NavLink>
+                )}
+                <NavLink to="/campaigns" className={navClass}>
+                  Browse campaigns
+                </NavLink>
+                {user && (
+                  <NavLink to="/my-campaigns" className={navClass}>
+                    My campaigns
+                  </NavLink>
+                )}
+                {(user?.role === "admin" || user?.is_staff) && (
+                  <NavLink to="/admin/campaigns" className={navClass}>
+                    Review queue
+                  </NavLink>
+                )}
+              </>
+>>>>>>> eacb4a06c31e74ad5f2bbd043c15a1ebe9d39189
             )}
           </div>
-        </div>
 
         <div className="flex items-center gap-3">
           {user ? (
@@ -97,6 +139,26 @@ export default function AppHeader() {
           </Link>
         </div>
       </nav>
+      {isLandingPage && (
+        <nav
+          aria-label="Landing page sections"
+          className="mx-auto flex max-w-container-max justify-center gap-2 overflow-x-auto border-t border-outline-variant/30 px-4 py-2 lg:hidden"
+        >
+          {[
+            ["#campaigns", "Campaigns"],
+            ["#how-it-works", "How it works"],
+            ["#faq", "FAQ"],
+          ].map(([href, label]) => (
+            <a
+              key={href}
+              href={href}
+              className="whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary-fixed hover:text-primary"
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+      )}
     </header>
   );
 }

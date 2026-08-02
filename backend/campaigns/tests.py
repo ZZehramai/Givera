@@ -33,7 +33,6 @@ class CampaignApiTests(APITestCase):
             "beneficiary": "Local children",
             "location": "Yangon",
             "goal_amount": "5000.00",
-            "cover_image": "https://example.com/library.jpg",
             "deadline": str(timezone.localdate() + timedelta(days=30)),
         }
 
@@ -61,6 +60,32 @@ class CampaignApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["title"], "Approved campaign")
+
+    def test_authenticated_user_sees_approved_campaigns_from_all_owners(self):
+        other_owner = User.objects.create_user(
+            email="other-owner@example.com",
+            username="other-owner",
+            password="StrongPassword123!",
+        )
+        Campaign.objects.create(
+            owner=self.owner,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "Owner campaign"},
+        )
+        Campaign.objects.create(
+            owner=other_owner,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "Community campaign"},
+        )
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.get(reverse("campaign-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(
+            [campaign["title"] for campaign in response.data],
+            ["Owner campaign", "Community campaign"],
+        )
 
     def test_admin_can_approve_pending_campaign(self):
         campaign = Campaign.objects.create(

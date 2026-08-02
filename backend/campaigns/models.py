@@ -50,7 +50,11 @@ class Campaign(models.Model):
         default=0,
         validators=[MinValueValidator(0)],
     )
-    cover_image = models.URLField(blank=True)
+    cover_image = models.ImageField(
+        upload_to="campaigns/",
+        blank=True,
+        null=True,
+    )
     deadline = models.DateField()
     status = models.CharField(
         max_length=20,

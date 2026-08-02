@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 import api from "../api/axios";
-import heroImage from "../assets/hero.png";
+import communityHeroImage from "../assets/community-hero.jpg";
 import AppHeader from "../components/AppHeader";
 import CampaignCard from "../components/CampaignCard";
 
@@ -64,7 +64,7 @@ export function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, ease: "easeOut" }}
             >
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white/75 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-primary shadow-sm backdrop-blur">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white/75 px-4 py-2 text-xs font-bold uppercase tracking-[0.01em] text-primary shadow-sm backdrop-blur">
               <Heart size={16} strokeWidth={2.5} aria-hidden="true" />
               A kinder way to fund change
             </div>
@@ -96,7 +96,7 @@ export function LandingPage() {
             transition={{ duration: 0.75, delay: 0.12, ease: "easeOut" }}
           >
             <div className="overflow-hidden rounded-[2.25rem] border-[8px] border-white bg-white shadow-2xl">
-              <img src={heroImage} alt="A community working together" className="aspect-[16/8] w-full object-cover" />
+              <img src={communityHeroImage} alt="Volunteers working together to distribute food boxes" className="aspect-[16/8] w-full object-cover" />
             </div>
             <div className="absolute -bottom-8 left-4 rounded-2xl bg-white p-4 shadow-xl sm:left-10 sm:flex sm:items-center sm:gap-3">
               <span className="grid h-11 w-11 place-items-center rounded-full bg-tertiary-container text-tertiary"><ShieldCheck size={22} aria-hidden="true" /></span>
@@ -128,9 +128,10 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section id="campaigns" className="bg-surface-container-low py-20">
+        <section id="campaigns" className="scroll-mt-28 bg-surface-container-low py-20">
           <div className="mx-auto max-w-container-max px-6">
             <div className="flex flex-wrap items-end justify-between gap-5">
+<<<<<<< HEAD
               <div>
                 
                 <h2 className="mt-2 text-3xl font-extrabold md:text-4xl">Underprivileged Campaigns</h2>
@@ -173,6 +174,14 @@ export function LandingPage() {
                 <h2 className="mt-2 text-3xl font-extrabold md:text-4xl">Natural Disaster Campaigns</h2>
                 </div>
               <Link to="/campaigns" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-primary shadow-sm transition hover:shadow-md">
+=======
+              <div className="w-full">
+                <p className="text-sm font-bold uppercase text-primary text-center">Open your heart</p>
+                <h2 className="mt-2 text-center text-4xl font-extrabold md:text-5xl">Stories seeking support</h2>
+                <p className="mt-3 text-on-surface-variant text-center">Recently approved campaigns from people in the Givera community.</p>
+              </div>
+              <Link to="/campaigns" className="ml-auto inline-flex self-start items-center gap-2 rounded-full px-5 py-3 font-bold text-on-surface-variant hover:text-primary text-sm transition ">
+>>>>>>> eacb4a06c31e74ad5f2bbd043c15a1ebe9d39189
                 Browse all <ArrowRight size={18} aria-hidden="true" />
               </Link>
             </div>
@@ -181,6 +190,7 @@ export function LandingPage() {
                 {featured.map((campaign, index) => (
                   <motion.div
                     key={campaign.id}
+                    className="h-full"
                     initial={{ opacity: 0, y: 18 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.2 }}
@@ -202,7 +212,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section id="how-it-works" className="bg-white py-20">
+        <section id="how-it-works" className="scroll-mt-28 bg-white py-20">
           <div className="mx-auto max-w-container-max px-6">
             <div className="grid gap-10 lg:grid-cols-[0.75fr_1.25fr]">
               <div>
@@ -242,7 +252,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section id="faq" className="bg-white py-20">
+        <section id="faq" className="scroll-mt-28 bg-white py-20">
           <div className="mx-auto grid max-w-5xl gap-10 px-6 lg:grid-cols-[0.7fr_1.3fr]">
             <div><p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Good to know</p><h2 className="mt-2 text-3xl font-extrabold">Your questions, answered.</h2></div>
             <div className="space-y-3">{faqs.map(([question, answer]) => (

@@ -10,6 +10,11 @@ def verify_google_token(token):
     @react-oauth/google or Google Identity Services sign-in) and
     returns the decoded payload.
     """
+    if not settings.GOOGLE_CLIENT_ID:
+        raise AuthenticationFailed(
+            'Google Sign-In is not configured on the server.'
+        )
+
     try:
         idinfo = id_token.verify_oauth2_token(
             token, google_requests.Request(), settings.GOOGLE_CLIENT_ID

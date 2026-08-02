@@ -9,8 +9,8 @@ import CampaignDetail from "./pages/CampaignDetail";
 import Campaigns from "./pages/Campaigns";
 import CreateCampaign from "./pages/CreateCampaign";
 import MyCampaigns from "./pages/MyCampaigns";
+import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AppHeader from "./components/AppHeader";
 
 function App() {
   return (
@@ -22,6 +22,14 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/campaigns/:id" element={<CampaignDetail />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/campaigns/create"
             element={

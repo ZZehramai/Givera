@@ -1,160 +1,178 @@
+import { AtSign, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
 import api from "../api/axios";
-import { useNavigate } from "react-router-dom";
+import AuthShell from "../components/AuthShell";
+
+const inputClass =
+  "w-full rounded-2xl border border-outline-variant bg-white py-3.5 pl-12 pr-4 text-on-surface outline-none transition placeholder:text-on-surface-variant/55 focus:border-primary focus:ring-4 focus:ring-primary/10";
+
+const initialForm = {
+  email: "",
+  username: "",
+  first_name: "",
+  last_name: "",
+  password: "",
+  password2: "",
+};
+
+function Field({ label, icon: Icon, ...inputProps }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-bold">{label}</span>
+      <span className="relative block">
+        <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" size={19} aria-hidden="true" />
+        <input {...inputProps} className={inputClass} />
+      </span>
+    </label>
+  );
+}
 
 export function Register() {
+  const navigate = useNavigate();
+  const [form, setForm] = useState(initialForm);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-    const navigate = useNavigate();
+  const handleChange = (event) => {
+    setForm((current) => ({
+      ...current,
+      [event.target.name]: event.target.value,
+    }));
+  };
 
-    const [form, setForm] = useState({
-        email: "",
-        username: "",
-        first_name: "",
-        last_name: "",
-        password: "",
-        password2: "",
-    });
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    try {
+      await api.post("/auth/register/", form);
+      navigate("/login", {
+        replace: true,
+        state: { message: "Your account is ready. You can sign in now." },
+      });
+    } catch (requestError) {
+      const data = requestError.response?.data;
+      if (data && typeof data === "object") {
+        const firstError = Object.values(data).flat()[0];
+        setError(firstError || "We couldn’t create your account.");
+      } else {
+        setError("We couldn’t create your account. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleChange = (e) => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value,
-        });
-    };
+  return (
+    <AuthShell mode="register">
+      <div>
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Get started</p>
+        <h2 className="mt-2 text-4xl font-extrabold">Create your account</h2>
+        <p className="mt-3 leading-7 text-on-surface-variant">
+          Join a community turning everyday generosity into real progress.
+        </p>
+      </div>
 
-    const register = async () => {
-
-        setLoading(true);
-        setError("");
-
-        try {
-            const response = await api.post("/auth/register/", form);
-            alert("Registration successful!");
-            console.log(response.data);
-            navigate("/login");
-        } catch (err) {
-
-            console.log(err.response?.data);
-
-            if (err.response?.data) {
-                const firstError = Object.values(err.response.data)[0];
-                setError(Array.isArray(firstError) ? firstError[0] : firstError);
-            } else {
-                setError("Something went wrong.");
-            }
-
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-100 via-white to-purple-200 flex items-center justify-center px-4">
-
-            <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8">
-
-                <div className="text-center mb-8">
-
-                    <h1 className="text-4xl font-bold text-gray-800">
-                        Create Account
-                    </h1>
-
-                    <p className="text-gray-500 mt-2">
-                        Register to get started
-                    </p>
-
-                </div>
-
-                <div className="space-y-4">
-
-                    <input
-                        name="email"
-                        type="email"
-                        placeholder="Email"
-                        value={form.email}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
-                    />
-
-                    <input
-                        name="username"
-                        type="text"
-                        placeholder="Username"
-                        value={form.username}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
-                    />
-
-                    <input
-                        name="first_name"
-                        type="text"
-                        placeholder="First Name"
-                        value={form.first_name}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
-                    />
-
-                    <input
-                        name="last_name"
-                        type="text"
-                        placeholder="Last Name"
-                        value={form.last_name}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
-                    />
-
-                    <input
-                        name="password"
-                        type="password"
-                        placeholder="Password"
-                        value={form.password}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
-                    />
-
-                    <input
-                        name="password2"
-                        type="password"
-                        placeholder="Confirm Password"
-                        value={form.password2}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
-                    />
-
-                    {error && (
-                        <div className="text-red-500 text-sm">
-                            {error}
-                        </div>
-                    )}
-
-                    <button
-                        onClick={register}
-                        disabled={loading}
-                        className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-semibold py-3 rounded-xl transition"
-                    >
-                        {loading ? "Creating Account..." : "Create Account"}
-                    </button>
-
-                    <p className="text-center text-gray-600">
-
-                        Already have an account?
-
-                        <span
-                            onClick={() => navigate("/login")}
-                            className="ml-1 text-purple-600 font-semibold cursor-pointer hover:underline"
-                        >
-                            Login
-                        </span>
-
-                    </p>
-
-                </div>
-
-            </div>
-
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field
+            required
+            autoComplete="given-name"
+            label="First name"
+            icon={UserRound}
+            name="first_name"
+            placeholder="First name"
+            value={form.first_name}
+            onChange={handleChange}
+          />
+          <Field
+            required
+            autoComplete="family-name"
+            label="Last name"
+            icon={UserRound}
+            name="last_name"
+            placeholder="Last name"
+            value={form.last_name}
+            onChange={handleChange}
+          />
         </div>
-    );
+
+        <Field
+          required
+          autoComplete="username"
+          label="Username"
+          icon={AtSign}
+          name="username"
+          placeholder="Choose a username"
+          value={form.username}
+          onChange={handleChange}
+        />
+
+        <Field
+          required
+          autoComplete="email"
+          label="Email address"
+          icon={Mail}
+          name="email"
+          type="email"
+          placeholder="you@example.com"
+          value={form.email}
+          onChange={handleChange}
+        />
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field
+            required
+            autoComplete="new-password"
+            label="Password"
+            icon={LockKeyhole}
+            name="password"
+            type="password"
+            placeholder="Create password"
+            value={form.password}
+            onChange={handleChange}
+          />
+          <Field
+            required
+            autoComplete="new-password"
+            label="Confirm password"
+            icon={LockKeyhole}
+            name="password2"
+            type="password"
+            placeholder="Repeat password"
+            value={form.password2}
+            onChange={handleChange}
+          />
+        </div>
+
+        <p className="text-xs leading-5 text-on-surface-variant">
+          Use at least 8 characters and avoid a commonly used password.
+        </p>
+
+        {error && (
+          <div role="alert" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-2xl bg-primary px-6 py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-55"
+        >
+          {loading ? "Creating your account…" : "Create account"}
+        </button>
+      </form>
+
+      <p className="mt-7 text-center text-sm text-on-surface-variant">
+        Already have an account?{" "}
+        <Link to="/login" className="font-bold text-primary hover:underline">
+          Sign in
+        </Link>
+      </p>
+    </AuthShell>
+  );
 }
