@@ -27,6 +27,7 @@ class User(AbstractUser):
     profile_picture = models.URLField(blank=True, null=True)
     country = models.CharField(max_length=100, blank=True)
     bio = models.TextField(blank=True)
+    
 
     is_email_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

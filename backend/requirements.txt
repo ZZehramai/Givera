@@ -1,19 +1,39 @@
-asgiref==3.11.1
-certifi==2026.6.17
-cffi==2.1.0
+altgraph @ file:///AppleInternal/Library/BuildRoots/4~CDlvugAeMYaHcTWIELyAQ2joHAecmlI0GAlKPsw/Library/Caches/com.apple.xbs/Sources/python3/altgraph-0.17.2-py2.py3-none-any.whl
+argcomplete==3.6.3
+asgiref==3.11.0
+certifi==2026.2.25
+cffi==2.0.0
 charset-normalizer==3.4.9
-cryptography==49.0.0
-Django==6.0.6
+click==8.1.8
+cryptography==46.0.5
+Django==4.2.27
+django-allauth==65.14.3
 django-cors-headers==4.9.0
-djangorestframework==3.17.1
-djangorestframework_simplejwt==5.5.1
-google-auth==2.56.0
+djangorestframework==3.16.1
+future @ file:///AppleInternal/Library/BuildRoots/4~CDlvugAeMYaHcTWIELyAQ2joHAecmlI0GAlKPsw/Library/Caches/com.apple.xbs/Sources/python3/future-0.18.2-py3-none-any.whl
+google-api-core==2.30.3
+google-api-python-client==2.198.0
+google-auth==2.48.0
+google-auth-httplib2==0.3.1
+googleapis-common-protos==1.75.0
+httplib2==0.32.0
 idna==3.18
-pyasn1==0.6.4
+macholib @ file:///AppleInternal/Library/BuildRoots/4~CDlvugAeMYaHcTWIELyAQ2joHAecmlI0GAlKPsw/Library/Caches/com.apple.xbs/Sources/python3/macholib-1.15.2-py2.py3-none-any.whl
+packaging==26.0
+pipx==1.8.0
+platformdirs==4.4.0
+proto-plus==1.27.2
+protobuf==6.33.6
+pyasn1==0.6.2
 pyasn1_modules==0.4.2
-pycparser==3.0
-PyJWT==2.13.0
-requests==2.34.2
-python-dotenv==1.1.1
+pycparser==2.23
+pyparsing==3.3.2
+requests==2.32.5
+rsa==4.9.1
+six @ file:///AppleInternal/Library/BuildRoots/4~CDlvugAeMYaHcTWIELyAQ2joHAecmlI0GAlKPsw/Library/Caches/com.apple.xbs/Sources/python3/six-1.15.0-py2.py3-none-any.whl
 sqlparse==0.5.5
-urllib3==2.7.0
+tomli==2.4.0
+typing_extensions==4.15.0
+uritemplate==4.2.0
+urllib3==2.6.3
+userpath==1.9.2
