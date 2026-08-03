@@ -1,4 +1,5 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+<<<<<<< HEAD
 import {
   ArrowUpRight,
   Bell,
@@ -9,6 +10,10 @@ import {
   Mail,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+=======
+import { ArrowUpRight, Bell, CheckCheck } from "lucide-react";
+import { useState, useEffect } from "react";
+>>>>>>> baedc264cea4aa0ebf07b81226cb712e5323c355
 import { logout } from "../services/authService";
 import api from "../api/axios";
 
@@ -16,6 +21,12 @@ export default function AppHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const isLandingPage = location.pathname === "/";
+<<<<<<< HEAD
+=======
+  const [user, setUser] = useState (() => JSON.parse(localStorage.getItem("user") || "null"));
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+>>>>>>> baedc264cea4aa0ebf07b81226cb712e5323c355
 
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user") || "null"));
   const [notifications, setNotifications] = useState([]);
@@ -34,6 +45,7 @@ export default function AppHeader() {
     return () => window.removeEventListener("userUpdated", syncUser);
   }, []);
 
+<<<<<<< HEAD
   // Close "About" dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -47,6 +59,12 @@ export default function AppHeader() {
 
   useEffect(() => {
     if (!user) return undefined;
+=======
+  useEffect(() => {
+    if (!user) {
+      return undefined;
+    }
+>>>>>>> baedc264cea4aa0ebf07b81226cb712e5323c355
     let active = true;
     api.get("/auth/notifications/")
       .then(({ data }) => { if (active) setNotifications(data); })
@@ -59,16 +77,25 @@ export default function AppHeader() {
     navigate("/login");
   };
 
+<<<<<<< HEAD
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+=======
+  const unreadCount = notifications.filter((notification) => !notification.is_read).length;
+>>>>>>> baedc264cea4aa0ebf07b81226cb712e5323c355
   const markRead = async (notification) => {
     if (!notification.is_read) {
       try {
         await api.patch(`/auth/notifications/${notification.id}/read/`);
+<<<<<<< HEAD
         setNotifications((current) =>
           current.map((item) => (item.id === notification.id ? { ...item, is_read: true } : item))
         );
       } catch { /* Fail silently */ }
+=======
+        setNotifications((current) => current.map((item) => item.id === notification.id ? { ...item, is_read: true } : item));
+      } catch { /* The notification can still be opened if marking it read fails. */ }
+>>>>>>> baedc264cea4aa0ebf07b81226cb712e5323c355
     }
     setNotificationsOpen(false);
   };
@@ -76,10 +103,15 @@ export default function AppHeader() {
   const markAllRead = async () => {
     try {
       await api.post("/auth/notifications/read-all/");
+<<<<<<< HEAD
       setNotifications((current) =>
         current.map((notification) => ({ ...notification, is_read: true }))
       );
     } catch { /* Fail silently */ }
+=======
+      setNotifications((current) => current.map((notification) => ({ ...notification, is_read: true })));
+    } catch { /* Keep the current unread state when the request cannot be completed. */ }
+>>>>>>> baedc264cea4aa0ebf07b81226cb712e5323c355
   };
 
   const navClass = ({ isActive }) =>
@@ -163,6 +195,7 @@ export default function AppHeader() {
           {/* User Controls / Auth Links */}
           {user ? (
             <>
+<<<<<<< HEAD
               {/* Notifications */}
               <div className="relative">
                 <button
@@ -239,6 +272,24 @@ export default function AppHeader() {
                     </div>
                   </div>
                 )}
+=======
+              <div className="relative">
+                <button type="button" onClick={() => setNotificationsOpen((open) => !open)} className="relative grid h-10 w-10 place-items-center rounded-xl text-on-surface-variant transition hover:bg-surface-container-low hover:text-primary" aria-label="Notifications" aria-expanded={notificationsOpen}>
+                  <Bell size={20} aria-hidden="true" />
+                  {unreadCount > 0 && <span className="absolute right-1.5 top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-extrabold text-white">{unreadCount > 9 ? "9+" : unreadCount}</span>}
+                </button>
+                {notificationsOpen && <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-outline-variant/70 bg-white shadow-[0_18px_45px_rgba(41,35,62,0.16)]">
+                  <div className="flex items-center justify-between border-b border-outline-variant/60 px-4 py-3"><div><p className="font-extrabold text-on-surface">Notifications</p><p className="text-xs text-on-surface-variant">{unreadCount ? `${unreadCount} unread` : "You’re all caught up"}</p></div>{unreadCount > 0 && <button type="button" onClick={markAllRead} className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"><CheckCheck size={15} />Mark all read</button>}</div>
+                  <div className="max-h-96 overflow-y-auto">{notifications.length ? notifications.map((notification) => <Link key={notification.id} to={notification.link || "/dashboard"} onClick={() => markRead(notification)} className={`block border-b border-outline-variant/45 px-4 py-3 last:border-0 transition hover:bg-surface-container-low ${notification.is_read ? "" : "bg-primary-fixed/30"}`}><div className="flex gap-3"><span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.is_read ? "bg-transparent" : "bg-primary"}`} /><div className="min-w-0"><p className="text-sm font-bold text-on-surface">{notification.title}</p><p className="mt-1 text-xs leading-5 text-on-surface-variant">{notification.message}</p><p className="mt-1.5 text-[11px] font-semibold text-on-surface-variant">{new Date(notification.created_at).toLocaleDateString()}</p></div></div></Link>) : <p className="px-5 py-10 text-center text-sm text-on-surface-variant">Updates about your campaigns and donations will appear here.</p>}</div>
+                </div>}
+              </div>
+              <Link
+                to="/profile"
+                className="hidden text-sm text-on-surface-variant sm:block"
+              >
+              <div className="bg-[#7047eb] text-white flex h-10 w-10 items-center justify-center rounded-full font-bold shadow-sm transition hover:bg-[#5b36d6]">
+                {user?.username?.charAt(0).toUpperCase()}
+>>>>>>> baedc264cea4aa0ebf07b81226cb712e5323c355
               </div>
 
               {/* Profile Avatar */}

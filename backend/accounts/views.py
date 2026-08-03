@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
@@ -9,10 +10,10 @@ from rest_framework_simplejwt.exceptions import TokenError
 
 from .serializers import (
     RegisterSerializer, LoginSerializer, GoogleLoginSerializer,
-    UserSerializer, ChangePasswordSerializer, ForgotPasswordSerializer,
+    NotificationSerializer, UserSerializer, ChangePasswordSerializer, ForgotPasswordSerializer,
     ResetPasswordSerializer, tokens_for_user,
 )
-from .models import PasswordResetOTP
+from .models import Notification, PasswordResetOTP
 from .google_auth import verify_google_token
 from .utils import generate_otp, send_password_reset_email, send_welcome_email
 
@@ -125,6 +126,32 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class NotificationListView(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(recipient=self.request.user)[:30]
+
+
+class NotificationReadView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        notification = get_object_or_404(Notification, pk=pk, recipient=request.user)
+        notification.is_read = True
+        notification.save(update_fields=["is_read"])
+        return Response(NotificationSerializer(notification).data)
+
+
+class NotificationMarkAllReadView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ChangePasswordView(APIView):

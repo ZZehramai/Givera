@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Campaign
+from .models import Campaign, CampaignUpdate
 
 
 @admin.register(Campaign)
@@ -17,3 +17,9 @@ class CampaignAdmin(admin.ModelAdmin):
     list_filter = ("status", "category", "created_at")
     search_fields = ("title", "summary", "owner__email", "beneficiary")
     readonly_fields = ("amount_raised", "approved_at", "created_at", "updated_at")
+
+
+@admin.register(CampaignUpdate)
+class CampaignUpdateAdmin(admin.ModelAdmin):
+    list_display = ("title", "campaign", "author", "created_at")
+    search_fields = ("title", "body", "campaign__title", "author__email")

@@ -6,10 +6,11 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.models import Notification
 from accounts.permissions import IsAdmin
 
-from .models import Campaign
-from .serializers import CampaignReviewSerializer, CampaignSerializer
+from .models import Campaign, CampaignUpdate
+from .serializers import AdminCampaignSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer
 
 
 class CampaignListCreateView(generics.ListCreateAPIView):
@@ -102,6 +103,14 @@ class PendingCampaignListView(generics.ListAPIView):
         return Campaign.objects.filter(status=Campaign.Status.PENDING).select_related("owner")
 
 
+class AdminCampaignListView(generics.ListAPIView):
+    serializer_class = AdminCampaignSerializer
+    permission_classes = [IsAdmin]
+
+    def get_queryset(self):
+        return Campaign.objects.select_related("owner")
+
+
 class CampaignReviewView(APIView):
     permission_classes = [IsAdmin]
 
@@ -123,4 +132,64 @@ class CampaignReviewView(APIView):
         campaign.save(
             update_fields=["status", "rejection_reason", "approved_at", "updated_at"]
         )
+        if decision == Campaign.Status.APPROVED:
+            Notification.objects.create(
+                recipient=campaign.owner,
+                type=Notification.Type.CAMPAIGN_APPROVED,
+                title="Campaign approved",
+                message=f'“{campaign.title}” is live and ready to receive support.',
+                link=f"/campaigns/{campaign.pk}",
+            )
+        else:
+            Notification.objects.create(
+                recipient=campaign.owner,
+                type=Notification.Type.CAMPAIGN_REJECTED,
+                title="Campaign needs changes",
+                message=f'“{campaign.title}” was not approved. Review the feedback and resubmit when ready.',
+                link=f"/campaigns/{campaign.pk}",
+            )
         return Response(CampaignSerializer(campaign).data, status=status.HTTP_200_OK)
+
+
+class CampaignUpdateListCreateView(generics.ListCreateAPIView):
+    serializer_class = CampaignUpdateSerializer
+
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
+
+    def get_campaign(self):
+        campaign = get_object_or_404(Campaign.objects.select_related("owner"), pk=self.kwargs["pk"])
+        user = self.request.user
+        can_view = campaign.status == Campaign.Status.APPROVED or (
+            user.is_authenticated and (campaign.owner == user or user.is_admin_role or user.is_staff)
+        )
+        if not can_view:
+            raise PermissionDenied("This campaign is not available.")
+        return campaign
+
+    def get_queryset(self):
+        return CampaignUpdate.objects.filter(campaign=self.get_campaign()).select_related("author")
+
+    def perform_create(self, serializer):
+        campaign = self.get_campaign()
+        if campaign.owner != self.request.user:
+            raise PermissionDenied("Only the campaign organizer can publish updates.")
+        if campaign.status not in {Campaign.Status.APPROVED, Campaign.Status.COMPLETED}:
+            raise ValidationError("Updates can only be published for approved or completed campaigns.")
+
+        update = serializer.save(campaign=campaign, author=self.request.user)
+        recipient_ids = campaign.donations.values_list("donor_id", flat=True).distinct()
+        notifications = [
+            Notification(
+                recipient_id=recipient_id,
+                type=Notification.Type.CAMPAIGN_UPDATE,
+                title=f"New update: {campaign.title}",
+                message=update.title,
+                link=f"/campaigns/{campaign.pk}",
+            )
+            for recipient_id in recipient_ids
+            if recipient_id != campaign.owner_id
+        ]
+        Notification.objects.bulk_create(notifications)

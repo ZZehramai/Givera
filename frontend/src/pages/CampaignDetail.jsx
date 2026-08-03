@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { CheckCircle2, Heart } from "lucide-react";
+import { CheckCircle2, Heart, MessageCircleHeart, Send, Sparkles } from "lucide-react";
 
 import api from "../api/axios";
 import AppHeader from "../components/AppHeader";
@@ -19,14 +19,42 @@ export default function CampaignDetail() {
   const [donating, setDonating] = useState(false);
   const [donationError, setDonationError] = useState("");
   const [donationSuccess, setDonationSuccess] = useState("");
+  const [updates, setUpdates] = useState([]);
+  const [updateTitle, setUpdateTitle] = useState("");
+  const [updateBody, setUpdateBody] = useState("");
+  const [publishingUpdate, setPublishingUpdate] = useState(false);
+  const [updateError, setUpdateError] = useState("");
   const isLoggedIn = Boolean(localStorage.getItem("access"));
+  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
   useEffect(() => {
-    api
-      .get(`/campaigns/${id}/`)
-      .then((response) => setCampaign(response.data))
+    Promise.all([api.get(`/campaigns/${id}/`), api.get(`/campaigns/${id}/updates/`)])
+      .then(([campaignResponse, updatesResponse]) => {
+        setCampaign(campaignResponse.data);
+        setUpdates(updatesResponse.data);
+      })
       .catch(() => setError("This campaign could not be found."));
   }, [id]);
+
+  const publishUpdate = async (event) => {
+    event.preventDefault();
+    setUpdateError("");
+    if (!updateTitle.trim() || !updateBody.trim()) {
+      setUpdateError("Add both a title and an update before publishing.");
+      return;
+    }
+    setPublishingUpdate(true);
+    try {
+      const { data } = await api.post(`/campaigns/${id}/updates/`, { title: updateTitle.trim(), body: updateBody.trim() });
+      setUpdates((current) => [data, ...current]);
+      setUpdateTitle("");
+      setUpdateBody("");
+    } catch (requestError) {
+      setUpdateError(requestError.response?.data?.detail || "We couldn’t publish that update. Please try again.");
+    } finally {
+      setPublishingUpdate(false);
+    }
+  };
 
   const donate = async (event) => {
     event.preventDefault();
@@ -83,6 +111,7 @@ export default function CampaignDetail() {
   }
 
   const progress = Math.min(Number(campaign.progress_percentage || 0), 100);
+  const isOrganizer = currentUser?.id === campaign.owner;
 
   return (
     <div className="min-h-screen bg-surface">
@@ -124,6 +153,14 @@ export default function CampaignDetail() {
               <div className="mt-4 whitespace-pre-wrap text-base leading-8 text-on-surface-variant">
                 {campaign.story}
               </div>
+
+              <section className="mt-12 border-t border-outline-variant/50 pt-9">
+                <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">From the organizer</p><h2 className="mt-2 text-2xl font-extrabold">Campaign updates</h2><p className="mt-2 text-sm text-on-surface-variant">Follow the progress and impact of this campaign.</p></div><MessageCircleHeart className="text-primary" size={28} aria-hidden="true" /></div>
+
+                {isOrganizer && <form onSubmit={publishUpdate} className="mt-7 rounded-2xl border border-primary/20 bg-primary-fixed/35 p-5"><div className="flex items-center gap-2 text-sm font-extrabold text-primary"><Sparkles size={17} />Share an update with your supporters</div><label className="sr-only" htmlFor="update-title">Update title</label><input id="update-title" value={updateTitle} onChange={(event) => setUpdateTitle(event.target.value)} maxLength={160} placeholder="What’s new?" className="mt-4 w-full rounded-xl border border-outline-variant bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-primary focus:ring-4 focus:ring-primary/10" /><label className="sr-only" htmlFor="update-body">Update details</label><textarea id="update-body" value={updateBody} onChange={(event) => setUpdateBody(event.target.value)} maxLength={2000} rows={4} placeholder="Tell supporters what has happened and what comes next." className="mt-3 w-full resize-y rounded-xl border border-outline-variant bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/10" />{updateError && <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{updateError}</p>}<button type="submit" disabled={publishingUpdate} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60"><Send size={16} />{publishingUpdate ? "Publishing…" : "Publish update"}</button></form>}
+
+                <div className="mt-7 space-y-5">{updates.length ? updates.map((update) => <article key={update.id} className="relative border-l-2 border-primary-fixed pl-6"><span className="absolute -left-[7px] top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-white" /><p className="text-xs font-bold uppercase tracking-[0.12em] text-on-surface-variant">{new Date(update.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</p><h3 className="mt-1 text-lg font-extrabold">{update.title}</h3><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-on-surface-variant">{update.body}</p><p className="mt-2 text-xs font-semibold text-on-surface-variant">Posted by {update.author_name}</p></article>) : <div className="rounded-2xl bg-surface-container-low px-5 py-7 text-center text-sm text-on-surface-variant">The organizer has not posted an update yet. Check back soon.</div>}</div>
+              </section>
             </div>
           </article>
 
