@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, PasswordResetOTP
+from .models import User, PasswordResetOTP, Notification
 
 
 @admin.register(User)
@@ -22,3 +22,10 @@ class CustomUserAdmin(UserAdmin):
 class PasswordResetOTPAdmin(admin.ModelAdmin):
     list_display = ['user', 'code', 'is_used', 'created_at']
     list_filter = ['is_used']
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ["recipient", "type", "title", "is_read", "created_at"]
+    list_filter = ["type", "is_read", "created_at"]
+    search_fields = ["recipient__email", "title", "message"]

@@ -30,6 +30,7 @@ import {
 import api from "../api/axios";
 import CampaignCard from "../components/CampaignCard";
 import { logout } from "../services/authService";
+import AdminDashboard from "./AdminDashboard";
 
 const statusColor = {
   approved: "bg-emerald-100 text-emerald-700",
@@ -275,7 +276,7 @@ function ProfilePanel({ onLogout }) {
   );
 }
 
-export default function Dashboard() {
+function UserDashboard() {
   const navigate = useNavigate();
   const storedUser = JSON.parse(localStorage.getItem("user") || "null");
   const [owned, setOwned] = useState([]);
@@ -380,10 +381,11 @@ export default function Dashboard() {
             <div className="flex items-center justify-between"><div><p className="text-sm font-bold uppercase tracking-widest text-secondary">Your giving</p><h2 className="mt-1 text-2xl font-extrabold">Campaigns you donated to</h2></div><Heart className="text-secondary" /></div>
             {donated.length ? <div className="mt-5 space-y-3">{donated.slice(0, 3).map((donation) => <Link key={donation.id} to={`/campaigns/${donation.campaign?.id || donation.campaign}`} className="flex items-center justify-between rounded-2xl bg-white/70 p-4"><span className="font-semibold">{donation.campaign?.title || "Supported campaign"}</span><span className="font-bold text-secondary">{money(donation.amount)}</span></Link>)}</div> : <div className="mt-8 rounded-2xl bg-white/55 p-6 text-center"><p className="font-semibold">No donation history yet</p><p className="mt-1 text-sm text-on-secondary-fixed-variant">When donation tracking is available, supported campaigns will appear here.</p><button type="button" onClick={() => setActiveSection("browse")} className="mt-4 inline-flex items-center gap-2 font-bold text-primary">Find a cause <ArrowRight size={17} /></button></div>}
           </article>
-          <article className="rounded-3xl bg-primary-fixed p-6">
-            <div className="flex items-center justify-between"><div><p className="text-sm font-bold uppercase tracking-widest text-primary">Account</p><h2 className="mt-1 text-2xl font-extrabold">Your profile</h2></div><UserRound className="text-primary" /></div>
-            <div className="mt-8 flex items-center gap-4"><div className="grid h-16 w-16 place-items-center rounded-full bg-primary text-2xl font-extrabold text-white">{firstName.charAt(0).toUpperCase()}</div><div><p className="text-lg font-bold">{storedUser?.username || firstName}</p><p className="text-sm text-on-surface-variant">{storedUser?.email || "Manage your account details"}</p></div></div>
-            <button type="button" onClick={() => setActiveSection("profile")} className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-primary">View profile <ArrowRight size={18} /></button>
+          <article className="relative overflow-hidden rounded-3xl bg-on-surface p-6 text-white shadow-[0_16px_36px_rgba(41,35,62,0.14)]">
+            <div className="absolute -right-10 -top-12 h-40 w-40 rounded-full border-[22px] border-white/10" />
+            <div className="relative flex items-start justify-between"><div><p className="text-sm font-bold uppercase tracking-[0.16em] text-primary-fixed">Account centre</p><h2 className="mt-1 text-2xl font-extrabold">Your profile</h2></div><span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-secondary-fixed"><UserRound size={20} /></span></div>
+            <div className="relative mt-7 flex items-center gap-4"><div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary text-2xl font-extrabold text-white shadow-lg shadow-black/20">{firstName.charAt(0).toUpperCase()}</div><div className="min-w-0"><p className="truncate text-lg font-bold">{storedUser?.username || firstName}</p><p className="mt-0.5 truncate text-sm text-white/60">{storedUser?.email || "Manage your account details"}</p></div></div>
+            <div className="relative mt-6 border-t border-white/10 pt-5"><button type="button" onClick={() => setActiveSection("profile")} className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-primary transition hover:-translate-y-0.5">Manage profile <ArrowRight size={17} /></button></div>
           </article>
         </section>
 
@@ -396,4 +398,9 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
+
+export default function Dashboard() {
+  const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+  return storedUser?.role === "admin" || storedUser?.is_staff ? <AdminDashboard /> : <UserDashboard />;
 }

@@ -8,6 +8,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from .models import Campaign
+from accounts.models import Notification
+from donations.models import Donation
 
 User = get_user_model()
 
@@ -105,3 +107,30 @@ class CampaignApiTests(APITestCase):
         campaign.refresh_from_db()
         self.assertEqual(campaign.status, Campaign.Status.APPROVED)
         self.assertIsNotNone(campaign.approved_at)
+        notification = Notification.objects.get(recipient=self.owner)
+        self.assertEqual(notification.type, Notification.Type.CAMPAIGN_APPROVED)
+
+    def test_organizer_update_notifies_campaign_donors(self):
+        donor = User.objects.create_user(
+            email="donor@example.com",
+            username="donor",
+            password="StrongPassword123!",
+        )
+        campaign = Campaign.objects.create(
+            owner=self.owner,
+            status=Campaign.Status.APPROVED,
+            **self.payload,
+        )
+        Donation.objects.create(donor=donor, campaign=campaign, amount="25.00")
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.post(
+            reverse("campaign-updates", kwargs={"pk": campaign.pk}),
+            {"title": "Books have arrived", "body": "The first set of books is now in the library."},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        notification = Notification.objects.get(recipient=donor)
+        self.assertEqual(notification.type, Notification.Type.CAMPAIGN_UPDATE)
+        self.assertEqual(notification.link, f"/campaigns/{campaign.pk}")

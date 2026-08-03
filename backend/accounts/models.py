@@ -58,3 +58,29 @@ class PasswordResetOTP(models.Model):
 
     def __str__(self):
         return f'OTP for {self.user.email}'
+
+
+class Notification(models.Model):
+    class Type(models.TextChoices):
+        CAMPAIGN_UPDATE = "campaign_update", "Campaign update"
+        CAMPAIGN_APPROVED = "campaign_approved", "Campaign approved"
+        CAMPAIGN_REJECTED = "campaign_rejected", "Campaign rejected"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    recipient = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    type = models.CharField(max_length=32, choices=Type.choices)
+    title = models.CharField(max_length=160)
+    message = models.CharField(max_length=280)
+    link = models.CharField(max_length=255, blank=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.recipient.email}: {self.title}"

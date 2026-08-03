@@ -2,6 +2,7 @@ from django.db import transaction
 from django.db.models import F
 from rest_framework import generics, permissions
 
+from accounts.permissions import IsAdmin
 from campaigns.models import Campaign
 
 from .models import Donation
@@ -31,3 +32,11 @@ class MyDonationListView(generics.ListAPIView):
         return Donation.objects.filter(donor=self.request.user).select_related(
             "donor", "campaign", "campaign__owner"
         )
+
+
+class AdminDonationListView(generics.ListAPIView):
+    serializer_class = DonationSerializer
+    permission_classes = [IsAdmin]
+
+    def get_queryset(self):
+        return Donation.objects.select_related("donor", "campaign", "campaign__owner")

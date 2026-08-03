@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import Campaign
+from .models import Campaign, CampaignUpdate
 
 
 class CampaignSerializer(serializers.ModelSerializer):
@@ -77,3 +77,30 @@ class CampaignReviewSerializer(serializers.Serializer):
                 {"rejection_reason": "Give the organizer a reason for rejection."}
             )
         return attrs
+
+
+class AdminCampaignSerializer(CampaignSerializer):
+    owner_phone_number = serializers.CharField(source="owner.phone_number", read_only=True)
+    owner_country = serializers.CharField(source="owner.country", read_only=True)
+    owner_bio = serializers.CharField(source="owner.bio", read_only=True)
+    owner_joined_at = serializers.DateTimeField(source="owner.created_at", read_only=True)
+
+    class Meta(CampaignSerializer.Meta):
+        fields = CampaignSerializer.Meta.fields + [
+            "owner_phone_number",
+            "owner_country",
+            "owner_bio",
+            "owner_joined_at",
+        ]
+
+
+class CampaignUpdateSerializer(serializers.ModelSerializer):
+    author_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CampaignUpdate
+        fields = ["id", "campaign", "author", "author_name", "title", "body", "created_at", "updated_at"]
+        read_only_fields = ["id", "campaign", "author", "author_name", "created_at", "updated_at"]
+
+    def get_author_name(self, obj):
+        return obj.author.get_full_name() or obj.author.username

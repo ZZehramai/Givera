@@ -3,7 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User
+from .models import Notification, User
 
 
 def tokens_for_user(user):
@@ -22,6 +22,13 @@ class UserSerializer(serializers.ModelSerializer):
             'auth_provider', 'phone_number', 'profile_picture', 'country',
             'bio', 'is_email_verified', 'is_staff', 'created_at'
         ]
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ["id", "type", "title", "message", "link", "is_read", "created_at"]
+        read_only_fields = fields
         read_only_fields = [
             'id', 'role', 'auth_provider', 'is_email_verified', 'is_staff', 'created_at'
         ]
