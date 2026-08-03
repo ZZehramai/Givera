@@ -7,11 +7,14 @@ import {
   BarChart3,
   ChevronDown,
   ClipboardCheck,
+  Clock,
   Eye,
   FileText,
   Heart,
   Megaphone,
+  PlusCircle,
   ShieldCheck,
+  Sparkles,
   Users,
 } from "lucide-react";
 
@@ -28,10 +31,25 @@ const steps = [
   { icon: Users, title: "Grow together", text: "Share your campaign and keep your community close to the progress." },
 ];
 
-const trustItems = [
-  { icon: ShieldCheck, title: "Reviewed", text: "Campaigns checked before publishing" },
-  { icon: BarChart3, title: "Transparent", text: "Goals and progress stay visible" },
-  { icon: Megaphone, title: "Connected", text: "Updates keep supporters in the story" },
+const statsItems = [
+  {
+    value: "$500k",
+    label: "Total raised",
+    text: "Direct financial support delivered to causes worldwide.",
+    icon: BarChart3,
+  },
+  {
+    value: "200",
+    label: "Total campaigns",
+    text: "Carefully reviewed stories making a real difference.",
+    icon: Megaphone,
+  },
+  {
+    value: "1M",
+    label: "Donators",
+    text: "A growing global community powering every story.",
+    icon: Heart,
+  },
 ];
 
 const faqs = [
@@ -56,78 +74,187 @@ export function LandingPage() {
       <AppHeader />
 
       <main>
-        <section className="hero-mesh overflow-hidden px-6 pb-20 pt-16 md:pt-20">
-          <div className="mx-auto max-w-container-max lg:grid lg:grid-cols-[0.92fr_1.08fr] lg:items-end lg:gap-16">
+       {/* HERO SECTION (FULL SIZE / EDGE-TO-EDGE DISPLAY) */}
+        <section className="relative w-full overflow-hidden bg-[#FAF8F5] px-4 pb-24 pt-16 text-center md:px-8 md:pt-24 lg:pt-28">
+          {/* Centered Content Container */}
+          <div className="mx-auto max-w-5xl">
             <motion.div
-              className="lg:pb-6 lg:text-left"
-              initial={{ opacity: 0, y: 22 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, ease: "easeOut" }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="flex flex-col items-center"
             >
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white/75 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-primary shadow-sm backdrop-blur">
-              <Heart size={16} strokeWidth={2.5} aria-hidden="true" />
-              A kinder way to fund change
-            </div>
-            <h1 className="mx-auto mt-7 max-w-4xl text-5xl font-extrabold leading-[1.03] md:text-7xl lg:mx-0">
-              Good things happen when <span className="text-primary">people show up.</span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-on-surface-variant lg:mx-0">
-              Discover thoughtful campaigns, support the stories that move you, and see
-              the difference your community makes.
-            </p>
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
-              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>
-              <Link to="/campaigns" className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5">
-                Find a cause <ArrowRight size={18} aria-hidden="true" />
-              </Link>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>
-              <Link to="/campaigns/create" className="inline-flex items-center justify-center gap-2 rounded-full border border-outline-variant bg-white px-7 py-4 font-bold text-primary transition hover:border-primary/30">
-                Start a campaign <ArrowUpRight size={18} aria-hidden="true" />
-              </Link>
-              </motion.div>
-            </div>
+              {/* Centered Top Pill Badge */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white px-5 py-2 text-xs font-bold uppercase tracking-[0.16em] text-primary shadow-sm">
+                <Heart size={16} strokeWidth={2.5} aria-hidden="true" />
+                A kinder way to fund change
+              </div>
+
+              {/* Heavy Bold Centered Heading */}
+              <h1 className="mt-7 text-3xl font-black uppercase tracking-tight text-slate-900 sm:text-6xl md:text-4xl lg:text-4xl xl:text-6xl leading-[0.95]">
+                Good things happen when <span className="text-primary">people show up.</span>
+              </h1>
+
+              {/* Subtitle Paragraph */}
+              <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-on-surface-variant md:text-xl">
+                Discover thoughtful campaigns, support the stories that move you, and see
+                the difference your community makes.
+              </p>
+
+              {/* Centered Action Buttons */}
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>
+                  <Link to="/campaigns" className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-9 py-4 font-bold text-white shadow-xl shadow-primary/25 transition hover:-translate-y-0.5">
+                   Start Browsing <ArrowRight size={18} aria-hidden="true" />
+                  </Link>
+                </motion.div>
+                
+              </div>
             </motion.div>
+          </div>
 
-          <motion.div
-            className="relative mx-auto mt-14 max-w-5xl lg:mt-0"
-            initial={{ opacity: 0, scale: 0.97, y: 18 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.75, delay: 0.12, ease: "easeOut" }}
-          >
-            <div className="overflow-hidden rounded-[2.25rem] border-[8px] border-white bg-white shadow-2xl">
-              <img src={communityHeroImage} alt="Volunteers working together to distribute food boxes" className="aspect-[16/8] w-full object-cover" />
-            </div>
-            <div className="absolute -bottom-8 left-4 rounded-2xl bg-white p-4 shadow-xl sm:left-10 sm:flex sm:items-center sm:gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-tertiary-container text-tertiary"><ShieldCheck size={22} aria-hidden="true" /></span>
-              <div className="mt-2 sm:mt-0"><p className="font-bold">Reviewed with care</p><p className="text-sm text-on-surface-variant">Trust starts before giving.</p></div>
-            </div>
-            <div className="absolute -right-2 -top-7 hidden rounded-2xl bg-secondary-container p-4 shadow-xl sm:block sm:right-8">
-              <p className="text-xs font-bold uppercase tracking-wider text-secondary">Community powered</p>
-              <p className="mt-1 text-sm text-on-secondary-fixed-variant">Every gift moves the story.</p>
-            </div>
-          </motion.div>
+          {/* FULL WIDTH HANGING POLAROID GALLERY */}
+                    <motion.div
+                      className="relative mt-16 w-full max-w-none pb-6 pt-4"
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.75, delay: 0.15, ease: "easeOut" }}
+                    >
+                      {/* Full Width Curved Hanging Line Path */}
+                      <svg
+                        className="pointer-events-none absolute left-0 top-8 -z-0 hidden h-28 w-full stroke-slate-300/80 lg:block"
+                        viewBox="0 0 1400 120"
+                        fill="none"
+                        preserveAspectRatio="none"
+                      >
+                        <path d="M 0,20 Q 700,110 1400,20" strokeWidth="2.5" strokeDasharray="6 6" />
+                      </svg>
+          
+                      {/* Pinned Polaroid Cards spanning full screen */}
+                      <div className="relative z-10 flex w-full flex-wrap items-center justify-center gap-y-10 gap-x-4 pb-6 pt-10 sm:gap-x-6 lg:gap-x-8 px-6">
+                        {/* Card 1: Far Left */}
+                        <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform -rotate-12 lg:translate-y-8 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
+                          <div className="overflow-hidden rounded-xl bg-slate-100">
+                            <img src={communityHeroImage} alt="Volunteers working together to distribute food boxes" className="aspect-[4/3] w-full object-cover" />
+                          </div>
+                          <div className="mt-3 text-left">
+                            <p className="font-bold text-slate-900 text-sm md:text-base">Reviewed with care</p>
+                            <p className="text-xs text-slate-500 mt-0.5">Trust starts before giving.</p>
+                          </div>
+                        </div>
+          
+                        {/* Card 2: Mid Left */}
+                        <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform -rotate-6 lg:translate-y-3 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
+                          <div className="overflow-hidden rounded-xl bg-slate-100">
+                            <img src={communityHeroImage} alt="Volunteers working together to distribute food boxes" className="aspect-[4/3] w-full object-cover filter brightness-95" />
+                          </div>
+                          <div className="mt-3 text-left">
+                            <p className="font-bold text-slate-900 text-sm md:text-base">Community powered</p>
+                            <p className="text-xs text-slate-500 mt-0.5">Every gift moves the story.</p>
+                          </div>
+                        </div>
+          
+                        {/* Card 3: Main Center Highlight */}
+                        <div className="relative shrink-0 w-56 sm:w-64 md:w-72 rounded-2xl bg-white p-4 shadow-2xl border border-slate-100 transform rotate-0 lg:-translate-y-4 lg:scale-105 z-20 transition duration-300 hover:scale-110">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4.5 w-4.5 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
+                          <div className="overflow-hidden rounded-xl bg-slate-100">
+                            <img src={communityHeroImage} alt="Volunteers working together to distribute food boxes" className="aspect-[16/11] w-full object-cover" />
+                          </div>
+                          <div className="mt-3.5 text-left">
+                            <p className="font-bold text-slate-900 text-base md:text-lg">Reviewed with care</p>
+                            <p className="text-xs md:text-sm text-slate-500 mt-0.5">Trust starts before giving.</p>
+                          </div>
+                        </div>
+          
+                        {/* Card 4: Mid Right */}
+                        <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform rotate-6 lg:translate-y-3 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
+                          <div className="overflow-hidden rounded-xl bg-slate-100">
+                            <img src={communityHeroImage} alt="Volunteers working together to distribute food boxes" className="aspect-[4/3] w-full object-cover filter contrast-105" />
+                          </div>
+                          <div className="mt-3 text-left">
+                            <p className="font-bold text-slate-900 text-sm md:text-base">Community powered</p>
+                            <p className="text-xs text-slate-500 mt-0.5">Every gift moves the story.</p>
+                          </div>
+                        </div>
+        
+                      </div>
+                    </motion.div>
+                  </section>
+
+       {/* REDESIGNED: DIRECT FUNDING / COMMUNITY PROPOSALS SECTION */}
+        <section className="bg-surface-container-low/50 py-12 border-y border-outline-variant/40">
+          <div className="mx-auto max-w-container-max px-6">
+            <motion.div
+              className="relative overflow-hidden rounded-[2.5rem] border border-outline-variant/60 bg-white p-8 md:p-12 shadow-sm"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.55 }}
+            >
+              <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+                {/* LEFT COLUMN: Text & Buttons */}
+                <div className="flex flex-col items-start">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-primary-fixed/80 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                    <Sparkles size={14} aria-hidden="true" />
+                    Demo Feature • Community Proposals
+                  </div>
+
+                  <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-on-surface md:text-4xl">
+                    Request a Campaign for <span className="text-primary">100% Direct Funding</span>
+                  </h2>
+
+                  <p className="mt-3 text-base leading-relaxed text-on-surface-variant md:text-lg">
+                    Are you a frontline project director or donor nominating a community initiative? Propose a cause for our zero-overhead, GPS-audited funding pipeline.
+                  </p>
+
+                  {/* BUTTONS (Moved below text) */}
+                  <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+                      <Link
+                        to="/campaigns/create"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-7 py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 sm:w-auto"
+                      >
+                        <PlusCircle size={18} aria-hidden="true" /> Propose New Project
+                      </Link>
+                    </motion.div>
+
+                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+                      <Link
+                        to="/campaigns"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-outline-variant bg-surface px-7 py-4 font-bold text-on-surface transition hover:border-primary/40 hover:text-primary sm:w-auto"
+                      >
+                        <Clock size={18} aria-hidden="true" /> Vetting Queue (3)
+                      </Link>
+                    </motion.div>
+                  </div>
+                </div>
+
+                {/* RIGHT COLUMN: Image Design Showcase */}
+                <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
+                  <div className="relative overflow-hidden rounded-[2rem] border-4 border-white bg-surface-container-low shadow-xl transition-all duration-300 hover:shadow-2xl">
+                    <img
+                      src={communityHeroImage}
+                      alt="Frontline project initiative"
+                      className="aspect-[4/3] w-full object-cover transition-transform duration-700 hover:scale-105"
+                    />
+
+                  </div>
+
+                  {/* Decorative Background Accent */}
+                  <div className="pointer-events-none absolute -bottom-4 -right-4 -z-10 h-full w-full rounded-[2rem] bg-primary/10 blur-xl" />
+                </div>
+              </div>
+            </motion.div>
           </div>
         </section>
 
-        <section className="bg-white px-6 pb-16 pt-20">
-          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-3">
-            {trustItems.map(({ icon: Icon, title, text }, index) => (
-              <motion.div
-                key={title}
-                className="flex gap-4 rounded-2xl border border-outline-variant/60 p-5 transition-shadow hover:shadow-md"
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.4 }}
-                transition={{ duration: 0.45, delay: index * 0.08 }}
-              >
-                <Icon className="shrink-0 text-primary" size={24} aria-hidden="true" />
-                <div><p className="font-bold">{title}</p><p className="mt-1 text-sm leading-6 text-on-surface-variant">{text}</p></div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
 
+        
+
+        {/* CAMPAIGNS SECTION */}
         <section id="campaigns" className="scroll-mt-28 bg-surface-container-low py-20">
           <div className="mx-auto max-w-container-max px-6">
             <div className="flex flex-wrap items-end justify-between gap-5">
@@ -167,6 +294,7 @@ export function LandingPage() {
           </div>
         </section>
 
+        {/* HOW IT WORKS SECTION */}
         <section id="how-it-works" className="scroll-mt-28 bg-white py-20">
           <div className="mx-auto max-w-container-max px-6">
             <div className="grid gap-10 lg:grid-cols-[0.75fr_1.25fr]">
@@ -180,11 +308,11 @@ export function LandingPage() {
                 {steps.map((step, index) => {
                   const StepIcon = step.icon;
                   return (
-                  <motion.article key={step.title} className="grid gap-4 rounded-3xl border border-outline-variant/60 bg-surface p-6 sm:grid-cols-[auto_1fr_auto] sm:items-center" initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.45, delay: index * 0.1 }}>
-                    <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary-fixed text-primary"><StepIcon size={23} aria-hidden="true" /></span>
-                    <div><p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Step {index + 1}</p><h3 className="mt-1 text-xl font-bold">{step.title}</h3><p className="mt-2 leading-7 text-on-surface-variant">{step.text}</p></div>
-                    <ArrowRight className="hidden text-outline-variant sm:block" size={20} aria-hidden="true" />
-                  </motion.article>
+                    <motion.article key={step.title} className="grid gap-4 rounded-3xl border border-outline-variant/60 bg-surface p-6 sm:grid-cols-[auto_1fr_auto] sm:items-center" initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.45, delay: index * 0.1 }}>
+                      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary-fixed text-primary"><StepIcon size={23} aria-hidden="true" /></span>
+                      <div><p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Step {index + 1}</p><h3 className="mt-1 text-xl font-bold">{step.title}</h3><p className="mt-2 leading-7 text-on-surface-variant">{step.text}</p></div>
+                      <ArrowRight className="hidden text-outline-variant sm:block" size={20} aria-hidden="true" />
+                    </motion.article>
                   );
                 })}
               </div>
@@ -192,21 +320,45 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className="bg-surface-container-low py-20">
-          <div className="mx-auto grid max-w-container-max gap-6 px-6 lg:grid-cols-2">
-            <motion.article className="min-h-80 rounded-[2rem] bg-primary p-8 text-white md:p-10" initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.55 }}>
-              <span className="inline-grid rounded-2xl bg-white/15 p-3"><Eye size={28} aria-hidden="true" /></span>
-              <h2 className="mt-14 max-w-md text-3xl font-extrabold">Transparency that feels reassuring, not complicated.</h2>
-              <p className="mt-4 max-w-md leading-7 text-primary-fixed">Campaign stories, goals, deadlines, and review status stay easy to understand.</p>
-            </motion.article>
-            <motion.article className="min-h-80 rounded-[2rem] bg-secondary-container p-8 md:p-10" initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.55, delay: 0.12 }}>
-              <span className="inline-grid rounded-2xl bg-white/60 p-3 text-secondary"><Users size={28} aria-hidden="true" /></span>
-              <h2 className="mt-14 max-w-md text-3xl font-extrabold">Designed around people, not transactions.</h2>
-              <p className="mt-4 max-w-md leading-7 text-on-secondary-fixed-variant">Human stories and ongoing updates keep generosity connected to real progress.</p>
-            </motion.article>
+        {/* REDESIGNED STATS SECTION */}
+        <section className="bg-white px-6 pb-20 pt-16">
+          <div className="mx-auto max-w-container-max">
+            <div className="grid gap-6 sm:grid-cols-3">
+              {statsItems.map(({ value, label, text, icon: Icon }, index) => (
+                <motion.div
+                  key={label}
+                  className="group relative flex flex-col justify-between rounded-[2rem] border border-outline-variant/60 bg-surface-container-low/40 p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-white hover:shadow-xl hover:shadow-primary/5"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-fixed text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                      <Icon size={22} aria-hidden="true" />
+                    </div>
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20" />
+                  </div>
+
+                  <div className="mt-8">
+                    <span className="block text-4xl font-extrabold tracking-tight text-on-surface sm:text-5xl">
+                      {value}
+                    </span>
+                    <p className="mt-1 text-lg font-bold text-primary">
+                      {label}
+                    </p>
+                    <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">
+                      {text}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </section>
 
+
+        {/* FAQ SECTION */}
         <section id="faq" className="scroll-mt-28 bg-white py-20">
           <div className="mx-auto grid max-w-5xl gap-10 px-6 lg:grid-cols-[0.7fr_1.3fr]">
             <div><p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Good to know</p><h2 className="mt-2 text-3xl font-extrabold">Your questions, answered.</h2></div>
@@ -219,17 +371,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className="px-6 pb-20">
-          <motion.div className="mx-auto max-w-container-max overflow-hidden rounded-[2.5rem] bg-[#29233E] px-6 py-16 text-center text-white md:px-12" initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true, amount: 0.35 }} transition={{ duration: 0.6 }}>
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary-fixed">Make today matter</p>
-            <h2 className="mx-auto mt-3 max-w-2xl text-4xl font-extrabold md:text-5xl">A cause is waiting for someone like you.</h2>
-            <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-white/65">Support a story or invite your community into one of your own.</p>
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link to="/campaigns" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-7 py-4 font-bold text-on-surface">Explore causes <ArrowRight size={18} aria-hidden="true" /></Link>
-              <Link to="/campaigns/create" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-7 py-4 font-bold text-white">Start a campaign <ArrowUpRight size={18} aria-hidden="true" /></Link>
-            </div>
-          </motion.div>
-        </section>
+       
       </main>
 
       <footer className="border-t border-outline-variant/60 bg-white">
