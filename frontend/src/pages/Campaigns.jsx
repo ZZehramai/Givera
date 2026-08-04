@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
+import { Search } from "lucide-react";
 
 import api from "../api/axios";
-// import AppHeader from "../components/AppHeader";
 import CampaignCard from "../components/CampaignCard";
 
 const categories = [
@@ -42,60 +42,88 @@ export default function Campaigns() {
   }, [query, category]);
 
   return (
-    <div className="min-h-screen bg-surface">
-  
+    <div className="min-h-screen bg-white text-slate-900">
       <main>
-        <section className="hero-mesh border-b border-outline-variant/30 px-6 py-16">
-          <div className="mx-auto max-w-container-max">
-            <p className="mb-3 text-sm font-bold uppercase tracking-widest text-primary">
-              Verified causes
+        {/* HERO / SEARCH SECTION */}
+        <section className="border-b border-slate-100 bg-[#FAF8F5] px-6 py-14 md:py-16">
+          <div className="mx-auto max-w-6xl">
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
+              Verified Causes
             </p>
-            <h1 className="max-w-3xl text-4xl font-bold leading-tight text-on-surface md:text-5xl">
+            <h1 className="max-w-2xl text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
               Find a cause that matters to you
             </h1>
-            <p className="mt-4 max-w-2xl text-lg text-on-surface-variant">
+            <p className="mt-3 max-w-2xl text-sm font-medium text-slate-600 md:text-base">
               Every campaign is reviewed before it becomes visible to donors.
             </p>
 
-            <div className="mt-8 grid max-w-3xl gap-3 rounded-2xl bg-white p-3 shadow-lg sm:grid-cols-[1fr_220px]">
+            {/* Search Bar */}
+            <div className="mt-8 flex max-w-2xl items-center gap-3 rounded-full border border-slate-200 bg-white px-5 py-3 shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+              <Search className="h-5 w-5 text-slate-400 shrink-0" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by title, story, or location"
-                className="rounded-xl border border-outline-variant px-4 py-3 outline-none focus:border-primary"
+                placeholder="Search by title, story, or location..."
+                className="w-full bg-transparent text-sm text-slate-900 placeholder-slate-400 outline-none"
               />
-              <select
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-                className="rounded-xl border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary"
-              >
-                {categories.map(([value, label]) => (
-                  <option key={value} value={value}>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="mt-6 flex flex-wrap items-center gap-2 pt-2">
+              {categories.map(([value, label]) => {
+                const isActive = category === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setCategory(value)}
+                    className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
+                      isActive
+                        ? "bg-slate-900 text-white shadow-sm"
+                        : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                    }`}
+                  >
                     {label}
-                  </option>
-                ))}
-              </select>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-container-max px-6 py-12">
+        {/* CAMPAIGNS GRID SECTION */}
+        <section className="mx-auto max-w-6xl px-6 py-12">
           {error && (
-            <div className="rounded-xl bg-red-50 p-4 text-red-700">{error}</div>
+            <div className="mb-8 rounded-2xl bg-rose-50 p-4 text-sm font-medium text-rose-700 border border-rose-200">
+              {error}
+            </div>
           )}
+
           {loading ? (
-            <p className="py-20 text-center text-on-surface-variant">Loading campaigns…</p>
+            /* Skeleton Loading Grid */
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="animate-pulse flex flex-col gap-3">
+                  <div className="aspect-[16/10] w-full rounded-2xl bg-slate-200" />
+                  <div className="h-5 w-3/4 rounded bg-slate-200" />
+                  <div className="h-2 w-full rounded-full bg-slate-200 mt-2" />
+                  <div className="h-4 w-1/3 rounded bg-slate-200" />
+                </div>
+              ))}
+            </div>
           ) : campaigns.length ? (
-            <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-3">
+            /* Clean Campaign Grid */
+            <div className="grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
               {campaigns.map((campaign) => (
                 <CampaignCard key={campaign.id} campaign={campaign} />
               ))}
             </div>
           ) : (
-            <div className="rounded-3xl bg-white px-6 py-20 text-center">
-              <h2 className="text-2xl font-bold text-on-surface">No campaigns found</h2>
-              <p className="mt-2 text-on-surface-variant">
-                Try another search or be the first to submit one.
+            /* Empty State */
+            <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/50 px-6 py-20 text-center">
+              <h2 className="text-xl font-bold text-slate-800">No campaigns found</h2>
+              <p className="mt-2 text-sm text-slate-500">
+                Try another keyword or select a different category.
               </p>
             </div>
           )}

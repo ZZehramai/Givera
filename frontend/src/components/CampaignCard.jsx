@@ -1,62 +1,61 @@
 import { Link } from "react-router-dom";
-
 import { mediaUrl } from "../utils/mediaUrl";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80";
 
 export default function CampaignCard({ campaign }) {
-  const progress = Math.min(Number(campaign.progress_percentage || 0), 100);
-  const daysLeft = Math.max(
-    0,
-    Math.ceil((new Date(campaign.deadline) - new Date()) / 86400000),
-  );
+  const amountRaised = Number(campaign.amount_raised || 0);
+  const goalAmount = Number(campaign.goal_amount || 1);
+  const progress = Math.min(Math.round((amountRaised / goalAmount) * 100), 100);
 
   return (
     <Link
       to={`/campaigns/${campaign.id}`}
-      className="group block h-full overflow-hidden rounded-2xl border-2 border-white bg-white shadow-[0_14px_32px_rgba(40,35,62,0.14)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(40,35,62,0.20)]"
+      className="group flex flex-col transition duration-200 hover:-translate-y-1"
     >
-      <div className="relative h-52 overflow-hidden bg-surface-container">
+      {/* Thumbnail Image Container */}
+      <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-slate-100">
         <img
           src={mediaUrl(campaign.cover_image, fallbackImage)}
-          alt=""
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          alt={campaign.title || "Campaign image"}
+          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           onError={(event) => {
             event.currentTarget.onerror = null;
             event.currentTarget.src = fallbackImage;
           }}
         />
-        <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-primary backdrop-blur">
-          {campaign.category_label}
-        </span>
-      </div>
-      <div className="p-6">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
-          {campaign.location}
-        </p>
-        <h2 className="mb-2 text-xl font-bold text-on-surface">{campaign.title}</h2>
-        <p className="mb-6 line-clamp-2 text-sm leading-6 text-on-surface-variant">
-          {campaign.summary}
-        </p>
 
-        <div className="mb-2 flex items-end justify-between gap-3">
-          <span className="font-bold text-primary">
-            ${Number(campaign.amount_raised).toLocaleString()}
+        {/* Location Badge (Dark semi-transparent overlay pill on bottom-left) */}
+        {campaign.location && (
+          <span className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-md">
+            {campaign.location}
           </span>
-          <span className="text-xs text-on-surface-variant">
-            ${Number(campaign.goal_amount).toLocaleString()} goal
-          </span>
-        </div>
-        <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
-          <div
-            className="h-full rounded-full progress-gradient"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <div className="mt-2 flex justify-between text-xs text-on-surface-variant">
-          <span>{progress}% funded</span>
-          <span>{daysLeft} days left</span>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="mt-3 flex flex-1 flex-col justify-between">
+        {/* Title */}
+        <h2 className="line-clamp-2 text-base font-extrabold leading-snug text-slate-900 group-hover:text-primary">
+          {campaign.title}
+        </h2>
+
+        {/* Progress & Raised Amount */}
+        <div className="mt-4">
+          {/* Thin Green Progress Bar */}
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          {/* Amount Raised Text */}
+          <p className="mt-2 text-sm font-extrabold text-slate-900">
+            ${amountRaised.toLocaleString()}{" "}
+            <span className="font-normal text-slate-500">raised</span>
+          </p>
         </div>
       </div>
     </Link>

@@ -1,28 +1,20 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   Bell,
   CheckCheck,
-  ChevronDown,
-  FileQuestion,
-  HelpCircle,
-  Mail,
+  UserRound,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { logout } from "../services/authService";
 import api from "../api/axios";
 
 export default function AppHeader() {
   const navigate = useNavigate();
-  // const location = useLocation();
-  // const isLandingPage = location.pathname === "/";
 
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user") || "null"));
   const [notifications, setNotifications] = useState([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
-
-  const aboutRef = useRef(null);
 
   useEffect(() => {
     const syncUser = () => {
@@ -71,11 +63,6 @@ export default function AppHeader() {
     } catch { /* Fail silently */ }
   };
 
-  const navClass = ({ isActive }) =>
-    `text-sm font-semibold transition ${
-      isActive ? "text-primary" : "text-on-surface-variant hover:text-primary"
-    }`;
-
   const sectionClass =
     "text-sm font-semibold text-on-surface-variant transition hover:text-primary";
 
@@ -90,7 +77,7 @@ export default function AppHeader() {
           </Link>
         </div>
 
-        {/* CENTER: Browse Campaigns & Campaign Requests */}
+        {/* CENTER Navigation Links */}
         <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex">
           <a href="#hero" className={sectionClass}>
             Home
@@ -109,10 +96,8 @@ export default function AppHeader() {
           </a>
         </div>
 
-        {/* RIGHT SIDE: About Dropdown, Sign In, Notifications & User Menu */}
+        {/* RIGHT SIDE: Notifications & User Menu */}
         <div className="flex items-center gap-4 sm:gap-5">
-          
-          {/* User Controls / Auth Links */}
           {user ? (
             <>
               {/* Notifications */}
@@ -193,10 +178,20 @@ export default function AppHeader() {
                 )}
               </div>
 
-              {/* Profile Avatar */}
-              <Link to="/dashboard" className="hidden text-sm text-on-surface-variant sm:block">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#7047eb] font-bold text-white shadow-sm transition hover:bg-[#5b36d6]">
-                  {user?.username?.charAt(0).toUpperCase()}
+              {/* Dynamic Profile Avatar */}
+              <Link to="/dashboard" className="hidden sm:block">
+                <div className="h-10 w-10 overflow-hidden rounded-full border border-purple-200 shadow-xs transition hover:opacity-90 hover:ring-2 hover:ring-purple-400">
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.username || "Profile"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-[#7047eb] font-bold text-white">
+                      {user?.username ? user.username.charAt(0).toUpperCase() : <UserRound size={18} />}
+                    </div>
+                  )}
                 </div>
               </Link>
 
@@ -211,15 +206,13 @@ export default function AppHeader() {
             </>
           ) : (
             <>
-              {/* Sign In Link */}
               <Link
                 to="/login"
-                className="text-sm font-semibold text-on-surface-variant transition text-primary"
+                className="text-sm font-semibold text-primary transition"
               >
                 Sign In
               </Link>
 
-              {/* Start Campaign CTA */}
               <Link
                 to="/login"
                 className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90"
@@ -238,7 +231,7 @@ export default function AppHeader() {
         className="mx-auto flex max-w-container-max justify-center gap-2 overflow-x-auto border-t border-outline-variant/30 px-4 py-2 lg:hidden"
       >
         <a
-          to="/#campaigns"
+          href="#campaigns"
           className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold text-on-surface-variant hover:bg-primary-fixed hover:text-primary"
         >
           Browse Campaigns

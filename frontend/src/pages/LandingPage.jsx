@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   BarChart3,
+  Check,
   Clock,
   Gift,
   Heart,
@@ -60,6 +61,10 @@ export function LandingPage() {
   const [featured, setFeatured] = useState([]);
   const [openFaq, setOpenFaq] = useState(null);
 
+  // Newsletter state
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
   useEffect(() => {
     let active = true;
     api.get("/campaigns/")
@@ -72,13 +77,27 @@ export function LandingPage() {
     setOpenFaq(openFaq === index ? null : index);
   };
 
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    if (!newsletterEmail) return;
+
+    // Set state to subscribed
+    setIsSubscribed(true);
+    setNewsletterEmail("");
+
+    // Optional: Reset button back to 'Subscribe' after 5 seconds
+    setTimeout(() => {
+      setIsSubscribed(false);
+    }, 5000);
+  };
+
   return (
     <div className="min-h-screen bg-surface text-on-surface">
       <AppHeader />
 
       <main>
         {/* HERO SECTION */}
-        <section className="relative w-full overflow-hidden bg-[#FAF8F5] px-4 pb-24 pt-16 text-center md:px-8 md:pt-24 lg:pt-28">
+        <section id="hero" className="relative w-full overflow-hidden bg-[#FAF8F5] px-4 pb-24 pt-16 text-center md:px-8 md:pt-24 lg:pt-28">
           <div className="mx-auto max-w-5xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -242,7 +261,7 @@ export function LandingPage() {
                         to="/campaigns/create"
                         className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-7 py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 sm:w-auto"
                       >
-                        <PlusCircle size={18} aria-hidden="true" /> Propose New Project
+                        <PlusCircle size={18} aria-hidden="true" /> Request Now
                       </Link>
                     </motion.div>
 
@@ -251,7 +270,7 @@ export function LandingPage() {
                         to="/campaigns"
                         className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-outline-variant bg-surface px-7 py-4 font-bold text-on-surface transition hover:border-primary/40 hover:text-primary sm:w-auto"
                       >
-                        <Clock size={18} aria-hidden="true" /> Vetting Queue (3)
+                        <Clock size={18} aria-hidden="true" /> Current Campaigns
                       </Link>
                     </motion.div>
                   </div>
@@ -313,110 +332,97 @@ export function LandingPage() {
         </section>
 
         {/* HOW IT WORKS SECTION */}
-        {/* HOW IT WORKS SECTION (WIDE CONTAINER FIT) */}
-<section
-  id="how-it-works"
-  className="scroll-mt-20 bg-white py-6 min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-hidden"
->
-  {/* Increased max-width from max-w-4xl to max-w-6xl */}
-  <div className="mx-auto max-w-6xl px-6 md:px-8 w-full">
-    
-    {/* Header */}
-    <div className="mx-auto max-w-2xl text-center">
-      <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
-        The donor journey
-      </p>
-      <h2 className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">
-        Three simple steps to give with confidence
-      </h2>
-      <p className="mx-auto mt-1.5 text-xs md:text-sm text-on-surface-variant max-w-lg leading-relaxed">
-        No clutter, no confusion — just a clear path from discovering a cause to seeing your impact unfold.
-      </p>
-    </div>
-
-    {/* Graphic Wave & Steps - Increased max-width from max-w-3xl to max-w-5xl */}
-    <div className="mx-auto mt-6 max-w-5xl">
-      <div className="relative aspect-[1000/220] w-full">
-        <svg
-          viewBox="0 0 1000 220"
-          preserveAspectRatio="none"
-          fill="none"
-          className="absolute inset-0 h-full w-full"
-          aria-hidden="true"
+        <section
+          id="how-it-works"
+          className="scroll-mt-20 bg-white py-6 min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-hidden"
         >
-          <motion.path
-            d="M20,170 C90,170 110,140 150,130 C230,110 320,50 430,50 C520,50 600,110 690,110 C780,110 880,50 970,30"
-            className="stroke-primary/70"
-            strokeWidth="3"
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            whileInView={{ pathLength: 1, opacity: 1 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 1.2, ease: "easeInOut" }}
-          />
-        </svg>
+          <div className="mx-auto max-w-6xl px-6 md:px-8 w-full">
+            
+            {/* Header */}
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                The donor journey
+              </p>
+              <h2 className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">
+                Three simple steps to give with confidence
+              </h2>
+              <p className="mx-auto mt-1.5 text-xs md:text-sm text-on-surface-variant max-w-lg leading-relaxed">
+                No clutter, no confusion — just a clear path from discovering a cause to seeing your impact unfold.
+              </p>
+            </div>
 
-        {donorJourneySteps.map((step, index) => {
-          const StepIcon = step.icon;
-          return (
-            <motion.div
-              key={step.title}
-              className="absolute -translate-x-1/2 -translate-y-1/2"
-              style={{ left: `${step.x}%`, top: `${step.y}%` }}
-              initial={{ opacity: 0, scale: 0.5 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, amount: 0.6 }}
-              transition={{ duration: 0.35, delay: 0.25 + index * 0.2 }}
-            >
-              <span className="absolute inset-0 -z-10 rounded-full bg-primary/25 blur-md" aria-hidden="true" />
-              <span className="grid h-12 w-12 place-items-center rounded-xl border border-outline-variant/50 bg-white text-primary shadow-md shadow-primary/15">
-                <StepIcon size={20} aria-hidden="true" />
-              </span>
-            </motion.div>
-          );
-        })}
-      </div>
+            {/* Graphic Wave & Steps */}
+            <div className="mx-auto mt-6 max-w-5xl">
+              <div className="relative aspect-[1000/220] w-full">
+                <svg
+                  viewBox="0 0 1000 220"
+                  preserveAspectRatio="none"
+                  fill="none"
+                  className="absolute inset-0 h-full w-full"
+                  aria-hidden="true"
+                >
+                  <motion.path
+                    d="M20,170 C90,170 110,140 150,130 C230,110 320,50 430,50 C520,50 600,110 690,110 C780,110 880,50 970,30"
+                    className="stroke-primary/70"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    whileInView={{ pathLength: 1, opacity: 1 }}
+                    viewport={{ once: true, amount: 0.4 }}
+                    transition={{ duration: 1.2, ease: "easeInOut" }}
+                  />
+                </svg>
 
-      {/* Step Text Below SVG */}
-      <div className="mt-3 grid gap-6 sm:grid-cols-3">
-        {donorJourneySteps.map((step, index) => (
-          <motion.div
-            key={step.title}
-            className={index === 2 ? "sm:text-right" : index === 1 ? "sm:text-center" : "sm:text-left"}
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.35, delay: 0.1 + index * 0.1 }}
-          >
-            <span className="text-2xl md:text-3xl font-extrabold text-outline-variant/70">0{index + 1}</span>
-            <h3 className="mt-0.5 text-base md:text-lg font-bold text-on-surface">{step.title}</h3>
-            <p className="mt-1 text-xs md:text-sm text-on-surface-variant leading-relaxed">{step.text}</p>
-          </motion.div>
-        ))}
-      </div>
-    </div>
+                {donorJourneySteps.map((step, index) => {
+                  const StepIcon = step.icon;
+                  return (
+                    <motion.div
+                      key={step.title}
+                      className="absolute -translate-x-1/2 -translate-y-1/2"
+                      style={{ left: `${step.x}%`, top: `${step.y}%` }}
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true, amount: 0.6 }}
+                      transition={{ duration: 0.35, delay: 0.25 + index * 0.2 }}
+                    >
+                      <span className="absolute inset-0 -z-10 rounded-full bg-primary/25 blur-md" aria-hidden="true" />
+                      <span className="grid h-12 w-12 place-items-center rounded-xl border border-outline-variant/50 bg-white text-primary shadow-md shadow-primary/15">
+                        <StepIcon size={20} aria-hidden="true" />
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </div>
 
-    {/* Button */}
-    <div className="mt-6 text-center">
-      <motion.div className="inline-block" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-        <Link
-          to="/campaigns"
-          className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-xs md:text-sm font-bold text-white shadow-md shadow-primary/20 transition hover:-translate-y-0.5"
-        >
-          Find a cause to support <ArrowRight size={16} aria-hidden="true" />
-        </Link>
-      </motion.div>
-    </div>
+              {/* Step Text Below SVG */}
+              <div className="mt-3 grid gap-6 sm:grid-cols-3">
+                {donorJourneySteps.map((step, index) => (
+                  <motion.div
+                    key={step.title}
+                    className={index === 2 ? "sm:text-right" : index === 1 ? "sm:text-center" : "sm:text-left"}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.4 }}
+                    transition={{ duration: 0.35, delay: 0.1 + index * 0.1 }}
+                  >
+                    <span className="text-2xl md:text-3xl font-extrabold text-outline-variant/70">0{index + 1}</span>
+                    <h3 className="mt-0.5 text-base md:text-lg font-bold text-on-surface">{step.title}</h3>
+                    <p className="mt-1 text-xs md:text-sm text-on-surface-variant leading-relaxed">{step.text}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
 
-  </div>
-</section>
+            
+          </div>
+        </section>
 
         {/* FAQ SECTION */}
         <section id="faq" className="scroll-mt-28 bg-[#f8f5ff] py-20">
           <div className="mx-auto grid max-w-5xl gap-10 px-6 lg:grid-cols-[0.7fr_1.3fr]">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Good to know</p>
-              <h2 className="mt-2 text-3xl font-extrabold text-slate-900">Your questions, answered.</h2>
+              <h2 className="mt-2 text-3xl font-extrabold text-slate-900">Frequently Asked Questions</h2>
             </div>
             
             <div className="space-y-4">
@@ -499,12 +505,12 @@ export function LandingPage() {
                 Platform
               </h4>
               <nav className="flex flex-col gap-2.5 text-sm font-medium">
-                <Link
+                <a
                   className="text-slate-700 transition-colors hover:text-primary dark:text-slate-300"
-                  to="/campaigns"
+                  href="#campaigns"
                 >
                   Campaigns
-                </Link>
+                </a>
                 <a
                   className="text-slate-700 transition-colors hover:text-primary dark:text-slate-300"
                   href="#how-it-works"
@@ -536,19 +542,33 @@ export function LandingPage() {
               </p>
               <form
                 className="mt-1 flex w-full max-w-md flex-col gap-2.5 sm:flex-row"
-                onSubmit={(e) => e.preventDefault()}
+                onSubmit={handleSubscribe}
               >
                 <input
                   className="w-full flex-1 rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   placeholder="Email address"
                   type="email"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  disabled={isSubscribed}
                   required
                 />
                 <button
-                  className="shrink-0 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-primary/90 hover:shadow-lg"
+                  className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-300 ${
+                    isSubscribed
+                      ? "bg-emerald-600 hover:bg-emerald-600"
+                      : "bg-primary hover:bg-primary/90 hover:shadow-lg"
+                  }`}
                   type="submit"
+                  disabled={isSubscribed}
                 >
-                  Subscribe
+                  {isSubscribed ? (
+                    <>
+                      <Check size={16} strokeWidth={3} /> Subscribed!
+                    </>
+                  ) : (
+                    "Subscribe"
+                  )}
                 </button>
               </form>
             </div>

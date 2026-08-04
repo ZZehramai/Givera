@@ -5,13 +5,12 @@ import {
   ArrowRight,
   ArrowUpRight,
   BarChart3,
-  ChevronRight,
   CircleDollarSign,
-  CircleUserRound,
   Compass,
   Edit3,
-  LayoutDashboard,
   Heart,
+  History,
+  LayoutDashboard,
   LogOut,
   Mail,
   MapPin,
@@ -47,83 +46,98 @@ const money = (value) =>
     maximumFractionDigits: 0,
   }).format(Number(value || 0));
 
+// Updated Sidebar Items including "History"
 const sidebarItems = [
   { section: "overview", label: "Overview", icon: LayoutDashboard },
   { section: "browse", label: "Browse campaigns", icon: Compass },
-  { section: "my-campaigns", label: "My campaigns", icon: Megaphone },
+  { section: "my-campaigns", label: "My campaigns", icon: Megaphone, badge: "2" },
+  { section: "history", label: "History", icon: History },
   { section: "profile", label: "Profile & settings", icon: Settings },
 ];
 
-function DashboardSidebar({ firstName, user, onLogout, activeSection, onSectionChange }) {
-  const navClass = (isActive) =>
-    `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-      isActive
-        ? "bg-primary text-white shadow-[0_8px_18px_rgba(118,87,217,0.22)]"
-        : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
-    }`;
-
+/* SIDEBAR MATCHING REFERENCE UI */
+function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) {
   return (
     <aside className="lg:sticky lg:top-4 lg:self-start">
-      <div className="flex flex-col rounded-3xl border border-white/80 bg-white/90 p-3 shadow-[0_18px_50px_rgba(40,35,62,0.08)] backdrop-blur lg:min-h-[calc(100vh-2rem)] lg:p-4">
-        <div className="flex w-full items-center justify-between gap-4 border-b border-outline-variant/50 px-2 pb-3 lg:block lg:pb-5">
-          <Link to="/" className="inline-flex items-center gap-2 text-xl font-extrabold text-primary">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-white">
-              <Heart size={18} fill="currentColor" aria-hidden="true" />
-            </span>
-            Givera
+      <div className="relative flex flex-col rounded-[2rem] bg-[#5B50BC] py-6 text-white shadow-xl lg:min-h-[calc(100vh-2rem)]">
+        {/* LOGO */}
+        <div className="flex items-center justify-between px-6 pb-6">
+          <Link to="/" className="text-2xl font-black tracking-wider text-white">
+            GIVERA
           </Link>
           <button
             type="button"
             onClick={onLogout}
-            className="inline-grid h-9 w-9 place-items-center rounded-xl text-on-surface-variant transition hover:bg-rose-50 hover:text-rose-600 lg:hidden"
+            className="rounded-xl p-2 text-white/70 hover:bg-white/10 lg:hidden"
             aria-label="Log out"
           >
-            <LogOut size={18} aria-hidden="true" />
+            <LogOut size={18} />
           </button>
         </div>
 
-        <div className="hidden items-center gap-3 border-b border-outline-variant/50 px-2 py-5 lg:flex">
-          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-lg font-extrabold text-white">
-            {firstName.charAt(0).toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate font-bold">{user?.username || firstName}</p>
-            <p className="truncate text-xs text-on-surface-variant">{user?.email || "Givera member"}</p>
-          </div>
-        </div>
+        {/* NAVIGATION */}
+        <nav className="flex flex-col space-y-1">
+          {sidebarItems.map(({ section, label, icon: Icon, badge }) => {
+            const isActive = activeSection === section;
+            const badgeValue =
+              section === "my-campaigns"
+                ? counts.myCampaigns
+                : section === "history"
+                ? counts.history
+                : badge;
 
-        <nav aria-label="Dashboard navigation" className="mt-3 flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
-          {sidebarItems.map(({ to, section, label, icon: Icon }) =>
-            section ? (
-              <button
-                key={section}
-                type="button"
-                onClick={() => onSectionChange(section)}
-                className={`${navClass(activeSection === section)} text-left`}
-                aria-current={activeSection === section ? "page" : undefined}
-              >
-                <Icon size={18} aria-hidden="true" />
-                <span className="whitespace-nowrap">{label}</span>
-                <ChevronRight size={16} aria-hidden="true" className="ml-auto hidden opacity-0 transition group-hover:opacity-100 lg:block" />
-              </button>
-            ) : (
-              <Link key={to} to={to} className={navClass(false)}>
-                <Icon size={18} aria-hidden="true" />
-                <span className="whitespace-nowrap">{label}</span>
-                <ChevronRight size={16} aria-hidden="true" className="ml-auto hidden opacity-0 transition group-hover:opacity-100 lg:block" />
-              </Link>
-            ),
-          )}
+            return (
+              <div key={section} className="relative pl-3">
+                {/* INVERTED CORNER GRAPHICS FOR ACTIVE ITEM */}
+                {isActive && (
+                  <>
+                    <div className="absolute right-0 -top-4 h-4 w-4 bg-[#f7f7fb]">
+                      <div className="h-full w-full rounded-br-2xl bg-[#5B50BC]" />
+                    </div>
+                    <div className="absolute right-0 -bottom-4 h-4 w-4 bg-[#f7f7fb]">
+                      <div className="h-full w-full rounded-tr-2xl bg-[#5B50BC]" />
+                    </div>
+                  </>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => onSectionChange(section)}
+                  className={`relative flex w-full items-center gap-3.5 px-5 py-3.5 text-sm font-semibold transition-all ${
+                    isActive
+                      ? "rounded-l-full bg-[#f7f7fb] text-slate-900 shadow-sm"
+                      : "text-white/80 hover:text-white"
+                  }`}
+                >
+                  <Icon size={18} className={isActive ? "text-[#5B50BC]" : "text-white/80"} />
+                  <span className="flex-1 text-left">{label}</span>
+
+                  {/* BADGE COUNT */}
+                  {badgeValue !== undefined && badgeValue !== null && (
+                    <span
+                      className={`rounded-md px-2 py-0.5 text-xs font-bold ${
+                        isActive
+                          ? "bg-[#5B50BC]/10 text-[#5B50BC]"
+                          : "bg-white/20 text-white"
+                      }`}
+                    >
+                      {badgeValue}
+                    </span>
+                  )}
+                </button>
+              </div>
+            );
+          })}
         </nav>
 
-        <div className="mt-auto hidden pt-5 lg:block">
-          
+        {/* LOGOUT BUTTON */}
+        <div className="mt-auto px-6 pt-6 hidden lg:block">
           <button
             type="button"
             onClick={onLogout}
-            className="mt-3 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-on-surface-variant transition hover:bg-rose-50 hover:text-rose-600"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
           >
-            <LogOut size={18} aria-hidden="true" />
+            <LogOut size={18} />
             Log out
           </button>
         </div>
@@ -135,11 +149,76 @@ function DashboardSidebar({ firstName, user, onLogout, activeSection, onSectionC
 function DonutChart({ value, label }) {
   const progress = Math.max(0, Math.min(value, 100));
   return (
-    <div className="relative grid h-36 w-36 place-items-center rounded-full" style={{ background: `conic-gradient(#7657d9 ${progress * 3.6}deg, #ebe2ff 0deg)` }}>
+    <div
+      className="relative grid h-36 w-36 place-items-center rounded-full"
+      style={{ background: `conic-gradient(#5B50BC ${progress * 3.6}deg, #ebe2ff 0deg)` }}
+    >
       <div className="grid h-24 w-24 place-items-center rounded-full bg-white text-center">
-        <div><p className="text-2xl font-extrabold">{Math.round(progress)}%</p><p className="text-xs text-on-surface-variant">{label}</p></div>
+        <div>
+          <p className="text-2xl font-extrabold">{Math.round(progress)}%</p>
+          <p className="text-xs text-slate-500">{label}</p>
+        </div>
       </div>
     </div>
+  );
+}
+
+function HistoryPanel({ donations, campaigns }) {
+  return (
+    <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      <div className="rounded-[2rem] bg-white p-7 shadow-sm border border-slate-100">
+        <h1 className="text-2xl font-extrabold text-slate-900">Activity History</h1>
+        <p className="mt-1 text-sm text-slate-500">Track your past contributions and completed campaigns.</p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* DONATIONS HISTORY */}
+        <div className="rounded-[2rem] bg-white p-6 shadow-sm border border-slate-100 space-y-4">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Heart size={18} className="text-[#5B50BC]" /> Donation History
+          </h2>
+          {donations.length ? (
+            <div className="space-y-3">
+              {donations.map((item) => (
+                <div key={item.id} className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
+                  <div>
+                    <p className="font-semibold text-slate-800">{item.campaign?.title || "Supported Campaign"}</p>
+                    <p className="text-xs text-slate-400">{item.created_at ? new Date(item.created_at).toLocaleDateString() : "Recent"}</p>
+                  </div>
+                  <span className="font-bold text-[#5B50BC]">{money(item.amount)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="py-8 text-center text-sm text-slate-400">No donation history available yet.</p>
+          )}
+        </div>
+
+        {/* CAMPAIGNS CREATED HISTORY */}
+        <div className="rounded-[2rem] bg-white p-6 shadow-sm border border-slate-100 space-y-4">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Megaphone size={18} className="text-[#5B50BC]" /> Created Campaigns
+          </h2>
+          {campaigns.length ? (
+            <div className="space-y-3">
+              {campaigns.map((item) => (
+                <div key={item.id} className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
+                  <div>
+                    <p className="font-semibold text-slate-800">{item.title}</p>
+                    <p className="text-xs text-slate-400">Raised {money(item.amount_raised)}</p>
+                  </div>
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusColor[item.status] || statusColor.draft}`}>
+                    {item.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="py-8 text-center text-sm text-slate-400">No created campaigns history yet.</p>
+          )}
+        </div>
+      </div>
+    </motion.section>
   );
 }
 
@@ -160,17 +239,16 @@ function BrowseCampaigns({ campaigns, loading }) {
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-on-surface via-[#3a2b6a] to-primary p-7 text-white shadow-[0_22px_45px_rgba(73,48,143,0.2)] md:p-10">
-        <div className="absolute -right-12 -top-20 h-52 w-52 rounded-full bg-white/10 blur-2xl" />
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary-fixed">Verified causes</p>
+      <div className="relative overflow-hidden rounded-[2rem] bg-[#5B50BC] p-7 text-white shadow-md md:p-10">
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-white/70">Verified causes</p>
         <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">Browse campaigns</h1>
-        <p className="mt-3 max-w-2xl leading-7 text-white/65">Find a cause that matters to you, without leaving your dashboard.</p>
-        <div className="mt-7 grid gap-3 rounded-2xl bg-white p-3 text-on-surface sm:grid-cols-[1fr_220px]">
-          <label className="flex items-center gap-2 rounded-xl border border-outline-variant px-4 py-3 focus-within:border-primary">
-            <Search size={18} className="text-on-surface-variant" aria-hidden="true" />
+        <p className="mt-3 max-w-2xl leading-7 text-white/80">Find a cause that matters to you, without leaving your dashboard.</p>
+        <div className="mt-7 grid gap-3 rounded-2xl bg-white p-3 text-slate-800 sm:grid-cols-[1fr_220px]">
+          <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 focus-within:border-[#5B50BC]">
+            <Search size={18} className="text-slate-400" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search campaigns" className="min-w-0 flex-1 outline-none" />
           </label>
-          <select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-xl border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary">
+          <select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#5B50BC]">
             <option value="">All causes</option>
             <option value="education">Education</option>
             <option value="medical">Medical</option>
@@ -184,9 +262,20 @@ function BrowseCampaigns({ campaigns, loading }) {
       </div>
 
       <div className="mt-7">
-        {loading ? <p className="py-20 text-center text-on-surface-variant">Loading campaigns…</p> : filteredCampaigns.length ? (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">{filteredCampaigns.map((campaign) => <CampaignCard key={campaign.id} campaign={campaign} />)}</div>
-        ) : <div className="rounded-3xl bg-white px-6 py-20 text-center"><h2 className="text-2xl font-bold">No campaigns found</h2><p className="mt-2 text-on-surface-variant">Try another search or category.</p></div>}
+        {loading ? (
+          <p className="py-20 text-center text-slate-500">Loading campaigns…</p>
+        ) : filteredCampaigns.length ? (
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {filteredCampaigns.map((campaign) => (
+              <CampaignCard key={campaign.id} campaign={campaign} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-3xl bg-white px-6 py-20 text-center">
+            <h2 className="text-2xl font-bold text-slate-800">No campaigns found</h2>
+            <p className="mt-2 text-slate-500">Try another search or category.</p>
+          </div>
+        )}
       </div>
     </motion.section>
   );
@@ -195,19 +284,47 @@ function BrowseCampaigns({ campaigns, loading }) {
 function MyCampaignsPanel({ campaigns, loading }) {
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-on-surface via-[#3a2b6a] to-primary p-7 text-white shadow-[0_22px_45px_rgba(73,48,143,0.2)] md:p-10">
-        <div className="absolute -right-12 -top-20 h-52 w-52 rounded-full bg-white/10 blur-2xl" />
-        <div><p className="text-sm font-bold uppercase tracking-[0.16em] text-primary-fixed">Organizer area</p><h1 className="mt-2 text-3xl font-extrabold md:text-4xl">My campaigns</h1></div>
-        <Link to="/campaigns/create" className="rounded-full bg-secondary-container px-5 py-3 font-bold text-on-secondary-container">Create campaign</Link>
+      <div className="relative overflow-hidden rounded-[2rem] bg-[#5B50BC] p-7 text-white shadow-md md:p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.16em] text-white/70">Organizer area</p>
+          <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">My campaigns</h1>
+        </div>
+        <Link to="/campaigns/create" className="rounded-full bg-white px-5 py-3 font-bold text-[#5B50BC] shadow-md hover:bg-slate-50">
+          Request Campaign
+        </Link>
       </div>
-      {loading ? <p className="py-20 text-center text-on-surface-variant">Loading campaigns…</p> : campaigns.length ? (
-        <div className="mt-7 space-y-4">{campaigns.map((campaign) => (
-          <article key={campaign.id} className="grid gap-4 rounded-2xl border border-outline-variant/60 bg-white p-6 md:grid-cols-[1fr_auto] md:items-center">
-            <div><div className="flex flex-wrap items-center gap-3"><h2 className="text-xl font-bold">{campaign.title}</h2><span className={`rounded-full px-3 py-1 text-xs font-bold ${statusColor[campaign.status] || statusColor.draft}`}>{campaign.status_label || campaign.status}</span></div><p className="mt-2 text-sm text-on-surface-variant">{campaign.summary}</p>{campaign.rejection_reason && <p className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700"><strong>Review note:</strong> {campaign.rejection_reason}</p>}</div>
-            <Link to={`/campaigns/${campaign.id}`} className="font-semibold text-primary hover:underline">View details →</Link>
-          </article>
-        ))}</div>
-      ) : <div className="mt-7 rounded-3xl bg-white px-6 py-20 text-center"><h2 className="text-2xl font-bold">You have not submitted a campaign yet</h2><p className="mt-2 text-on-surface-variant">Tell your story and send it to the review team.</p></div>}
+      {loading ? (
+        <p className="py-20 text-center text-slate-500">Loading campaigns…</p>
+      ) : campaigns.length ? (
+        <div className="mt-7 space-y-4">
+          {campaigns.map((campaign) => (
+            <article key={campaign.id} className="grid gap-4 rounded-2xl border border-slate-100 bg-white p-6 md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="text-xl font-bold text-slate-800">{campaign.title}</h2>
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusColor[campaign.status] || statusColor.draft}`}>
+                    {campaign.status_label || campaign.status}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-slate-500">{campaign.summary}</p>
+                {campaign.rejection_reason && (
+                  <p className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
+                    <strong>Review note:</strong> {campaign.rejection_reason}
+                  </p>
+                )}
+              </div>
+              <Link to={`/campaigns/${campaign.id}`} className="font-semibold text-[#5B50BC] hover:underline">
+                View details →
+              </Link>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-7 rounded-3xl bg-white px-6 py-20 text-center">
+          <h2 className="text-2xl font-bold text-slate-800">You have not submitted a campaign yet</h2>
+          <p className="mt-2 text-slate-500">Tell your story and send it to the review team.</p>
+        </div>
+      )}
     </motion.section>
   );
 }
@@ -220,10 +337,17 @@ function ProfilePanel({ onLogout }) {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    api.get("/auth/profile/").then((response) => {
-      setUser(response.data);
-      setForm({ username: response.data.username || "", email: response.data.email || "", phone_number: response.data.phone_number || "", country: response.data.country || "" });
-    }).catch(() => setMessage("Your profile could not be loaded.")).finally(() => {});
+    api.get("/auth/profile/")
+      .then((response) => {
+        setUser(response.data);
+        setForm({
+          username: response.data.username || "",
+          email: response.data.email || "",
+          phone_number: response.data.phone_number || "",
+          country: response.data.country || "",
+        });
+      })
+      .catch(() => setMessage("Your profile could not be loaded."));
   }, []);
 
   const save = async () => {
@@ -236,10 +360,14 @@ function ProfilePanel({ onLogout }) {
       window.dispatchEvent(new Event("userUpdated"));
       setEditing(false);
       setMessage("Profile updated successfully.");
-    } catch { setMessage("Profile could not be updated."); } finally { setSaving(false); }
+    } catch {
+      setMessage("Profile could not be updated.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (!user) return <p className="py-20 text-center text-on-surface-variant">{message || "Loading profile…"}</p>;
+  if (!user) return <p className="py-20 text-center text-slate-500">{message || "Loading profile…"}</p>;
   const fields = [
     ["Name", "username", "text", UserRound],
     ["Email", "email", "email", Mail],
@@ -248,28 +376,74 @@ function ProfilePanel({ onLogout }) {
   ];
   const initial = user.username?.trim().charAt(0).toUpperCase() || "G";
   const success = message === "Profile updated successfully.";
-  const cancel = () => {
-    setForm({ username: user.username || "", email: user.email || "", phone_number: user.phone_number || "", country: user.country || "" });
-    setEditing(false);
-    setMessage("");
-  };
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-5xl">
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div><p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Account centre</p><h1 className="mt-2 text-3xl font-extrabold tracking-[-0.045em] md:text-4xl">Your profile</h1><p className="mt-2 text-sm text-on-surface-variant">Manage the details connected to your Givera account.</p></div>
-        {!editing && <button type="button" onClick={() => { setMessage(""); setForm({ username: user.username || "", email: user.email || "", phone_number: user.phone_number || "", country: user.country || "" }); setEditing(true); }} className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white shadow-[0_10px_22px_rgba(118,87,217,0.25)]"><Edit3 size={16} />Edit details</button>}
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#5B50BC]">Account centre</p>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl text-slate-900">Your profile</h1>
+        </div>
+        {!editing && (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#5B50BC] px-5 py-3 text-sm font-bold text-white shadow-md"
+          >
+            <Edit3 size={16} /> Edit details
+          </button>
+        )}
       </div>
+
       <div className="grid items-start gap-6 md:grid-cols-[235px_minmax(0,1fr)]">
-        <aside className="overflow-hidden rounded-[1.75rem] bg-on-surface text-white shadow-[0_18px_42px_rgba(41,35,62,0.15)]">
-          <div className="relative overflow-hidden bg-primary px-6 pb-7 pt-6"><div className="absolute -right-9 -top-10 h-32 w-32 rounded-full border-[16px] border-white/15" /><div className="relative grid h-16 w-16 place-items-center rounded-2xl bg-white text-2xl font-extrabold text-primary">{initial}</div><h2 className="relative mt-4 truncate text-lg font-extrabold">{user.username}</h2><p className="relative mt-1 truncate text-sm text-white/70">{user.email}</p></div>
-          <div className="p-4"><p className="px-2 pb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">Profile settings</p><div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-3 text-sm font-bold"><CircleUserRound size={18} className="text-secondary-fixed" />Personal details</div><button type="button" onClick={onLogout} className="mt-4 flex w-full items-center gap-2 border-t border-white/10 px-2 pt-4 text-sm font-bold text-white/65 transition hover:text-white"><LogOut size={17} />Log out</button></div>
+        <aside className="overflow-hidden rounded-[1.75rem] bg-[#5B50BC] text-white shadow-md">
+          <div className="relative px-6 pb-7 pt-6 text-center">
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-white text-2xl font-extrabold text-[#5B50BC]">
+              {initial}
+            </div>
+            <h2 className="mt-4 truncate text-lg font-extrabold">{user.username}</h2>
+            <p className="mt-1 truncate text-sm text-white/70">{user.email}</p>
+          </div>
         </aside>
-        <section className="overflow-hidden rounded-[1.75rem] border border-white/80 bg-white shadow-[0_12px_30px_rgba(40,35,62,0.06)]">
-          <div className="flex flex-col gap-3 border-b border-outline-variant/60 px-6 py-6 sm:flex-row sm:items-center sm:justify-between md:px-8"><div><h2 className="text-xl font-extrabold">Personal information</h2><p className="mt-1 text-sm text-on-surface-variant">{editing ? "Make your changes below, then save when you’re ready." : "Your basic contact and location details."}</p></div><div className="inline-flex w-fit items-center gap-2 rounded-full bg-tertiary-container px-3 py-1.5 text-xs font-bold text-[#176b5b]"><ShieldCheck size={15} />Account verified</div></div>
-          <div className="px-6 py-3 md:px-8">{fields.map(([label, name, type, Icon]) => <div key={name} className="grid gap-2 border-b border-outline-variant/45 py-5 last:border-none md:grid-cols-[145px_minmax(0,1fr)] md:items-center md:gap-6"><div className="flex items-center gap-3 text-sm font-bold text-on-surface-variant"><span className="grid h-9 w-9 place-items-center rounded-lg bg-surface-container-low text-primary"><Icon size={17} /></span>{label}</div>{editing ? <input type={type} name={name} value={form[name]} onChange={(event) => setForm({ ...form, [name]: event.target.value })} className="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-sm font-semibold outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10" /> : <p className="pl-12 text-sm font-semibold md:pl-0">{user[name] || <span className="font-medium text-on-surface-variant">Not provided</span>}</p>}</div>)}</div>
-          {message && <p role="status" className={`mx-6 mb-2 rounded-xl px-4 py-3 text-sm font-semibold md:mx-8 ${success ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{message}</p>}
-          {editing && <div className="flex flex-col-reverse gap-3 border-t border-outline-variant/60 bg-surface-container-low px-6 py-5 sm:flex-row sm:justify-end md:px-8"><button type="button" onClick={cancel} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-on-surface-variant transition hover:bg-white disabled:opacity-50"><X size={17} />Discard changes</button><button type="button" onClick={save} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(118,87,217,0.22)] disabled:opacity-50"><Check size={17} />{saving ? "Saving…" : "Save changes"}</button></div>}
+
+        <section className="overflow-hidden rounded-[1.75rem] border border-slate-100 bg-white shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-slate-100 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-800">Personal information</h2>
+            </div>
+            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
+              <ShieldCheck size={15} /> Account verified
+            </div>
+          </div>
+          <div className="px-6 py-3">
+            {fields.map(([label, name, type, Icon]) => (
+              <div key={name} className="grid gap-2 border-b border-slate-100 py-5 last:border-none md:grid-cols-[145px_minmax(0,1fr)] md:items-center">
+                <div className="flex items-center gap-3 text-sm font-bold text-slate-500">
+                  <Icon size={17} className="text-[#5B50BC]" /> {label}
+                </div>
+                {editing ? (
+                  <input
+                    type={type}
+                    value={form[name]}
+                    onChange={(e) => setForm({ ...form, [name]: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 p-3 text-sm font-semibold outline-none focus:border-[#5B50BC]"
+                  />
+                ) : (
+                  <p className="text-sm font-semibold text-slate-800">{user[name] || "Not provided"}</p>
+                )}
+              </div>
+            ))}
+          </div>
+          {editing && (
+            <div className="flex justify-end gap-3 border-t border-slate-100 bg-slate-50 p-4">
+              <button onClick={() => setEditing(false)} className="px-4 py-2 text-sm font-bold text-slate-500">
+                Cancel
+              </button>
+              <button onClick={save} disabled={saving} className="rounded-full bg-[#5B50BC] px-6 py-2 text-sm font-bold text-white shadow-sm">
+                {saving ? "Saving…" : "Save changes"}
+              </button>
+            </div>
+          )}
         </section>
       </div>
     </motion.section>
@@ -315,85 +489,130 @@ function UserDashboard() {
   return (
     <div className="min-h-screen bg-[#f7f7fb]">
       <div className="mx-auto max-w-[1440px] px-4 py-4 sm:px-6 lg:grid lg:grid-cols-[264px_minmax(0,1fr)] lg:gap-8">
-        <DashboardSidebar firstName={firstName} user={storedUser} onLogout={handleLogout} activeSection={activeSection} onSectionChange={setActiveSection} />
+        <DashboardSidebar
+          onLogout={handleLogout}
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          counts={{ myCampaigns: owned.length, history: donated.length }}
+        />
+
         <main className="mt-6 min-w-0 lg:mt-0">
-        {activeSection === "browse" ? <BrowseCampaigns campaigns={discover} loading={loading} /> : activeSection === "my-campaigns" ? <MyCampaignsPanel campaigns={owned} loading={loading} /> : activeSection === "profile" ? <ProfilePanel onLogout={handleLogout} /> : <>
-        <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative flex overflow-hidden flex-col gap-6 rounded-[2rem] bg-gradient-to-br from-on-surface via-[#3a2b6a] to-primary p-7 text-white shadow-[0_22px_45px_rgba(73,48,143,0.2)] md:flex-row md:items-center md:justify-between md:p-10">
-          <div className="absolute -right-12 -top-20 h-60 w-60 rounded-full bg-white/10 blur-2xl" />
-          <div className="relative">
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary-fixed">Your Givera home</p>
-            <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">Welcome back, {firstName}.</h1>
-            <p className="mt-3 max-w-xl leading-7 text-white/65">Discover causes, manage your campaigns, and follow the impact you help create.</p>
-          </div>
-          <div className="relative flex flex-wrap gap-3">
-            <button type="button" onClick={() => setActiveSection("browse")} className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-on-surface"><Compass size={18} /> Browse</button>
-            <Link to="/campaigns/create" className="inline-flex items-center gap-2 rounded-full bg-secondary-container px-5 py-3 font-bold text-on-secondary-container"><Plus size={18} /> Start campaign</Link>
-          </div>
-        </motion.section>
+          {activeSection === "browse" ? (
+            <BrowseCampaigns campaigns={discover} loading={loading} />
+          ) : activeSection === "my-campaigns" ? (
+            <MyCampaignsPanel campaigns={owned} loading={loading} />
+          ) : activeSection === "history" ? (
+            <HistoryPanel donations={donated} campaigns={owned} />
+          ) : activeSection === "profile" ? (
+            <ProfilePanel onLogout={handleLogout} />
+          ) : (
+            <>
+              {/* OVERVIEW HERO */}
+              <motion.section
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative flex overflow-hidden flex-col gap-6 rounded-[2rem] bg-[#5B50BC] p-7 text-white shadow-md md:flex-row md:items-center md:justify-between md:p-10"
+              >
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-white/70">
+                    Your Givera home
+                  </p>
+                  <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">
+                    Welcome back, {firstName}.
+                  </h1>
+                  <p className="mt-3 max-w-xl leading-7 text-white/80">
+                    Discover causes, manage your campaigns, and follow the impact you help create.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection("browse")}
+                    className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-[#5B50BC] shadow-sm"
+                  >
+                    <Compass size={18} /> Browse
+                  </button>
+                  <Link
+                    to="/campaigns/create"
+                    className="inline-flex items-center gap-2 rounded-full bg-white/20 border border-white/30 px-5 py-3 font-bold text-white hover:bg-white/30"
+                  >
+                    <Plus size={18} /> Request Campaign
+                  </Link>
+                </div>
+              </motion.section>
 
-        <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            [CircleDollarSign, "Raised by your campaigns", money(metrics.raised), "bg-primary-fixed text-primary"],
-            [Target, "Combined campaign goals", money(metrics.goal), "bg-secondary-container text-secondary"],
-            [BarChart3, "Active campaigns", metrics.active, "bg-tertiary-container text-tertiary"],
-            [Heart, "Your total donations", money(metrics.donatedAmount), "bg-rose-100 text-rose-600"],
-          ].map(([Icon, label, value, color], index) => (
-            <motion.article key={label} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 * index }} className="rounded-2xl border border-white/80 bg-white p-5 shadow-[0_12px_30px_rgba(40,35,62,0.06)]">
-              <span className={`inline-grid rounded-xl p-2.5 ${color}`}><Icon size={21} /></span>
-              <p className="mt-5 text-sm text-on-surface-variant">{label}</p>
-              <p className="mt-1 text-2xl font-extrabold">{loading ? "—" : value}</p>
-            </motion.article>
-          ))}
-        </section>
+              {/* STATS OVERVIEW CARDS */}
+              <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  [CircleDollarSign, "Raised by your campaigns", money(metrics.raised)],
+                  [Target, "Combined campaign goals", money(metrics.goal)],
+                  [BarChart3, "Active campaigns", metrics.active],
+                  [Heart, "Your total donations", money(metrics.donatedAmount)],
+                ].map(([Icon, label, value], index) => (
+                  <motion.article
+                    key={label}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 * index }}
+                    className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
+                  >
+                    <span className="inline-grid rounded-xl p-2.5 bg-[#5B50BC]/10 text-[#5B50BC]">
+                      <Icon size={21} />
+                    </span>
+                    <p className="mt-5 text-sm text-slate-500">{label}</p>
+                    <p className="mt-1 text-2xl font-extrabold text-slate-900">
+                      {loading ? "—" : value}
+                    </p>
+                  </motion.article>
+                ))}
+              </section>
 
-        <section className="mt-7 grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-          <article className="rounded-3xl border border-white/80 bg-white p-6 shadow-[0_12px_30px_rgba(40,35,62,0.06)]">
-            <div className="flex items-center justify-between gap-4"><div><p className="text-sm font-bold text-primary">CAMPAIGN PERFORMANCE</p><h2 className="mt-1 text-2xl font-extrabold">Funds raised by campaign</h2></div><BarChart3 className="text-primary" /></div>
-            <div className="mt-8 space-y-5">
-              {owned.length ? owned.slice(0, 5).map((campaign) => {
-                const percentage = Math.min(Number(campaign.progress_percentage || 0), 100);
-                return <div key={campaign.id}><div className="mb-2 flex justify-between gap-4 text-sm"><span className="truncate font-semibold">{campaign.title}</span><span className="shrink-0 text-on-surface-variant">{money(campaign.amount_raised)}</span></div><div className="h-3 overflow-hidden rounded-full bg-surface-container-high"><motion.div initial={{ width: 0 }} animate={{ width: `${percentage}%` }} transition={{ duration: 0.8 }} className="h-full rounded-full progress-gradient" /></div></div>;
-              }) : <p className="py-12 text-center text-on-surface-variant">Create a campaign to see performance charts.</p>}
-            </div>
-          </article>
-          <article className="flex flex-col items-center justify-center rounded-3xl border border-white/80 bg-white p-6 text-center shadow-[0_12px_30px_rgba(40,35,62,0.06)]">
-            <DonutChart value={metrics.progress} label="of goal" />
-            <h2 className="mt-5 text-xl font-extrabold">Overall fundraising progress</h2>
-            <p className="mt-2 text-sm leading-6 text-on-surface-variant">{money(metrics.raised)} raised across {owned.length} campaign{owned.length === 1 ? "" : "s"}.</p>
-          </article>
-        </section>
-
-        <section className="mt-10">
-          <div className="flex items-end justify-between gap-4"><div><p className="text-sm font-bold uppercase tracking-widest text-primary">Organizer area</p><h2 className="mt-1 text-3xl font-extrabold">Campaigns you created</h2></div><button type="button" onClick={() => setActiveSection("my-campaigns")} className="inline-flex items-center gap-2 font-bold text-primary">Manage all <ArrowRight size={18} /></button></div>
-          <div className="mt-6 overflow-hidden rounded-3xl border border-white/80 bg-white shadow-[0_12px_30px_rgba(40,35,62,0.06)]">
-            {owned.length ? owned.slice(0, 4).map((campaign) => (
-              <Link key={campaign.id} to={`/campaigns/${campaign.id}`} className="grid gap-3 border-b border-outline-variant/50 p-5 last:border-0 hover:bg-surface-container-low sm:grid-cols-[1fr_auto_auto] sm:items-center">
-                <div><p className="font-bold">{campaign.title}</p><p className="mt-1 line-clamp-1 text-sm text-on-surface-variant">{campaign.summary}</p></div>
-                <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${statusColor[campaign.status] || statusColor.draft}`}>{campaign.status_label || campaign.status}</span>
-                <ArrowUpRight className="text-primary" size={18} />
-              </Link>
-            )) : <div className="p-10 text-center"><p className="font-bold">No campaigns created yet</p><Link to="/campaigns/create" className="mt-3 inline-flex items-center gap-2 text-primary">Start your first campaign <ArrowRight size={17} /></Link></div>}
-          </div>
-        </section>
-
-        <section className="mt-10 grid gap-6 lg:grid-cols-2">
-          <article className="rounded-3xl bg-secondary-container p-6">
-            <div className="flex items-center justify-between"><div><p className="text-sm font-bold uppercase tracking-widest text-secondary">Your giving</p><h2 className="mt-1 text-2xl font-extrabold">Campaigns you donated to</h2></div><Heart className="text-secondary" /></div>
-            {donated.length ? <div className="mt-5 space-y-3">{donated.slice(0, 3).map((donation) => <Link key={donation.id} to={`/campaigns/${donation.campaign?.id || donation.campaign}`} className="flex items-center justify-between rounded-2xl bg-white/70 p-4"><span className="font-semibold">{donation.campaign?.title || "Supported campaign"}</span><span className="font-bold text-secondary">{money(donation.amount)}</span></Link>)}</div> : <div className="mt-8 rounded-2xl bg-white/55 p-6 text-center"><p className="font-semibold">No donation history yet</p><p className="mt-1 text-sm text-on-secondary-fixed-variant">When donation tracking is available, supported campaigns will appear here.</p><button type="button" onClick={() => setActiveSection("browse")} className="mt-4 inline-flex items-center gap-2 font-bold text-primary">Find a cause <ArrowRight size={17} /></button></div>}
-          </article>
-          <article className="relative overflow-hidden rounded-3xl bg-on-surface p-6 text-white shadow-[0_16px_36px_rgba(41,35,62,0.14)]">
-            <div className="absolute -right-10 -top-12 h-40 w-40 rounded-full border-[22px] border-white/10" />
-            <div className="relative flex items-start justify-between"><div><p className="text-sm font-bold uppercase tracking-[0.16em] text-primary-fixed">Account centre</p><h2 className="mt-1 text-2xl font-extrabold">Your profile</h2></div><span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-secondary-fixed"><UserRound size={20} /></span></div>
-            <div className="relative mt-7 flex items-center gap-4"><div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary text-2xl font-extrabold text-white shadow-lg shadow-black/20">{firstName.charAt(0).toUpperCase()}</div><div className="min-w-0"><p className="truncate text-lg font-bold">{storedUser?.username || firstName}</p><p className="mt-0.5 truncate text-sm text-white/60">{storedUser?.email || "Manage your account details"}</p></div></div>
-            <div className="relative mt-6 border-t border-white/10 pt-5"><button type="button" onClick={() => setActiveSection("profile")} className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-primary transition hover:-translate-y-0.5">Manage profile <ArrowRight size={17} /></button></div>
-          </article>
-        </section>
-
-        <section className="mt-12 pb-10">
-          <div className="flex items-end justify-between gap-4"><div><p className="text-sm font-bold uppercase tracking-widest text-primary">Discover</p><h2 className="mt-1 text-3xl font-extrabold">All community campaigns</h2><p className="mt-2 text-sm text-on-surface-variant">Explore every approved campaign created by the Givera community.</p></div><button type="button" onClick={() => setActiveSection("browse")} className="hidden items-center gap-2 font-bold text-primary sm:inline-flex">Search campaigns <ArrowRight size={18} /></button></div>
-          {discover.length ? <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">{discover.map((campaign) => <CampaignCard key={campaign.id} campaign={campaign} />)}</div> : <p className="mt-6 rounded-2xl bg-white p-8 text-center text-on-surface-variant">Campaigns will appear here when available.</p>}
-        </section>
-        </>}
+              {/* CAMPAIGN PERFORMANCE CHART */}
+              <section className="mt-7 grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+                <article className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-bold text-[#5B50BC]">CAMPAIGN PERFORMANCE</p>
+                      <h2 className="mt-1 text-2xl font-extrabold text-slate-900">Funds raised</h2>
+                    </div>
+                    <BarChart3 className="text-[#5B50BC]" />
+                  </div>
+                  <div className="mt-8 space-y-5">
+                    {owned.length ? (
+                      owned.slice(0, 5).map((campaign) => {
+                        const percentage = Math.min(Number(campaign.progress_percentage || 0), 100);
+                        return (
+                          <div key={campaign.id}>
+                            <div className="mb-2 flex justify-between gap-4 text-sm">
+                              <span className="truncate font-semibold text-slate-800">{campaign.title}</span>
+                              <span className="shrink-0 text-slate-500">{money(campaign.amount_raised)}</span>
+                            </div>
+                            <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${percentage}%` }}
+                                transition={{ duration: 0.8 }}
+                                className="h-full rounded-full bg-[#5B50BC]"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="py-12 text-center text-slate-400">Create a campaign to see performance charts.</p>
+                    )}
+                  </div>
+                </article>
+                <article className="flex flex-col items-center justify-center rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-sm">
+                  <DonutChart value={metrics.progress} label="of goal" />
+                  <h2 className="mt-5 text-xl font-extrabold text-slate-900">Overall progress</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    {money(metrics.raised)} raised across {owned.length} campaign{owned.length === 1 ? "" : "s"}.
+                  </p>
+                </article>
+              </section>
+            </>
+          )}
         </main>
       </div>
     </div>
@@ -402,5 +621,9 @@ function UserDashboard() {
 
 export default function Dashboard() {
   const storedUser = JSON.parse(localStorage.getItem("user") || "null");
-  return storedUser?.role === "admin" || storedUser?.is_staff ? <AdminDashboard /> : <UserDashboard />;
+  return storedUser?.role === "admin" || storedUser?.is_staff ? (
+    <AdminDashboard />
+  ) : (
+    <UserDashboard />
+  );
 }
