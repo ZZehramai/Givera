@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import api from "../api/axios";
-import AppHeader from "../components/AppHeader";
+// import AppHeader from "../components/AppHeader";
 import CampaignCard from "../components/CampaignCard";
 
 const categories = [
@@ -43,7 +43,7 @@ export default function Campaigns() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <AppHeader />
+  
       <main>
         <section className="hero-mesh border-b border-outline-variant/30 px-6 py-16">
           <div className="mx-auto max-w-container-max">
