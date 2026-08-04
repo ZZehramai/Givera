@@ -92,8 +92,11 @@ export default function AppHeader() {
 
         {/* CENTER: Browse Campaigns & Campaign Requests */}
         <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex">
+          <a href="#hero" className={sectionClass}>
+            Home
+          </a>
           <a href="#campaigns" className={sectionClass}>
-            Browse Campaigns
+            Campaigns
           </a>
           <a href="#campaign-request" className={sectionClass}>
             Campaign Requests
@@ -211,9 +214,9 @@ export default function AppHeader() {
               {/* Sign In Link */}
               <Link
                 to="/login"
-                className="text-sm font-semibold text-on-surface-variant transition hover:text-primary"
+                className="text-sm font-semibold text-on-surface-variant transition text-primary"
               >
-                Sign in
+                Sign In
               </Link>
 
               {/* Start Campaign CTA */}
