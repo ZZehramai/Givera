@@ -342,79 +342,103 @@ export function LandingPage() {
         </section>
 
         {/* HOW IT WORKS SECTION */}
-        <section id="how-it-works" className="scroll-mt-28 overflow-hidden bg-white py-20">
-          <div className="mx-auto max-w-container-max px-6">
-            <div className="mx-auto max-w-2xl text-center">
-              <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">The donor journey</p>
-              <h2 className="mt-2 text-3xl font-extrabold md:text-4xl">Three simple steps to give with confidence</h2>
-              <p className="mx-auto mt-4 leading-7 text-on-surface-variant">No clutter, no confusion — just a clear path from discovering a cause to seeing your impact unfold.</p>
-            </div>
- 
-            <div className="mx-auto mt-14 max-w-5xl">
-              <div className="relative aspect-[1000/340] w-full">
-                <svg viewBox="0 0 1000 340" preserveAspectRatio="none" fill="none" className="absolute inset-0 h-full w-full" aria-hidden="true">
-                  <motion.path
-                    d="M20,260 C90,260 110,230 150,218 C230,195 320,95 430,95 C520,95 600,180 690,180 C780,180 880,95 970,58"
-                    className="stroke-primary/70"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    whileInView={{ pathLength: 1, opacity: 1 }}
-                    viewport={{ once: true, amount: 0.4 }}
-                    transition={{ duration: 1.3, ease: "easeInOut" }}
-                  />
-                </svg>
- 
-                {donorJourneySteps.map((step, index) => {
-                  const StepIcon = step.icon;
-                  return (
-                    <motion.div
-                      key={step.title}
-                      className="absolute -translate-x-1/2 -translate-y-1/2"
-                      style={{ left: `${step.x}%`, top: `${step.y}%` }}
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true, amount: 0.6 }}
-                      transition={{ duration: 0.4, delay: 0.35 + index * 0.25 }}
-                    >
-                      <span className="absolute inset-0 -z-10 rounded-full bg-primary/25 blur-xl" aria-hidden="true" />
-                      <span className="grid h-14 w-14 place-items-center rounded-2xl border border-outline-variant/50 bg-white text-primary shadow-lg shadow-primary/15">
-                        <StepIcon size={24} aria-hidden="true" />
-                      </span>
-                    </motion.div>
-                  );
-                })}
-              </div>
- 
-              <div className="mt-6 grid gap-8 sm:grid-cols-3 sm:gap-6">
-                {donorJourneySteps.map((step, index) => (
-                  <motion.div
-                    key={step.title}
-                    className={index === 2 ? "sm:text-right" : index === 1 ? "sm:text-center" : "sm:text-left"}
-                    initial={{ opacity: 0, y: 14 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.4 }}
-                    transition={{ duration: 0.4, delay: 0.15 + index * 0.1 }}
-                  >
-                    <span className="text-4xl font-extrabold text-outline-variant/70">0{index + 1}</span>
-                    <h3 className="mt-1 text-xl font-bold">{step.title}</h3>
-                    <p className="mt-2 leading-7 text-on-surface-variant">{step.text}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
- 
-            <div className="mt-12 text-center">
-              <motion.div className="inline-block" whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>
-                <Link to="/campaigns" className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5">
-                  Find a cause to support <ArrowRight size={18} aria-hidden="true" />
-                </Link>
-              </motion.div>
-            </div>
-          </div>
-        </section>
+        {/* HOW IT WORKS SECTION (WIDE CONTAINER FIT) */}
+<section
+  id="how-it-works"
+  className="scroll-mt-20 bg-white py-6 min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-hidden"
+>
+  {/* Increased max-width from max-w-4xl to max-w-6xl */}
+  <div className="mx-auto max-w-6xl px-6 md:px-8 w-full">
+    
+    {/* Header */}
+    <div className="mx-auto max-w-2xl text-center">
+      <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+        The donor journey
+      </p>
+      <h2 className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">
+        Three simple steps to give with confidence
+      </h2>
+      <p className="mx-auto mt-1.5 text-xs md:text-sm text-on-surface-variant max-w-lg leading-relaxed">
+        No clutter, no confusion — just a clear path from discovering a cause to seeing your impact unfold.
+      </p>
+    </div>
 
-        
+    {/* Graphic Wave & Steps - Increased max-width from max-w-3xl to max-w-5xl */}
+    <div className="mx-auto mt-6 max-w-5xl">
+      <div className="relative aspect-[1000/220] w-full">
+        <svg
+          viewBox="0 0 1000 220"
+          preserveAspectRatio="none"
+          fill="none"
+          className="absolute inset-0 h-full w-full"
+          aria-hidden="true"
+        >
+          <motion.path
+            d="M20,170 C90,170 110,140 150,130 C230,110 320,50 430,50 C520,50 600,110 690,110 C780,110 880,50 970,30"
+            className="stroke-primary/70"
+            strokeWidth="3"
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            whileInView={{ pathLength: 1, opacity: 1 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 1.2, ease: "easeInOut" }}
+          />
+        </svg>
+
+        {donorJourneySteps.map((step, index) => {
+          const StepIcon = step.icon;
+          return (
+            <motion.div
+              key={step.title}
+              className="absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: `${step.x}%`, top: `${step.y}%` }}
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, amount: 0.6 }}
+              transition={{ duration: 0.35, delay: 0.25 + index * 0.2 }}
+            >
+              <span className="absolute inset-0 -z-10 rounded-full bg-primary/25 blur-md" aria-hidden="true" />
+              <span className="grid h-12 w-12 place-items-center rounded-xl border border-outline-variant/50 bg-white text-primary shadow-md shadow-primary/15">
+                <StepIcon size={20} aria-hidden="true" />
+              </span>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Step Text Below SVG */}
+      <div className="mt-3 grid gap-6 sm:grid-cols-3">
+        {donorJourneySteps.map((step, index) => (
+          <motion.div
+            key={step.title}
+            className={index === 2 ? "sm:text-right" : index === 1 ? "sm:text-center" : "sm:text-left"}
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.35, delay: 0.1 + index * 0.1 }}
+          >
+            <span className="text-2xl md:text-3xl font-extrabold text-outline-variant/70">0{index + 1}</span>
+            <h3 className="mt-0.5 text-base md:text-lg font-bold text-on-surface">{step.title}</h3>
+            <p className="mt-1 text-xs md:text-sm text-on-surface-variant leading-relaxed">{step.text}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+
+    {/* Button */}
+    <div className="mt-6 text-center">
+      <motion.div className="inline-block" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+        <Link
+          to="/campaigns"
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-xs md:text-sm font-bold text-white shadow-md shadow-primary/20 transition hover:-translate-y-0.5"
+        >
+          Find a cause to support <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      </motion.div>
+    </div>
+
+  </div>
+</section>
 
         {/* FAQ SECTION */}
         <section id="faq" className="scroll-mt-28 bg-white py-20">
