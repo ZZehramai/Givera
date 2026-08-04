@@ -191,7 +191,7 @@ export default function AppHeader() {
               </div>
 
               {/* Profile Avatar */}
-              <Link to="/profile" className="hidden text-sm text-on-surface-variant sm:block">
+              <Link to="/dashboard" className="hidden text-sm text-on-surface-variant sm:block">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#7047eb] font-bold text-white shadow-sm transition hover:bg-[#5b36d6]">
                   {user?.username?.charAt(0).toUpperCase()}
                 </div>
@@ -221,7 +221,7 @@ export default function AppHeader() {
                 to="/login"
                 className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90"
               >
-                Start campaign
+                Donate Now
                 <ArrowUpRight size={16} aria-hidden="true" />
               </Link>
             </>
