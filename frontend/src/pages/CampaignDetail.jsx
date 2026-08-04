@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { CheckCircle2, Heart, MessageCircleHeart, Send, Sparkles } from "lucide-react";
 
 import api from "../api/axios";
-import AppHeader from "../components/AppHeader";
+// import AppHeader from "../components/AppHeader";
 import { mediaUrl } from "../utils/mediaUrl";
 
 const fallbackImage =
@@ -95,7 +95,7 @@ export default function CampaignDetail() {
   if (error) {
     return (
       <div className="min-h-screen bg-surface">
-        <AppHeader />
+  
         <div className="mx-auto max-w-3xl px-6 py-24 text-center">
           <h1 className="text-3xl font-bold">{error}</h1>
           <Link to="/campaigns" className="mt-6 inline-block text-primary underline">
@@ -115,7 +115,7 @@ export default function CampaignDetail() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <AppHeader />
+
       <main className="mx-auto max-w-container-max px-6 py-10">
         <Link to="/campaigns" className="text-sm font-semibold text-primary">
           ← All campaigns
