@@ -401,7 +401,7 @@ function ProfilePanel({ onLogout }) {
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-white text-2xl font-extrabold text-[#5B50BC]">
               {initial}
             </div>
-            <h2 className="mt-4 truncate text-lg font-extrabold">{user.username}</h2>
+            <h2 className="mt-4 truncate text-lg font-extrabold">{user.name}</h2>
             <p className="mt-1 truncate text-sm text-white/70">{user.email}</p>
           </div>
         </aside>
