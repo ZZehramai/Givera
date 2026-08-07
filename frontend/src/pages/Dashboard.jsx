@@ -33,10 +33,10 @@ import AdminDashboard from "./AdminDashboard";
 
 const statusColor = {
   approved: "bg-emerald-100 text-emerald-700",
-  pending: "bg-amber-100 text-amber-700",
+  pending: "bg-amber-100 text-amber-800",
   rejected: "bg-rose-100 text-rose-700",
   draft: "bg-slate-100 text-slate-600",
-  completed: "bg-violet-100 text-violet-700",
+  completed: "bg-amber-100 text-amber-900",
 };
 
 const money = (value) =>
@@ -46,29 +46,54 @@ const money = (value) =>
     maximumFractionDigits: 0,
   }).format(Number(value || 0));
 
-// Updated Sidebar Items including "History"
 const sidebarItems = [
-  { section: "overview", label: "Overview", icon: LayoutDashboard },
-  { section: "browse", label: "Browse campaigns", icon: Compass },
-  { section: "my-campaigns", label: "My campaigns", icon: Megaphone, badge: "2" },
-  { section: "history", label: "History", icon: History },
-  { section: "profile", label: "Profile & settings", icon: Settings },
+  { 
+    section: "overview", 
+    label: "Overview", 
+    icon: LayoutDashboard,
+    iconColor: "text-emerald-500",
+  },
+  { 
+    section: "browse", 
+    label: "Browse campaigns", 
+    icon: Compass,
+    iconColor: "text-blue-500",
+  },
+  { 
+    section: "my-campaigns", 
+    label: "My campaigns", 
+    icon: Megaphone, 
+    badge: "2",
+    iconColor: "text-amber-500",
+  },
+  { 
+    section: "history", 
+    label: "History", 
+    icon: History,
+    iconColor: "text-teal-500",
+  },
+  { 
+    section: "profile", 
+    label: "Profile & settings", 
+    icon: Settings,
+    iconColor: "text-slate-500",
+  },
 ];
 
-/* SIDEBAR MATCHING REFERENCE UI */
+/* SIDEBAR USING LANDING PAGE PURPLE (#7451E8) FOR ACTIVE STATE */
 function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) {
   return (
     <aside className="lg:sticky lg:top-4 lg:self-start">
-      <div className="relative flex flex-col rounded-[2rem] bg-[#5B50BC] py-6 text-white shadow-xl lg:min-h-[calc(100vh-2rem)]">
+      <div className="relative flex flex-col rounded-[2rem] bg-white py-6 text-slate-800 shadow-md border border-slate-100 lg:min-h-[calc(100vh-2rem)]">
         {/* LOGO */}
         <div className="flex items-center justify-between px-6 pb-6">
-          <Link to="/" className="text-2xl font-black tracking-wider text-white">
+          <Link to="/" className="text-2xl font-black tracking-wider text-[#7451E8]">
             GIVERA
           </Link>
           <button
             type="button"
             onClick={onLogout}
-            className="rounded-xl p-2 text-white/70 hover:bg-white/10 lg:hidden"
+            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 lg:hidden"
             aria-label="Log out"
           >
             <LogOut size={18} />
@@ -77,7 +102,7 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) 
 
         {/* NAVIGATION */}
         <nav className="flex flex-col space-y-1">
-          {sidebarItems.map(({ section, label, icon: Icon, badge }) => {
+          {sidebarItems.map(({ section, label, icon: Icon, iconColor, badge }) => {
             const isActive = activeSection === section;
             const badgeValue =
               section === "my-campaigns"
@@ -91,11 +116,11 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) 
                 {/* INVERTED CORNER GRAPHICS FOR ACTIVE ITEM */}
                 {isActive && (
                   <>
-                    <div className="absolute right-0 -top-4 h-4 w-4 bg-[#f7f7fb]">
-                      <div className="h-full w-full rounded-br-2xl bg-[#5B50BC]" />
+                    <div className="absolute right-0 -top-4 h-4 w-4 bg-[#7451E8]">
+                      <div className="h-full w-full rounded-br-2xl bg-white" />
                     </div>
-                    <div className="absolute right-0 -bottom-4 h-4 w-4 bg-[#f7f7fb]">
-                      <div className="h-full w-full rounded-tr-2xl bg-[#5B50BC]" />
+                    <div className="absolute right-0 -bottom-4 h-4 w-4 bg-[#7451E8]">
+                      <div className="h-full w-full rounded-tr-2xl bg-white" />
                     </div>
                   </>
                 )}
@@ -103,22 +128,27 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) 
                 <button
                   type="button"
                   onClick={() => onSectionChange(section)}
-                  className={`relative flex w-full items-center gap-3.5 px-5 py-3.5 text-sm font-semibold transition-all ${
+                  className={`relative flex w-full items-center gap-3.5 px-5 py-3.5 text-sm font-bold transition-all ${
                     isActive
-                      ? "rounded-l-full bg-[#f7f7fb] text-slate-900 shadow-sm"
-                      : "text-white/80 hover:text-white"
+                      ? "rounded-l-full bg-[#7451E8] text-white shadow-sm"
+                      : "text-slate-700 hover:text-[#7451E8] hover:bg-slate-50 rounded-l-full"
                   }`}
                 >
-                  <Icon size={18} className={isActive ? "text-[#5B50BC]" : "text-white/80"} />
+                  <Icon 
+                    size={20} 
+                    className={`transition-colors duration-200 ${
+                      isActive ? "text-white drop-shadow-sm" : iconColor
+                    }`} 
+                  />
                   <span className="flex-1 text-left">{label}</span>
 
                   {/* BADGE COUNT */}
                   {badgeValue !== undefined && badgeValue !== null && (
                     <span
-                      className={`rounded-md px-2 py-0.5 text-xs font-bold ${
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-black ${
                         isActive
-                          ? "bg-[#5B50BC]/10 text-[#5B50BC]"
-                          : "bg-white/20 text-white"
+                          ? "bg-[#FFC72C] text-[#7451E8]"
+                          : "bg-[#FFC72C]/20 text-[#7451E8]"
                       }`}
                     >
                       {badgeValue}
@@ -135,9 +165,9 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) 
           <button
             type="button"
             onClick={onLogout}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
           >
-            <LogOut size={18} />
+            <LogOut size={18} className="text-rose-500" />
             Log out
           </button>
         </div>
@@ -151,12 +181,12 @@ function DonutChart({ value, label }) {
   return (
     <div
       className="relative grid h-36 w-36 place-items-center rounded-full"
-      style={{ background: `conic-gradient(#5B50BC ${progress * 3.6}deg, #ebe2ff 0deg)` }}
+      style={{ background: `conic-gradient(#FFC72C ${progress * 3.6}deg, #F3F0FF 0deg)` }}
     >
-      <div className="grid h-24 w-24 place-items-center rounded-full bg-white text-center">
+      <div className="grid h-24 w-24 place-items-center rounded-full bg-white text-center shadow-inner">
         <div>
-          <p className="text-2xl font-extrabold">{Math.round(progress)}%</p>
-          <p className="text-xs text-slate-500">{label}</p>
+          <p className="text-2xl font-extrabold text-[#7451E8]">{Math.round(progress)}%</p>
+          <p className="text-xs text-slate-500 font-medium">{label}</p>
         </div>
       </div>
     </div>
@@ -175,7 +205,7 @@ function HistoryPanel({ donations, campaigns }) {
         {/* DONATIONS HISTORY */}
         <div className="rounded-[2rem] bg-white p-6 shadow-sm border border-slate-100 space-y-4">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Heart size={18} className="text-[#5B50BC]" /> Donation History
+            <Heart size={18} className="text-rose-500" /> Donation History
           </h2>
           {donations.length ? (
             <div className="space-y-3">
@@ -185,7 +215,7 @@ function HistoryPanel({ donations, campaigns }) {
                     <p className="font-semibold text-slate-800">{item.campaign?.title || "Supported Campaign"}</p>
                     <p className="text-xs text-slate-400">{item.created_at ? new Date(item.created_at).toLocaleDateString() : "Recent"}</p>
                   </div>
-                  <span className="font-bold text-[#5B50BC]">{money(item.amount)}</span>
+                  <span className="font-bold text-[#7451E8]">{money(item.amount)}</span>
                 </div>
               ))}
             </div>
@@ -197,7 +227,7 @@ function HistoryPanel({ donations, campaigns }) {
         {/* CAMPAIGNS CREATED HISTORY */}
         <div className="rounded-[2rem] bg-white p-6 shadow-sm border border-slate-100 space-y-4">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Megaphone size={18} className="text-[#5B50BC]" /> Created Campaigns
+            <Megaphone size={18} className="text-[#7451E8]" /> Created Campaigns
           </h2>
           {campaigns.length ? (
             <div className="space-y-3">
@@ -239,16 +269,16 @@ function BrowseCampaigns({ campaigns, loading }) {
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="relative overflow-hidden rounded-[2rem] bg-[#5B50BC] p-7 text-white shadow-md md:p-10">
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-white/70">Verified causes</p>
+      <div className="relative overflow-hidden rounded-[2rem] bg-[#7451E8] p-7 text-white shadow-md md:p-10">
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFC72C]">Verified causes</p>
         <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">Browse campaigns</h1>
         <p className="mt-3 max-w-2xl leading-7 text-white/80">Find a cause that matters to you, without leaving your dashboard.</p>
         <div className="mt-7 grid gap-3 rounded-2xl bg-white p-3 text-slate-800 sm:grid-cols-[1fr_220px]">
-          <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 focus-within:border-[#5B50BC]">
+          <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 focus-within:border-[#7451E8]">
             <Search size={18} className="text-slate-400" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search campaigns" className="min-w-0 flex-1 outline-none" />
           </label>
-          <select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#5B50BC]">
+          <select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#7451E8]">
             <option value="">All causes</option>
             <option value="education">Education</option>
             <option value="medical">Medical</option>
@@ -284,12 +314,12 @@ function BrowseCampaigns({ campaigns, loading }) {
 function MyCampaignsPanel({ campaigns, loading }) {
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="relative overflow-hidden rounded-[2rem] bg-[#5B50BC] p-7 text-white shadow-md md:p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="relative overflow-hidden rounded-[2rem] bg-[#7451E8] p-7 text-white shadow-md md:p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.16em] text-white/70">Organizer area</p>
+          <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFC72C]">Organizer area</p>
           <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">My campaigns</h1>
         </div>
-        <Link to="/campaigns/create" className="rounded-full bg-white px-5 py-3 font-bold text-[#5B50BC] shadow-md hover:bg-slate-50">
+        <Link to="/campaigns/create" className="rounded-full bg-[#FFC72C] px-5 py-3 font-bold text-[#7451E8] shadow-md hover:bg-amber-300 transition">
           Request Campaign
         </Link>
       </div>
@@ -313,7 +343,7 @@ function MyCampaignsPanel({ campaigns, loading }) {
                   </p>
                 )}
               </div>
-              <Link to={`/campaigns/${campaign.id}`} className="font-semibold text-[#5B50BC] hover:underline">
+              <Link to={`/campaigns/${campaign.id}`} className="font-semibold text-[#7451E8] hover:underline">
                 View details →
               </Link>
             </article>
@@ -375,20 +405,19 @@ function ProfilePanel({ onLogout }) {
     ["Location", "country", "text", MapPin],
   ];
   const initial = user.username?.trim().charAt(0).toUpperCase() || "G";
-  const success = message === "Profile updated successfully.";
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-5xl">
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#5B50BC]">Account centre</p>
+          <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#7451E8]">Account centre</p>
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl text-slate-900">Your profile</h1>
         </div>
         {!editing && (
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#5B50BC] px-5 py-3 text-sm font-bold text-white shadow-md"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#7451E8] px-5 py-3 text-sm font-bold text-white shadow-md hover:bg-[#603ed6]"
           >
             <Edit3 size={16} /> Edit details
           </button>
@@ -396,13 +425,18 @@ function ProfilePanel({ onLogout }) {
       </div>
 
       <div className="grid items-start gap-6 md:grid-cols-[235px_minmax(0,1fr)]">
-        <aside className="overflow-hidden rounded-[1.75rem] bg-[#5B50BC] text-white shadow-md">
+        <aside className="overflow-hidden rounded-[1.75rem] bg-white border border-slate-100 text-slate-800 shadow-sm">
           <div className="relative px-6 pb-7 pt-6 text-center">
-            <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-white text-2xl font-extrabold text-[#5B50BC]">
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#7451E8] text-2xl font-extrabold text-white">
               {initial}
             </div>
+<<<<<<< HEAD
             <h2 className="mt-4 truncate text-lg font-extrabold">{user.name}</h2>
             <p className="mt-1 truncate text-sm text-white/70">{user.email}</p>
+=======
+            <h2 className="mt-4 truncate text-lg font-extrabold text-slate-900">{user.username}</h2>
+            <p className="mt-1 truncate text-sm text-slate-500">{user.email}</p>
+>>>>>>> e986e4995d075217361f19c67c4127922999b5e7
           </div>
         </aside>
 
@@ -419,14 +453,14 @@ function ProfilePanel({ onLogout }) {
             {fields.map(([label, name, type, Icon]) => (
               <div key={name} className="grid gap-2 border-b border-slate-100 py-5 last:border-none md:grid-cols-[145px_minmax(0,1fr)] md:items-center">
                 <div className="flex items-center gap-3 text-sm font-bold text-slate-500">
-                  <Icon size={17} className="text-[#5B50BC]" /> {label}
+                  <Icon size={17} className="text-[#7451E8]" /> {label}
                 </div>
                 {editing ? (
                   <input
                     type={type}
                     value={form[name]}
                     onChange={(e) => setForm({ ...form, [name]: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 p-3 text-sm font-semibold outline-none focus:border-[#5B50BC]"
+                    className="w-full rounded-xl border border-slate-200 p-3 text-sm font-semibold outline-none focus:border-[#7451E8]"
                   />
                 ) : (
                   <p className="text-sm font-semibold text-slate-800">{user[name] || "Not provided"}</p>
@@ -439,7 +473,7 @@ function ProfilePanel({ onLogout }) {
               <button onClick={() => setEditing(false)} className="px-4 py-2 text-sm font-bold text-slate-500">
                 Cancel
               </button>
-              <button onClick={save} disabled={saving} className="rounded-full bg-[#5B50BC] px-6 py-2 text-sm font-bold text-white shadow-sm">
+              <button onClick={save} disabled={saving} className="rounded-full bg-[#7451E8] px-6 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#603ed6]">
                 {saving ? "Saving…" : "Save changes"}
               </button>
             </div>
@@ -486,8 +520,39 @@ function UserDashboard() {
     navigate("/login");
   };
 
+  const statCardsData = [
+    {
+      Icon: CircleDollarSign,
+      label: "Raised by your campaigns",
+      value: money(metrics.raised),
+      bg: "bg-emerald-50",
+      text: "text-emerald-600",
+    },
+    {
+      Icon: Target,
+      label: "Combined campaign goals",
+      value: money(metrics.goal),
+      bg: "bg-[#F3F0FF]",
+      text: "text-[#7451E8]",
+    },
+    {
+      Icon: BarChart3,
+      label: "Active campaigns",
+      value: metrics.active,
+      bg: "bg-amber-50",
+      text: "text-amber-600",
+    },
+    {
+      Icon: Heart,
+      label: "Your total donations",
+      value: money(metrics.donatedAmount),
+      bg: "bg-rose-50",
+      text: "text-rose-600",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#f7f7fb]">
+    <div className="min-h-screen bg-[#F8FAFC]">
       <div className="mx-auto max-w-[1440px] px-4 py-4 sm:px-6 lg:grid lg:grid-cols-[264px_minmax(0,1fr)] lg:gap-8">
         <DashboardSidebar
           onLogout={handleLogout}
@@ -507,14 +572,14 @@ function UserDashboard() {
             <ProfilePanel onLogout={handleLogout} />
           ) : (
             <>
-              {/* OVERVIEW HERO */}
+              {/* OVERVIEW HERO BANNER */}
               <motion.section
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative flex overflow-hidden flex-col gap-6 rounded-[2rem] bg-[#5B50BC] p-7 text-white shadow-md md:flex-row md:items-center md:justify-between md:p-10"
+                className="relative flex overflow-hidden flex-col gap-6 rounded-[2rem] bg-[#7451E8] p-7 text-white shadow-md md:flex-row md:items-center md:justify-between md:p-10"
               >
                 <div>
-                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-white/70">
+                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFC72C]">
                     Your Givera home
                   </p>
                   <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">
@@ -528,13 +593,13 @@ function UserDashboard() {
                   <button
                     type="button"
                     onClick={() => setActiveSection("browse")}
-                    className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-[#5B50BC] shadow-sm"
+                    className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-[#7451E8] shadow-sm hover:bg-slate-100 transition"
                   >
                     <Compass size={18} /> Browse
                   </button>
                   <Link
                     to="/campaigns/create"
-                    className="inline-flex items-center gap-2 rounded-full bg-white/20 border border-white/30 px-5 py-3 font-bold text-white hover:bg-white/30"
+                    className="inline-flex items-center gap-2 rounded-full bg-[#FFC72C] px-5 py-3 font-bold text-[#7451E8] shadow-md hover:bg-amber-300 transition"
                   >
                     <Plus size={18} /> Request Campaign
                   </Link>
@@ -543,12 +608,7 @@ function UserDashboard() {
 
               {/* STATS OVERVIEW CARDS */}
               <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {[
-                  [CircleDollarSign, "Raised by your campaigns", money(metrics.raised)],
-                  [Target, "Combined campaign goals", money(metrics.goal)],
-                  [BarChart3, "Active campaigns", metrics.active],
-                  [Heart, "Your total donations", money(metrics.donatedAmount)],
-                ].map(([Icon, label, value], index) => (
+                {statCardsData.map(({ Icon, label, value, bg, text }, index) => (
                   <motion.article
                     key={label}
                     initial={{ opacity: 0, y: 14 }}
@@ -556,10 +616,10 @@ function UserDashboard() {
                     transition={{ delay: 0.08 * index }}
                     className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
                   >
-                    <span className="inline-grid rounded-xl p-2.5 bg-[#5B50BC]/10 text-[#5B50BC]">
-                      <Icon size={21} />
+                    <span className={`inline-grid rounded-xl p-3 ${bg} ${text}`}>
+                      <Icon size={22} />
                     </span>
-                    <p className="mt-5 text-sm text-slate-500">{label}</p>
+                    <p className="mt-4 text-sm font-medium text-slate-500">{label}</p>
                     <p className="mt-1 text-2xl font-extrabold text-slate-900">
                       {loading ? "—" : value}
                     </p>
@@ -572,10 +632,12 @@ function UserDashboard() {
                 <article className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-bold text-[#5B50BC]">CAMPAIGN PERFORMANCE</p>
+                      <p className="text-xs font-bold tracking-wider text-[#7451E8] uppercase">CAMPAIGN PERFORMANCE</p>
                       <h2 className="mt-1 text-2xl font-extrabold text-slate-900">Funds raised</h2>
                     </div>
-                    <BarChart3 className="text-[#5B50BC]" />
+                    <div className="p-2.5 bg-[#F3F0FF] text-[#7451E8] rounded-xl">
+                      <BarChart3 size={20} />
+                    </div>
                   </div>
                   <div className="mt-8 space-y-5">
                     {owned.length ? (
@@ -585,14 +647,14 @@ function UserDashboard() {
                           <div key={campaign.id}>
                             <div className="mb-2 flex justify-between gap-4 text-sm">
                               <span className="truncate font-semibold text-slate-800">{campaign.title}</span>
-                              <span className="shrink-0 text-slate-500">{money(campaign.amount_raised)}</span>
+                              <span className="shrink-0 font-medium text-slate-500">{money(campaign.amount_raised)}</span>
                             </div>
                             <div className="h-3 overflow-hidden rounded-full bg-slate-100">
                               <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${percentage}%` }}
                                 transition={{ duration: 0.8 }}
-                                className="h-full rounded-full bg-[#5B50BC]"
+                                className="h-full rounded-full bg-[#FFC72C]"
                               />
                             </div>
                           </div>
