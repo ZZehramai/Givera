@@ -57,3 +57,50 @@ class DonationApiTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["campaign"]["id"], str(self.campaign.id))
+
+    def test_demo_checkout_only_records_donation_after_confirmation(self):
+        checkout = self.client.post(
+            "/api/donations/demo-checkout/",
+            {
+                "campaign_id": self.campaign.id,
+                "provider": "kbzpay",
+                "amount": "25.00",
+                "message": "Demo support",
+            },
+            format="json",
+        )
+
+        self.assertEqual(checkout.status_code, 201)
+        self.assertEqual(checkout.data["status"], "pending")
+        self.assertTrue(checkout.data["transaction_reference"].startswith("GIV-"))
+        self.assertIsNotNone(checkout.data["expires_at"])
+        self.assertEqual(Donation.objects.count(), 0)
+
+        response = self.client.post(
+            f'/api/donations/demo-checkout/{checkout.data["id"]}/simulate/',
+            {"outcome": "success"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["status"], "paid")
+        self.assertEqual(Donation.objects.count(), 1)
+        self.campaign.refresh_from_db()
+        self.assertEqual(self.campaign.amount_raised, Decimal("25.00"))
+
+    def test_failed_demo_payment_does_not_create_a_donation(self):
+        checkout = self.client.post(
+            "/api/donations/demo-checkout/",
+            {"campaign_id": self.campaign.id, "provider": "wave", "amount": "5000.00"},
+            format="json",
+        )
+
+        response = self.client.post(
+            f'/api/donations/demo-checkout/{checkout.data["id"]}/simulate/',
+            {"outcome": "failed"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], "failed")
+        self.assertEqual(Donation.objects.count(), 0)

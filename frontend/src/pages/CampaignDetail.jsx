@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { CheckCircle2, Heart, MessageCircleHeart, Send, Sparkles } from "lucide-react";
+import { CheckCircle2, Heart, MessageCircleHeart, Send, ShieldCheck, Smartphone, Sparkles, X } from "lucide-react";
 
 import api from "../api/axios";
 // import AppHeader from "../components/AppHeader";
@@ -19,6 +19,10 @@ export default function CampaignDetail() {
   const [donating, setDonating] = useState(false);
   const [donationError, setDonationError] = useState("");
   const [donationSuccess, setDonationSuccess] = useState("");
+  const [provider, setProvider] = useState("kbzpay");
+  const [checkout, setCheckout] = useState(null);
+  const [receipt, setReceipt] = useState(null);
+  const [secondsRemaining, setSecondsRemaining] = useState(0);
   const [updates, setUpdates] = useState([]);
   const [updateTitle, setUpdateTitle] = useState("");
   const [updateBody, setUpdateBody] = useState("");
@@ -35,6 +39,14 @@ export default function CampaignDetail() {
       })
       .catch(() => setError("This campaign could not be found."));
   }, [id]);
+
+  useEffect(() => {
+    if (!checkout?.expires_at) return undefined;
+    const updateCountdown = () => setSecondsRemaining(Math.max(0, Math.ceil((new Date(checkout.expires_at).getTime() - Date.now()) / 1000)));
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, [checkout]);
 
   const publishUpdate = async (event) => {
     event.preventDefault();
@@ -61,24 +73,20 @@ export default function CampaignDetail() {
     setDonationError("");
     setDonationSuccess("");
     const numericAmount = Number(amount);
-    if (!numericAmount || numericAmount < 1) {
-      setDonationError("Enter a donation of at least $1.");
+    if (!numericAmount || numericAmount < 1000) {
+      setDonationError("Enter a donation of at least 1,000 Ks.");
       return;
     }
     setDonating(true);
     try {
-      await api.post("/donations/", {
+      const { data } = await api.post("/donations/demo-checkout/", {
         campaign_id: id,
+        provider,
         amount: numericAmount,
         message,
         is_anonymous: anonymous,
       });
-      const refreshed = await api.get(`/campaigns/${id}/`);
-      setCampaign(refreshed.data);
-      setDonationSuccess(`Thank you! Your ${numericAmount.toLocaleString("en-US", { style: "currency", currency: "USD" })} donation was recorded.`);
-      setAmount("");
-      setMessage("");
-      setAnonymous(false);
+      setCheckout(data);
     } catch (requestError) {
       const data = requestError.response?.data;
       setDonationError(
@@ -87,6 +95,32 @@ export default function CampaignDetail() {
         data?.detail ||
         "Your donation could not be recorded. Please try again.",
       );
+    } finally {
+      setDonating(false);
+    }
+  };
+
+  const simulateDemoPayment = async (outcome) => {
+    if (!checkout) return;
+    setDonating(true);
+    setDonationError("");
+    try {
+      const { data } = await api.post(`/donations/demo-checkout/${checkout.id}/simulate/`, { outcome });
+      if (outcome !== "success") {
+        setCheckout(null);
+        setDonationError(data.failure_reason || `Demo payment ${data.status}. You can try again whenever you’re ready.`);
+        return;
+      }
+      const refreshed = await api.get(`/campaigns/${id}/`);
+      setCampaign(refreshed.data);
+      setDonationSuccess(`Demo complete — your ${Number(checkout.amount).toLocaleString()} Ks donation was recorded. No money was transferred.`);
+      setReceipt(data);
+      setAmount("");
+      setMessage("");
+      setAnonymous(false);
+      setCheckout(null);
+    } catch (requestError) {
+      setDonationError(requestError.response?.data?.detail || "The demo payment could not be completed. Please try again.");
     } finally {
       setDonating(false);
     }
@@ -192,21 +226,21 @@ export default function CampaignDetail() {
                 <form onSubmit={donate} className="mt-7">
                   <label className="text-sm font-bold" htmlFor="donation-amount">Donation amount</label>
                   <div className="mt-2 flex rounded-xl border border-outline-variant bg-surface focus-within:border-primary">
-                    <span className="grid w-12 place-items-center border-r border-outline-variant font-bold text-primary">$</span>
+                    <span className="grid w-12 place-items-center border-r border-outline-variant text-xs font-bold text-primary">Ks</span>
                     <input
                       id="donation-amount"
                       type="number"
-                      min="1"
-                      step="0.01"
+                      min="1000"
+                      step="1000"
                       value={amount}
                       onChange={(event) => setAmount(event.target.value)}
-                      placeholder="25"
+                      placeholder="10000"
                       className="min-w-0 flex-1 bg-transparent px-4 py-3 outline-none"
                     />
                   </div>
                   <div className="mt-3 grid grid-cols-4 gap-2">
-                    {[10, 25, 50, 100].map((preset) => (
-                      <button key={preset} type="button" onClick={() => setAmount(String(preset))} className="rounded-lg bg-surface-container px-2 py-2 text-sm font-bold text-primary hover:bg-primary-fixed">${preset}</button>
+                    {[5000, 10000, 20000, 50000].map((preset) => (
+                      <button key={preset} type="button" onClick={() => setAmount(String(preset))} className="rounded-lg bg-surface-container px-2 py-2 text-xs font-bold text-primary hover:bg-primary-fixed">{preset.toLocaleString()} Ks</button>
                     ))}
                   </div>
                   <label className="mt-4 block text-sm font-bold" htmlFor="donation-message">Message <span className="font-normal text-on-surface-variant">(optional)</span></label>
@@ -215,12 +249,23 @@ export default function CampaignDetail() {
                     <input type="checkbox" checked={anonymous} onChange={(event) => setAnonymous(event.target.checked)} className="h-4 w-4 accent-primary" />
                     Show my donation as anonymous
                   </label>
+                  <fieldset className="mt-5">
+                    <legend className="text-sm font-bold">Demo payment method</legend>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      {[['kbzpay', 'KBZPay'], ['wave', 'Wave'], ['mmqr', 'MMQR']].map(([value, label]) => (
+                        <label key={value} className={`cursor-pointer rounded-xl border px-2 py-2.5 text-center text-xs font-extrabold transition ${provider === value ? "border-primary bg-primary-fixed text-primary" : "border-outline-variant text-on-surface-variant"}`}>
+                          <input type="radio" name="demo-provider" value={value} checked={provider === value} onChange={(event) => setProvider(event.target.value)} className="sr-only" />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
                   {donationError && <p className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{donationError}</p>}
                   <button type="submit" disabled={donating} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60">
                     <Heart size={19} />
-                    {donating ? "Recording donation…" : "Donate now"}
+                    {donating ? "Opening demo checkout…" : "Continue to demo payment"}
                   </button>
-                  <p className="mt-3 text-center text-xs leading-5 text-on-surface-variant">Demo donations are recorded immediately. No real payment is processed.</p>
+                  <p className="mt-3 text-center text-xs leading-5 text-on-surface-variant">Demo only — no wallet is opened and no real payment is processed.</p>
                 </form>
               ) : (
                 <div className="mt-7">
@@ -232,6 +277,29 @@ export default function CampaignDetail() {
           </aside>
         </div>
       </main>
+      {checkout && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-on-surface/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="demo-checkout-title">
+          <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-start justify-between bg-primary px-6 py-5 text-white">
+              <div><p className="text-xs font-bold uppercase tracking-widest text-primary-fixed">Safe demonstration</p><h2 id="demo-checkout-title" className="mt-1 text-xl font-extrabold">{checkout.provider_label} checkout</h2></div>
+              <button type="button" onClick={() => setCheckout(null)} disabled={donating} aria-label="Close demo checkout" className="rounded-lg p-1 hover:bg-white/10 disabled:opacity-50"><X /></button>
+            </div>
+            <div className="p-6 text-center">
+              <div className="mx-auto grid h-24 w-24 grid-cols-3 gap-1 rounded-2xl bg-surface-container-low p-3 text-primary" aria-label="Non-scannable demo QR visual">{Array.from({ length: 9 }, (_, index) => <span key={index} className={`rounded-sm ${[0, 1, 3, 4, 8].includes(index) ? "bg-primary" : "bg-primary/20"}`} />)}</div>
+              <p className="mt-5 text-2xl font-extrabold text-on-surface">{Number(checkout.amount).toLocaleString()} Ks</p>
+              <p className="mt-1 text-sm text-on-surface-variant">to {campaign.title}</p>
+              <div className="mt-4 flex items-center justify-between rounded-xl bg-surface-container-low px-4 py-3 text-left text-xs"><span className="font-bold text-on-surface-variant">Reference</span><span className="font-extrabold text-on-surface">{checkout.transaction_reference}</span></div>
+              <p className={`mt-3 text-xs font-bold ${secondsRemaining ? "text-on-surface-variant" : "text-rose-600"}`}>{secondsRemaining ? `Demo session expires in ${String(Math.floor(secondsRemaining / 60)).padStart(2, "0")}:${String(secondsRemaining % 60).padStart(2, "0")}` : "Demo session expired — start again."}</p>
+              <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left text-sm text-amber-900"><div className="flex gap-2 font-bold"><ShieldCheck className="shrink-0" size={18} />No real payment</div><p className="mt-1 leading-5">This visual cannot be scanned. It demonstrates the provider return and callback states without a wallet, account, or bank connection.</p></div>
+              <button type="button" onClick={() => simulateDemoPayment("success")} disabled={donating || !secondsRemaining} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 font-bold text-white disabled:opacity-60"><CheckCircle2 size={19} />{donating ? "Completing demo…" : "Simulate successful payment"}</button>
+              <div className="mt-3 grid grid-cols-2 gap-3"><button type="button" onClick={() => simulateDemoPayment("failed")} disabled={donating || !secondsRemaining} className="rounded-xl bg-rose-50 px-3 py-2.5 text-xs font-bold text-rose-700 disabled:opacity-50">Simulate failed payment</button><button type="button" onClick={() => simulateDemoPayment("cancelled")} disabled={donating} className="rounded-xl bg-surface-container px-3 py-2.5 text-xs font-bold text-on-surface-variant disabled:opacity-50">Cancel demo payment</button></div>
+            </div>
+          </div>
+        </div>
+      )}
+      {receipt && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-on-surface/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="demo-receipt-title"><div className="w-full max-w-md rounded-3xl bg-white p-7 shadow-2xl"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-emerald-700"><CheckCircle2 size={30} /></div><p className="mt-4 text-center text-xs font-bold uppercase tracking-widest text-primary">Demo receipt</p><h2 id="demo-receipt-title" className="mt-1 text-center text-2xl font-extrabold">Donation completed</h2><div className="mt-6 space-y-3 rounded-2xl bg-surface-container-low p-5 text-sm"><div className="flex justify-between gap-4"><span>Amount</span><strong>{Number(receipt.amount).toLocaleString()} Ks</strong></div><div className="flex justify-between gap-4"><span>Method</span><strong>{receipt.provider_label}</strong></div><div className="flex justify-between gap-4"><span>Reference</span><strong className="text-right">{receipt.transaction_reference}</strong></div><div className="flex justify-between gap-4"><span>Status</span><strong className="text-emerald-700">Completed</strong></div></div><p className="mt-5 text-center text-xs leading-5 text-on-surface-variant">DEMO PAYMENT — no funds were transferred.</p><button type="button" onClick={() => setReceipt(null)} className="mt-5 w-full rounded-xl bg-primary px-5 py-3 font-bold text-white">Done</button></div></div>
+      )}
     </div>
   );
 }
