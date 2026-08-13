@@ -68,7 +68,7 @@ export function LandingPage() {
   useEffect(() => {
     let active = true;
     api.get("/campaigns/")
-      .then(({ data }) => active && setFeatured(data.slice(0, 3)))
+      .then(({ data }) => active && setFeatured(data.slice(0, 5)))
       .catch(() => active && setFeatured([]));
     return () => { active = false; };
   }, []);
@@ -90,6 +90,9 @@ export function LandingPage() {
       setIsSubscribed(false);
     }, 5000);
   };
+
+  const mainCampaign = featured[0];
+  const sideCampaigns = featured.slice(1, 5);
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -126,180 +129,24 @@ export function LandingPage() {
                   </Link>
                 </motion.div>
               </div>
-                                <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-slate-600">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="h-5 w-5 text-primary" />
-                      <span>Verified Campaigns</span>
-                    </div>
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-slate-600">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  <span>Verified Campaigns</span>
+                </div>
 
-                    <div className="flex items-center gap-2">
-                      <Gift className="h-5 w-5 text-yellow-500" />
-                      <span>100% Community Driven</span>
-                    </div>
+                <div className="flex items-center gap-2">
+                  <Gift className="h-5 w-5 text-yellow-500" />
+                  <span>100% Community Driven</span>
+                </div>
 
-                    <div className="flex items-center gap-2">
-                      <Heart className="h-5 w-5 text-rose-500 fill-rose-200" />
-                      <span>Thousands of Donors</span>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Heart className="h-5 w-5 text-rose-500 fill-rose-200" />
+                  <span>Thousands of Donors</span>
+                </div>
+              </div>
             </motion.div>
           </div>
-
-{/* POLAROID GALLERY
-<motion.div
-  className="relative mt-20 w-full max-w-none pb-10 pt-6"
-  initial={{ opacity: 0, y: 30 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.75, delay: 0.15, ease: "easeOut" }}
->
-  {/* Decorative Dashed Line */}
-  {/* <svg
-    className="pointer-events-none absolute left-0 top-10 -z-0 hidden h-28 w-full lg:block"
-    viewBox="0 0 1400 120"
-    fill="none"
-    preserveAspectRatio="none"
-  >
-    <defs>
-      <linearGradient id="heroLine" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#A855F7" />
-        <stop offset="100%" stopColor="#FACC15" />
-      </linearGradient>
-    </defs>
-
-    <path
-      d="M0,20 Q700,110 1400,20"
-      stroke="url(#heroLine)"
-      strokeWidth="3"
-      strokeDasharray="8 8"
-    />
-  </svg> */}
-
-  {/* <div className="relative z-10 flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-12 px-6">
-
-    {/* CARD 1 */}
-    {/* <motion.div
-      whileHover={{ scale: 1.05, rotate: 0, y: -8 }}
-      transition={{ duration: 0.3 }}
-      className="relative w-48 shrink-0 -rotate-12 rounded-3xl border border-gray-200 bg-gradient-to-b from-white to-purple-50 p-3.5 shadow-xl md:w-64"
-    >
-      <div className="absolute -top-3 left-1/2 h-5 w-5 -translate-x-1/2 rounded-full bg-gradient-to-br from-green-300 to-green-500 ring-4 ring-green-100 shadow-md" />
-
-      <div className="overflow-hidden rounded-2xl">
-        <img
-          src={communityHeroImage}
-          alt="Volunteers"
-          className="aspect-[4/3] w-full object-cover transition duration-700 hover:scale-110"
-        />
-      </div>
-
-      <div className="mt-4">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-primary" />
-          <p className="font-bold text-primary">
-            Reviewed with Care
-          </p>
-        </div>
-
-        <p className="mt-2 text-sm text-slate-600">
-          Every campaign is reviewed before reaching donors.
-        </p>
-      </div>
-    </motion.div> */}
-
-    {/* CARD 2 */}
-    {/* <motion.div
-      whileHover={{ scale: 1.05, rotate: 0, y: -8 }}
-      transition={{ duration: 0.3 }}
-      className="relative w-48 shrink-0 -rotate-6 rounded-3xl border border-gray-200 bg-white p-3.5 shadow-xl md:w-64"
-    >
-      <div className="absolute -top-3 left-1/2 h-5 w-5 -translate-x-1/2 rounded-full bg-gradient-to-br from-green-300 to-green-500 ring-4 ring-green-100 shadow-md" />
-
-      <div className="overflow-hidden rounded-2xl">
-        <img
-          src={communityHeroImage}
-          alt="Community"
-          className="aspect-[4/3] w-full object-cover transition duration-700 hover:scale-110 brightness-95"
-        />
-      </div>
-
-      <div className="mt-4">
-        <div className="flex items-center gap-2">
-          <Heart className="h-5 w-5 text-primary fill-primary" />
-          <p className="font-bold text-primary">
-            Community Powered
-          </p>
-        </div>
-
-        <p className="mt-2 text-sm text-slate-600">
-          Every donation helps real people and real communities.
-        </p>
-      </div>
-    </motion.div> */}
-
-    {/* FEATURED CARD */}
-    {/* <motion.div
-      whileHover={{ scale: 1.08, y: -10 }}
-      transition={{ duration: 0.3 }}
-      className="relative z-20 w-56 shrink-0 rounded-3xl border-2 border-gray-200 bg-white p-4 shadow-[0_30px_70px_rgba(168,85,247,0.22)] md:w-72 lg:-translate-y-5"
-    >
-      <div className="absolute -top-3 left-1/2 h-5 w-5 -translate-x-1/2 rounded-full bg-gradient-to-br from-green-300 to-green-500 ring-4 ring-green-100 shadow-md" />
-
-      <div className="overflow-hidden rounded-2xl">
-        <img
-          src={communityHeroImage}
-          alt="Donation"
-          className="aspect-[16/11] w-full object-cover transition duration-700 hover:scale-110"
-        />
-      </div>
-
-      <div className="mt-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <p className="font-bold text-primary text-lg">
-            Trusted Giving
-          </p>
-        </div>
-
-        <p className="mt-2 text-sm text-slate-600">
-          Transparent fundraising with verified campaigns and measurable impact.
-        </p>
-      </div>
-    </motion.div> */}
-
-    {/* CARD 4 */}
-    {/* <motion.div
-      whileHover={{ scale: 1.05, rotate: 0, y: -8 }}
-      transition={{ duration: 0.3 }}
-      className="relative w-48 shrink-0 rotate-6 rounded-3xl border border-gray-200 bg-white p-3.5 shadow-xl md:w-64"
-    >
-      <div className="absolute -top-3 left-1/2 h-5 w-5 -translate-x-1/2 rounded-full bg-gradient-to-br from-green-300 to-green-500 ring-4 ring-green-100 shadow-md" />
-
-      <div className="overflow-hidden rounded-2xl">
-        <img
-          src={communityHeroImage}
-          alt="Impact"
-          className="aspect-[4/3] w-full object-cover transition duration-700 hover:scale-110 contrast-105"
-        />
-      </div>
-
-      <div className="mt-4">
-        <div className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-primary" />
-          <p className="font-bold text-primary">
-            Real Impact
-          </p>
-        </div>
-
-        <p className="mt-2 text-sm text-slate-600">
-          Follow donations and see the difference your generosity creates.
-        </p>
-      </div>
-    </motion.div> */}
-
-  {/* </div> */} 
-{/* </motion.div>  */}
-
-          
 
           {/* POLAROID GALLERY */}
           <motion.div
@@ -403,33 +250,49 @@ export function LandingPage() {
         </section>
 
         {/* CAMPAIGNS SECTION */}
-        <section id="campaigns" className="scroll-mt-28 bg-surface-container-low py-20">
+        <section id="campaigns" className="scroll-mt-28 bg-[#FAF8F5] py-20">
           <div className="mx-auto max-w-container-max px-6">
-            <div className="flex flex-wrap items-end justify-between gap-5">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Open your heart</p>
-                <h2 className="mt-2 text-3xl font-extrabold md:text-4xl">Stories seeking support</h2>
-                <p className="mt-3 text-on-surface-variant">Recently approved campaigns from people in the Givera community.</p>
+            
+            {/* STYLISH SECTION HEADER */}
+            <div className="mb-10 flex flex-wrap items-end justify-between gap-6 border-b border-slate-200/60 pb-8 dark:border-slate-800">
+              <div className="max-w-2xl">
+                <h2 className="text-4xl font-black tracking-tight sm:text-5xl md:text-6xl">
+                  <span className="bg-gradient-to-r from-slate-900 via-primary to-emerald-600 bg-clip-text text-transparent dark:from-white dark:via-purple-300 dark:to-emerald-400">
+                    Campaigns
+                  </span>
+                </h2>
+                
+                <p className="mt-3 text-base font-medium leading-relaxed text-on-surface-variant md:text-lg">
+                  Recently approved campaigns from people in the Givera community.
+                </p>
               </div>
-              <Link to="/campaigns" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-primary shadow-sm transition hover:shadow-md">
-                Browse all <ArrowRight size={18} aria-hidden="true" />
+
+              {/* Browse All Button */}
+              <Link 
+                to="/campaigns" 
+                className="group inline-flex items-center gap-2.5 rounded-full border border-slate-300 bg-white px-6 py-3.5 text-sm font-bold text-slate-800 shadow-sm transition-all duration-300 hover:border-primary hover:bg-slate-50 hover:shadow-md"
+              >
+                <span>Browse all</span>
+                <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1 text-primary" aria-hidden="true" />
               </Link>
             </div>
+
+            {/* CAMPAIGNS GRID */}
             {featured.length ? (
-              <div className="mt-10 grid gap-7 md:grid-cols-2 lg:grid-cols-3">
-                {featured.map((campaign, index) => (
-                  <motion.div
-                    key={campaign.id}
-                    className="h-full"
-                    initial={{ opacity: 0, y: 18 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ duration: 0.45, delay: index * 0.1 }}
-                    whileHover={{ y: -5 }}
-                  >
-                    <CampaignCard campaign={campaign} />
-                  </motion.div>
-                ))}
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                {/* Main Large Card (Left side) */}
+                {mainCampaign && (
+                  <div className="lg:col-span-6 flex flex-col">
+                    <CampaignCard campaign={mainCampaign} isFeatured={true} />
+                  </div>
+                )}
+
+                {/* 2x2 Grid of Cards (Right side) */}
+                <div className="lg:col-span-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  {sideCampaigns.map((campaign) => (
+                    <CampaignCard key={campaign.id} campaign={campaign} />
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="mt-10 rounded-[2rem] border border-outline-variant/50 bg-white px-6 py-14 text-center">
