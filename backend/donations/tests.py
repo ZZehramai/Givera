@@ -104,3 +104,17 @@ class DonationApiTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["status"], "failed")
         self.assertEqual(Donation.objects.count(), 0)
+
+    def test_admin_donation_list_is_paginated_and_contains_transaction_details(self):
+        admin = User.objects.create_user(username="admin", email="admin@example.com", password="test-password", role=User.Role.ADMIN)
+        donation = Donation.objects.create(donor=self.donor, campaign=self.campaign, amount=Decimal("1000.00"))
+        self.client.force_authenticate(admin)
+
+        response = self.client.get("/api/donations/admin/all/?page=1&page_size=10")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("results", response.data)
+        record = next(item for item in response.data["results"] if item["id"] == str(donation.id))
+        self.assertEqual(record["donor_email"], self.donor.email)
+        self.assertEqual(record["campaign_title"], self.campaign.title)
+        self.assertEqual(record["payment_status"], "recorded")

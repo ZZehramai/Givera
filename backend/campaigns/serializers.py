@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import Campaign, CampaignUpdate
+from .models import Campaign, CampaignUpdate, FundUtilization
 
 
 class CampaignSerializer(serializers.ModelSerializer):
@@ -104,3 +104,27 @@ class CampaignUpdateSerializer(serializers.ModelSerializer):
 
     def get_author_name(self, obj):
         return obj.author.get_full_name() or obj.author.username
+
+
+class FundUtilizationSerializer(serializers.ModelSerializer):
+    status_label = serializers.CharField(source="get_status_display", read_only=True)
+
+    class Meta:
+        model = FundUtilization
+        fields = ["id", "campaign", "submitted_by", "title", "description", "amount_spent", "spent_on", "evidence", "status", "status_label", "review_note", "reviewed_at", "created_at", "updated_at"]
+        read_only_fields = ["id", "campaign", "submitted_by", "status", "status_label", "review_note", "reviewed_at", "created_at", "updated_at"]
+
+    def validate_evidence(self, value):
+        if value and value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError("Evidence image must be 5 MB or smaller.")
+        return value
+
+
+class FundUtilizationReviewSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=[FundUtilization.Status.APPROVED, FundUtilization.Status.REJECTED])
+    review_note = serializers.CharField(max_length=500, required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        if attrs["status"] == FundUtilization.Status.REJECTED and not attrs.get("review_note", "").strip():
+            raise serializers.ValidationError({"review_note": "Explain what needs to be changed."})
+        return attrs

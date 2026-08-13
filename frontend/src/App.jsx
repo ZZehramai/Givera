@@ -5,7 +5,7 @@ import Profile from "./pages/Profile";
 import { Register } from "./pages/Register";
 import { Login } from "./pages/Login";
 import AdminCampaigns from "./pages/AdminCampaigns";
-import CampaignDetail from "./pages/CampaignDetail";
+import CampaignDetail from "./pages/CampaignDetailReference";
 import Campaigns from "./pages/Campaigns";
 import CreateCampaign from "./pages/CreateCampaign";
 import MyCampaigns from "./pages/MyCampaigns";

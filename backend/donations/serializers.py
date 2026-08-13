@@ -42,6 +42,41 @@ class DonationSerializer(serializers.ModelSerializer):
         return campaign
 
 
+class AdminDonationSerializer(DonationSerializer):
+    donor_email = serializers.EmailField(source="donor.email", read_only=True)
+    donor_phone_number = serializers.CharField(source="donor.phone_number", read_only=True)
+    campaign_title = serializers.CharField(source="campaign.title", read_only=True)
+    campaign_owner_name = serializers.SerializerMethodField()
+    payment_reference = serializers.SerializerMethodField()
+    payment_method = serializers.SerializerMethodField()
+    payment_status = serializers.SerializerMethodField()
+    payment_status_label = serializers.SerializerMethodField()
+
+    class Meta(DonationSerializer.Meta):
+        fields = DonationSerializer.Meta.fields + [
+            "donor_email", "donor_phone_number", "campaign_title", "campaign_owner_name",
+            "payment_reference", "payment_method", "payment_status", "payment_status_label",
+        ]
+
+    def get_campaign_owner_name(self, obj):
+        return obj.campaign.owner.get_full_name() or obj.campaign.owner.username
+
+    def get_payment_reference(self, obj):
+        return getattr(getattr(obj, "demo_payment", None), "transaction_reference", "—")
+
+    def get_payment_method(self, obj):
+        payment = getattr(obj, "demo_payment", None)
+        return payment.get_provider_display() if payment else "Manual record"
+
+    def get_payment_status(self, obj):
+        payment = getattr(obj, "demo_payment", None)
+        return payment.status if payment else "recorded"
+
+    def get_payment_status_label(self, obj):
+        payment = getattr(obj, "demo_payment", None)
+        return payment.get_status_display() if payment else "Recorded"
+
+
 class DemoPaymentCreateSerializer(serializers.ModelSerializer):
     campaign_id = serializers.PrimaryKeyRelatedField(
         source="campaign", queryset=Campaign.objects.all(), write_only=True

@@ -78,3 +78,9 @@ summary::-webkit-details-marker { display: none; }
 @utility ambient-shadow {
   box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.03);
 }
+/* The campaign donation panel must grow with its form content. */
+@media (min-width: 1024px) {
+  .lg\:h-\[504px\] {
+    height: auto !important;
+  }
+}

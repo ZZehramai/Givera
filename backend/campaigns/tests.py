@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Campaign
+from .models import Campaign, FundUtilization
 from accounts.models import Notification
 from donations.models import Donation
 
@@ -134,3 +134,38 @@ class CampaignApiTests(APITestCase):
         notification = Notification.objects.get(recipient=donor)
         self.assertEqual(notification.type, Notification.Type.CAMPAIGN_UPDATE)
         self.assertEqual(notification.link, f"/campaigns/{campaign.pk}")
+
+    def test_public_donor_list_hides_anonymous_donor_identity(self):
+        donor = User.objects.create_user(email="donor@example.com", username="donor", password="StrongPassword123!")
+        campaign = Campaign.objects.create(owner=self.owner, status=Campaign.Status.APPROVED, **self.payload)
+        Donation.objects.create(donor=donor, campaign=campaign, amount="2500.00", is_anonymous=True)
+
+        response = self.client.get(reverse("campaign-donors", kwargs={"pk": campaign.pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]["donor_name"], "Anonymous")
+        self.assertEqual(str(response.data[0]["amount"]), "2500.00")
+
+    def test_only_admin_can_publish_utilization(self):
+        campaign = Campaign.objects.create(owner=self.owner, status=Campaign.Status.APPROVED, **self.payload)
+        self.client.force_authenticate(self.owner)
+        denied = self.client.post(
+            reverse("fund-utilization", kwargs={"pk": campaign.pk}),
+            {"title": "Bought books", "description": "Books for the library shelves.", "amount_spent": "2000.00", "spent_on": str(timezone.localdate())},
+            format="json",
+        )
+        self.assertEqual(denied.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.client.force_authenticate(self.admin)
+        created = self.client.post(
+            reverse("fund-utilization", kwargs={"pk": campaign.pk}),
+            {"title": "Bought books", "description": "Books for the library shelves.", "amount_spent": "2000.00", "spent_on": str(timezone.localdate())},
+            format="json",
+        )
+        self.assertEqual(created.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(created.data["status"], FundUtilization.Status.APPROVED)
+
+        self.client.force_authenticate(user=None)
+        public = self.client.get(reverse("fund-utilization", kwargs={"pk": campaign.pk}))
+        self.assertEqual(len(public.data), 1)
+        self.assertEqual(public.data[0]["title"], "Bought books")

@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
@@ -96,6 +97,35 @@ class CampaignUpdate(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.campaign.title}: {self.title}"
+
+
+class FundUtilization(models.Model):
+    """An administrator-published, evidence-backed record of campaign spending."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending review"
+        APPROVED = "approved", "Published"
+        REJECTED = "rejected", "Needs changes"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="fund_utilizations")
+    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="fund_utilizations")
+    title = models.CharField(max_length=160)
+    description = models.TextField(max_length=2000)
+    amount_spent = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("1.00"))])
+    spent_on = models.DateField()
+    evidence = models.ImageField(upload_to="fund-utilization/", blank=True, null=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    review_note = models.CharField(max_length=500, blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-spent_on", "-created_at"]
 
     def __str__(self):
         return f"{self.campaign.title}: {self.title}"

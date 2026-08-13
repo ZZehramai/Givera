@@ -9,5 +9,8 @@ urlpatterns = [
     path("admin/all/", views.AdminCampaignListView.as_view(), name="admin-campaigns"),
     path("<uuid:pk>/", views.CampaignDetailView.as_view(), name="campaign-detail"),
     path("<uuid:pk>/updates/", views.CampaignUpdateListCreateView.as_view(), name="campaign-updates"),
+    path("<uuid:pk>/donors/", views.CampaignDonorListView.as_view(), name="campaign-donors"),
+    path("<uuid:pk>/fund-utilization/", views.FundUtilizationListCreateView.as_view(), name="fund-utilization"),
+    path("<uuid:pk>/fund-utilization/<uuid:utilization_pk>/review/", views.FundUtilizationReviewView.as_view(), name="fund-utilization-review"),
     path("<uuid:pk>/review/", views.CampaignReviewView.as_view(), name="campaign-review"),
 ]

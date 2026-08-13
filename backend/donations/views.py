@@ -5,6 +5,7 @@ from django.utils import timezone
 from datetime import timedelta
 from uuid import uuid4
 from rest_framework import generics, permissions, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -12,7 +13,7 @@ from accounts.permissions import IsAdmin
 from campaigns.models import Campaign
 
 from .models import DemoPayment, Donation
-from .serializers import DemoPaymentCreateSerializer, DemoPaymentSerializer, DonationSerializer
+from .serializers import AdminDonationSerializer, DemoPaymentCreateSerializer, DemoPaymentSerializer, DonationSerializer
 
 
 class DonationCreateView(generics.CreateAPIView):
@@ -40,12 +41,31 @@ class MyDonationListView(generics.ListAPIView):
         )
 
 
+class AdminDonationPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 50
+
+
 class AdminDonationListView(generics.ListAPIView):
-    serializer_class = DonationSerializer
+    serializer_class = AdminDonationSerializer
     permission_classes = [IsAdmin]
+    pagination_class = AdminDonationPagination
 
     def get_queryset(self):
-        return Donation.objects.select_related("donor", "campaign", "campaign__owner")
+        queryset = Donation.objects.select_related("donor", "campaign", "campaign__owner").select_related("demo_payment")
+        query = self.request.query_params.get("q", "").strip()
+        if query:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(donor__email__icontains=query)
+                | Q(donor__username__icontains=query)
+                | Q(donor__first_name__icontains=query)
+                | Q(donor__last_name__icontains=query)
+                | Q(campaign__title__icontains=query)
+                | Q(demo_payment__transaction_reference__icontains=query)
+            )
+        return queryset
 
 
 class DemoPaymentCreateView(generics.CreateAPIView):

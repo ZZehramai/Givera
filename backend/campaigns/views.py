@@ -9,8 +9,8 @@ from rest_framework.views import APIView
 from accounts.models import Notification
 from accounts.permissions import IsAdmin
 
-from .models import Campaign, CampaignUpdate
-from .serializers import AdminCampaignSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer
+from .models import Campaign, CampaignUpdate, FundUtilization
+from .serializers import AdminCampaignSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer
 
 
 class CampaignListCreateView(generics.ListCreateAPIView):
@@ -193,3 +193,73 @@ class CampaignUpdateListCreateView(generics.ListCreateAPIView):
             if recipient_id != campaign.owner_id
         ]
         Notification.objects.bulk_create(notifications)
+
+
+class CampaignDonorListView(generics.ListAPIView):
+    """Public supporter list. Anonymous donors remain anonymous by design."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        campaign = get_object_or_404(Campaign, pk=kwargs["pk"], status=Campaign.Status.APPROVED)
+        from donations.models import Donation
+
+        donations = Donation.objects.filter(campaign=campaign).select_related("donor")
+        supporters = [
+            {
+                "id": str(donation.id),
+                "donor_name": "Anonymous" if donation.is_anonymous else (donation.donor.get_full_name() or donation.donor.username),
+                "amount": donation.amount,
+                "created_at": donation.created_at,
+            }
+            for donation in donations
+        ]
+        return Response(supporters)
+
+
+class FundUtilizationListCreateView(generics.ListCreateAPIView):
+    serializer_class = FundUtilizationSerializer
+
+    def get_permissions(self):
+        return [IsAdmin()] if self.request.method == "POST" else [permissions.AllowAny()]
+
+    def get_campaign(self):
+        campaign = get_object_or_404(Campaign.objects.select_related("owner"), pk=self.kwargs["pk"])
+        user = self.request.user
+        can_view = campaign.status == Campaign.Status.APPROVED or (user.is_authenticated and (campaign.owner == user or user.is_admin_role or user.is_staff))
+        if not can_view:
+            raise PermissionDenied("This campaign is not available.")
+        return campaign
+
+    def get_queryset(self):
+        campaign = self.get_campaign()
+        user = self.request.user
+        queryset = FundUtilization.objects.filter(campaign=campaign)
+        if not (user.is_authenticated and (campaign.owner == user or user.is_admin_role or user.is_staff)):
+            queryset = queryset.filter(status=FundUtilization.Status.APPROVED)
+        return queryset
+
+    def perform_create(self, serializer):
+        campaign = self.get_campaign()
+        if campaign.status not in {Campaign.Status.APPROVED, Campaign.Status.COMPLETED}:
+            raise ValidationError("Spending reports can only be added to an approved or completed campaign.")
+        serializer.save(
+            campaign=campaign,
+            submitted_by=self.request.user,
+            status=FundUtilization.Status.APPROVED,
+            reviewed_at=timezone.now(),
+        )
+
+
+class FundUtilizationReviewView(APIView):
+    permission_classes = [IsAdmin]
+
+    def patch(self, request, pk, utilization_pk):
+        utilization = get_object_or_404(FundUtilization, pk=utilization_pk, campaign_id=pk)
+        serializer = FundUtilizationReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        utilization.status = serializer.validated_data["status"]
+        utilization.review_note = serializer.validated_data.get("review_note", "")
+        utilization.reviewed_at = timezone.now()
+        utilization.save(update_fields=["status", "review_note", "reviewed_at", "updated_at"])
+        return Response(FundUtilizationSerializer(utilization).data)
