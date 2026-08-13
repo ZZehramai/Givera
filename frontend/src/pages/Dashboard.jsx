@@ -20,6 +20,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  Smartphone,
   Target,
   UserRound,
   Check,
@@ -193,7 +194,7 @@ function DonutChart({ value, label }) {
   );
 }
 
-function HistoryPanel({ donations, campaigns }) {
+function HistoryPanel({ donations, campaigns, demoPayments }) {
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div className="rounded-[2rem] bg-white p-7 shadow-sm border border-slate-100">
@@ -247,6 +248,11 @@ function HistoryPanel({ donations, campaigns }) {
             <p className="py-8 text-center text-sm text-slate-400">No created campaigns history yet.</p>
           )}
         </div>
+      </div>
+      <div className="rounded-[2rem] bg-white p-6 shadow-sm border border-slate-100 space-y-4">
+        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Smartphone size={18} className="text-[#7451E8]" /> Demo Payment Activity</h2>
+        <p className="text-sm text-slate-500">Sandbox records only — no money was transferred.</p>
+        {demoPayments.length ? <div className="space-y-3">{demoPayments.map((payment) => <div key={payment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 p-4"><div><p className="font-semibold text-slate-800">{payment.provider_label}</p><p className="text-xs text-slate-400">{payment.transaction_reference}</p></div><div className="text-right"><p className="font-bold text-[#7451E8]">{Number(payment.amount).toLocaleString()} Ks</p><span className={`text-xs font-bold ${payment.status === "paid" ? "text-emerald-700" : payment.status === "pending" ? "text-amber-700" : "text-rose-600"}`}>{payment.status}</span></div></div>)}</div> : <p className="py-5 text-center text-sm text-slate-400">No demo payment activity yet.</p>}
       </div>
     </motion.section>
   );
@@ -430,8 +436,13 @@ function ProfilePanel({ onLogout }) {
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#7451E8] text-2xl font-extrabold text-white">
               {initial}
             </div>
+<<<<<<< HEAD
             <h2 className="mt-4 truncate text-lg font-extrabold text-slate-900">{user.username}</h2>
             <p className="mt-1 truncate text-sm text-slate-500">{user.email}</p>
+=======
+            <h2 className="mt-4 truncate text-lg font-extrabold">{user.name}</h2>
+            <p className="mt-1 truncate text-sm text-white/70">{user.email}</p>
+>>>>>>> 47622b82d028879caa027a65f622d61326bf48bc
           </div>
         </aside>
 
@@ -485,6 +496,7 @@ function UserDashboard() {
   const [owned, setOwned] = useState([]);
   const [discover, setDiscover] = useState([]);
   const [donated, setDonated] = useState([]);
+  const [demoPayments, setDemoPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("overview");
 
@@ -493,10 +505,12 @@ function UserDashboard() {
       api.get("/campaigns/mine/"),
       api.get("/campaigns/"),
       api.get("/donations/mine/"),
-    ]).then(([ownedResult, discoverResult, donatedResult]) => {
+      api.get("/donations/demo-checkout/mine/"),
+    ]).then(([ownedResult, discoverResult, donatedResult, demoPaymentsResult]) => {
       if (ownedResult.status === "fulfilled") setOwned(ownedResult.value.data);
       if (discoverResult.status === "fulfilled") setDiscover(discoverResult.value.data);
       if (donatedResult.status === "fulfilled") setDonated(donatedResult.value.data);
+      if (demoPaymentsResult.status === "fulfilled") setDemoPayments(demoPaymentsResult.value.data);
       setLoading(false);
     });
   }, []);
@@ -562,7 +576,7 @@ function UserDashboard() {
           ) : activeSection === "my-campaigns" ? (
             <MyCampaignsPanel campaigns={owned} loading={loading} />
           ) : activeSection === "history" ? (
-            <HistoryPanel donations={donated} campaigns={owned} />
+            <HistoryPanel donations={donated} campaigns={owned} demoPayments={demoPayments} />
           ) : activeSection === "profile" ? (
             <ProfilePanel onLogout={handleLogout} />
           ) : (

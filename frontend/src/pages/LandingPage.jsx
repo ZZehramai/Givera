@@ -147,6 +147,7 @@ export function LandingPage() {
               </div>
             </motion.div>
           </div>
+          
 
           {/* POLAROID GALLERY */}
           <motion.div
