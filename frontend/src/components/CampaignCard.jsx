@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { CalendarDays, MapPin } from "lucide-react";
 import { mediaUrl } from "../utils/mediaUrl";
 
 const fallbackImage =
@@ -8,13 +9,15 @@ export default function CampaignCard({ campaign }) {
   const amountRaised = Number(campaign.amount_raised || 0);
   const goalAmount = Number(campaign.goal_amount || 1);
   const progress = Math.min(Math.round((amountRaised / goalAmount) * 100), 100);
+  const daysRemaining = campaign.deadline
+    ? Math.max(0, Math.ceil((new Date(campaign.deadline).getTime() - Date.now()) / 86400000))
+    : null;
 
   return (
     <Link
       to={`/campaigns/${campaign.id}`}
       className="group flex flex-col transition duration-200 hover:-translate-y-1"
     >
-      {/* Thumbnail Image Container */}
       <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-slate-100">
         <img
           src={mediaUrl(campaign.cover_image, fallbackImage)}
@@ -25,36 +28,37 @@ export default function CampaignCard({ campaign }) {
             event.currentTarget.src = fallbackImage;
           }}
         />
-
-        {/* Location Badge (Dark semi-transparent overlay pill on bottom-left) */}
         {campaign.location && (
-          <span className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-md">
+          <span className="absolute bottom-3 left-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-md">
+            <MapPin className="mr-1 inline-block" size={13} />
             {campaign.location}
           </span>
         )}
+        <span className="absolute right-3 top-3 rounded-full bg-[#FFE27A] px-2.5 py-1 text-[11px] font-bold text-[#765E00] shadow-sm">
+          {campaign.category_label || "Community"}
+        </span>
       </div>
 
-      {/* Content */}
       <div className="mt-3 flex flex-1 flex-col justify-between">
-        {/* Title */}
-        <h2 className="line-clamp-2 text-base font-extrabold leading-snug text-slate-900 group-hover:text-primary">
-          {campaign.title}
-        </h2>
-
-        {/* Progress & Raised Amount */}
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="line-clamp-2 text-base font-extrabold leading-snug text-slate-900">
+            {campaign.title}
+          </h2>
+          {daysRemaining !== null && (
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap pt-0.5 text-[11px] font-semibold text-slate-500">
+              <CalendarDays size={13} /> {daysRemaining ? `${daysRemaining} days left` : "Ending today"}
+            </span>
+          )}
+        </div>
         <div className="mt-4">
-          {/* Thin Green Progress Bar */}
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
               className="h-full rounded-full bg-emerald-500 transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
-
-          {/* Amount Raised Text */}
           <p className="mt-2 text-sm font-extrabold text-slate-900">
-            ${amountRaised.toLocaleString()}{" "}
-            <span className="font-normal text-slate-500">raised</span>
+            {amountRaised.toLocaleString()} Ks <span className="font-normal text-slate-500">raised</span>
           </p>
         </div>
       </div>

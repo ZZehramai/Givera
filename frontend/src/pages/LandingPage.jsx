@@ -310,7 +310,7 @@ export function LandingPage() {
         <section id="campaign-request" className="bg-surface-container-low/50 py-12 border-y border-outline-variant/40">
           <div className="mx-auto max-w-container-max px-6">
             <motion.div
-              className="relative overflow-hidden rounded-[2.5rem] border border-outline-variant/60 bg-white p-8 md:p-12 shadow-sm"
+              className="relative overflow-hidden py-8 md:py-12"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
@@ -372,7 +372,7 @@ export function LandingPage() {
           id="how-it-works"
           className="scroll-mt-20 bg-white py-6 min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-hidden"
         >
-          <div className="mx-auto max-w-6xl px-6 md:px-8 w-full">
+          <div className="mx-auto max-w-container-max px-6 w-full">
             
             {/* Header */}
             <div className="mx-auto max-w-2xl text-center">
@@ -388,7 +388,7 @@ export function LandingPage() {
             </div>
 
             {/* Graphic Wave & Steps */}
-            <div className="mx-auto mt-6 max-w-5xl">
+            <div className="mx-auto mt-6 max-w-container-max">
               <div className="relative aspect-[1000/220] w-full">
                 <svg
                   viewBox="0 0 1000 220"
@@ -455,7 +455,7 @@ export function LandingPage() {
 
         {/* FAQ SECTION */}
         <section id="faq" className="scroll-mt-28 bg-[#f8f5ff] py-20">
-          <div className="mx-auto grid max-w-5xl gap-10 px-6 lg:grid-cols-[0.7fr_1.3fr]">
+          <div className="mx-auto grid max-w-container-max gap-10 px-6 lg:grid-cols-[0.7fr_1.3fr]">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Good to know</p>
               <h2 className="mt-2 text-3xl font-extrabold text-slate-900">Frequently Asked Questions</h2>

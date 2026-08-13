@@ -436,13 +436,8 @@ function ProfilePanel({ onLogout }) {
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#7451E8] text-2xl font-extrabold text-white">
               {initial}
             </div>
-<<<<<<< HEAD
             <h2 className="mt-4 truncate text-lg font-extrabold text-slate-900">{user.username}</h2>
             <p className="mt-1 truncate text-sm text-slate-500">{user.email}</p>
-=======
-            <h2 className="mt-4 truncate text-lg font-extrabold">{user.name}</h2>
-            <p className="mt-1 truncate text-sm text-white/70">{user.email}</p>
->>>>>>> 47622b82d028879caa027a65f622d61326bf48bc
           </div>
         </aside>
 
