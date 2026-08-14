@@ -25,9 +25,9 @@ import CampaignCard from "../components/CampaignCard";
 const currentYear = new Date().getFullYear();
 
 const donorJourneySteps = [
-  { icon: Heart, title: "Discover a cause", text: "Browse reviewed campaigns and find a story that speaks to you.", x: 15, y: 64 },
-  { icon: Gift, title: "Give in seconds", text: "Pick an amount, choose a payment method, and send your support instantly.", x: 43, y: 28 },
-  { icon: BarChart3, title: "Follow the impact", text: "Get updates as your gift moves the campaign closer to its goal.", x: 69, y: 53 },
+  { icon: Heart, title: "Discover a cause", text: "Browse reviewed campaigns and find a story that speaks to you.", x: 16.7, y: 58 },
+  { icon: Gift, title: "Give in seconds", text: "Pick an amount, choose a payment method, and send your support instantly.", x: 50, y: 30 },
+  { icon: BarChart3, title: "Follow the impact", text: "Get updates as your gift moves the campaign closer to its goal.", x: 83.3, y: 34 },
 ];
 
 const statsItems = [
@@ -51,10 +51,29 @@ const statsItems = [
   },
 ];
 
+const trustItems = [
+  {
+    icon: ShieldCheck,
+    title: "Reviewed campaigns",
+    text: "Campaigns are reviewed before they are shared with the Givera community.",
+  },
+  {
+    icon: BarChart3,
+    title: "Visible fund use",
+    text: "Follow campaign progress and read spending reports published by administrators.",
+  },
+  {
+    icon: Check,
+    title: "Clear donation records",
+    text: "Every completed donation includes a reference and a record in your giving history.",
+  },
+];
+
 const faqs = [
   ["Who can start a campaign?", "Any registered user can submit a campaign. Every submission begins in review."],
   ["When does it become public?", "A campaign appears publicly after an administrator has reviewed and approved it."],
   ["Can organizers track progress?", "Yes. My Campaigns shows draft, pending, approved, rejected, and completed statuses."],
+  ["How can donors see how funds are used?", "Approved spending reports are shown on the campaign page, so donors can follow how collected funds are being used."],
 ];
 
 export function LandingPage() {
@@ -95,12 +114,12 @@ export function LandingPage() {
   const sideCampaigns = featured.slice(1, 5);
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
+    <div className="min-h-screen bg-white text-on-surface">
       <AppHeader />
 
       <main>
         {/* HERO SECTION */}
-        <section id="hero" className="relative w-full overflow-hidden bg-[#FAF8F5] bg-gradient-to-b from-white to-yellow-50 px-4 pb-24 pt-16 text-center md:px-8 md:pt-24 lg:pt-24">
+        <section id="hero" className="relative w-full overflow-hidden bg-white px-4 pb-24 pt-16 text-center md:px-8 md:pt-24 lg:pt-24">
           <div className="mx-auto max-w-5xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -113,7 +132,7 @@ export function LandingPage() {
                 A kinder way to fund change
               </div>
 
-              <h1 className="mt-7 text-3xl font-black uppercase tracking-tight text-slate-900 sm:text-6xl md:text-4xl lg:text-4xl xl:text-6xl leading-[0.95]">
+              <h1 className="mt-7 text-4xl font-black uppercase tracking-tight text-slate-900 sm:text-6xl md:text-7xl xl:text-6xl leading-[0.95]">
                 Good things happen when <span className="text-primary">people show up.</span>
               </h1>
 
@@ -129,7 +148,7 @@ export function LandingPage() {
                   </Link>
                 </motion.div>
               </div>
-              <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-slate-600">
+              {/* <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-slate-600">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-primary" />
                   <span>Verified Campaigns</span>
@@ -144,7 +163,7 @@ export function LandingPage() {
                   <Heart className="h-5 w-5 text-rose-500 fill-rose-200" />
                   <span>Thousands of Donors</span>
                 </div>
-              </div>
+              </div> */}
             </motion.div>
           </div>
           
@@ -214,7 +233,7 @@ export function LandingPage() {
         </section>
 
         {/* STATS SECTION */}
-        <section className="bg-white px-6 pb-20 pt-16">
+        {/* <section className="bg-white px-6 pb-20 pt-16">
           <div className="mx-auto max-w-container-max">
             <div className="grid gap-6 sm:grid-cols-3">
               {statsItems.map(({ value, label, text, icon: Icon }, index) => (
@@ -248,19 +267,48 @@ export function LandingPage() {
               ))}
             </div>
           </div>
+        </section> */}
+
+        {/* TRANSPARENCY SECTION */}
+        <section className="relative overflow-hidden rounded-t-[50%_10%] bg-gray-100 pb-28 pt-36">
+          <div className="relative mx-auto max-w-container-max px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">See where every gift makes an impact.</h2>
+              <p className="mt-4 text-base leading-7 text-slate-700">
+                Givera is built to make fundraising easier to follow—from campaign review to donation records and fund utilization updates.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-5 md:grid-cols-3">
+              {trustItems.map(({ icon: Icon, title, text }, index) => (
+                <motion.div
+                  key={title}
+                  className="rounded-2xl p-6 transition hover:-translate-y-1 hover:shadow-xl"
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.35 }}
+                  transition={{ duration: 0.35, delay: index * 0.08 }}
+                >
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary-fixed text-primary">
+                    <Icon size={21} aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-5 text-lg font-extrabold text-slate-900">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* CAMPAIGNS SECTION */}
-        <section id="campaigns" className="scroll-mt-28 bg-[#FAF8F5] py-20">
+        <section id="campaigns" className="scroll-mt-28 bg-white py-20">
           <div className="mx-auto max-w-container-max px-6">
             
             {/* STYLISH SECTION HEADER */}
             <div className="mb-10 flex flex-wrap items-end justify-between gap-6 border-b border-slate-200/60 pb-8 dark:border-slate-800">
               <div className="max-w-2xl">
-                <h2 className="text-4xl font-black tracking-tight sm:text-5xl md:text-6xl">
-                  <span className="bg-gradient-to-r from-slate-900 via-primary to-emerald-600 bg-clip-text text-transparent dark:from-white dark:via-purple-300 dark:to-emerald-400">
-                    Campaigns
-                  </span>
+                <h2 className="text-5xl font-bold text-slate-900 sm:text-5xl md:text-6xl">
+                   <span className="text-primary">Featured Campaigns</span>
                 </h2>
                 
                 <p className="mt-3 text-base font-medium leading-relaxed text-on-surface-variant md:text-lg">
@@ -307,7 +355,7 @@ export function LandingPage() {
         </section>
 
         {/* COMMUNITY PROPOSALS SECTION */}
-        <section id="campaign-request" className="bg-surface-container-low/50 py-12 border-y border-outline-variant/40">
+        <section id="campaign-request" className="bg-white py-12 border-y border-outline-variant/40">
           <div className="mx-auto max-w-container-max px-6">
             <motion.div
               className="relative overflow-hidden py-8 md:py-12"
@@ -323,7 +371,7 @@ export function LandingPage() {
                     Demo Feature • Community Proposals
                   </div>
 
-                  <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-on-surface md:text-4xl">
+                  <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-on-surface md:text-5xl">
                     Request a Campaign for <span className="text-primary">100% Direct Funding</span>
                   </h2>
 
@@ -370,16 +418,16 @@ export function LandingPage() {
         {/* HOW IT WORKS SECTION */}
         <section
           id="how-it-works"
-          className="scroll-mt-20 bg-white py-6 min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-hidden"
+          className="relative scroll-mt-20 overflow-hidden bg-white py-24 min-h-[calc(100vh-5rem)] flex items-center justify-center"
         >
-          <div className="mx-auto max-w-container-max px-6 w-full">
+          <div className="relative mx-auto max-w-container-max px-6 w-full">
             
             {/* Header */}
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
                 The donor journey
               </p>
-              <h2 className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">
+              <h2 className="mt-1 text-3xl md:text-4xl font-extrabold text-on-surface">
                 Three simple steps to give with confidence
               </h2>
               <p className="mx-auto mt-1.5 text-xs md:text-sm text-on-surface-variant max-w-lg leading-relaxed">
@@ -435,7 +483,7 @@ export function LandingPage() {
                 {donorJourneySteps.map((step, index) => (
                   <motion.div
                     key={step.title}
-                    className={index === 2 ? "sm:text-right" : index === 1 ? "sm:text-center" : "sm:text-left"}
+                    className="text-center"
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.4 }}
@@ -454,20 +502,27 @@ export function LandingPage() {
         </section>
 
         {/* FAQ SECTION */}
-        <section id="faq" className="scroll-mt-28 bg-[#f8f5ff] py-20">
-          <div className="mx-auto grid max-w-container-max gap-10 px-6 lg:grid-cols-[0.7fr_1.3fr]">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Good to know</p>
-              <h2 className="mt-2 text-3xl font-extrabold text-slate-900">Frequently Asked Questions</h2>
-            </div>
-            
-            <div className="space-y-4">
-              {faqs.map(([question, answer], index) => {
-                const isOpen = openFaq === index;
-                return (
-                  <motion.div 
-                    key={question} 
-                    className="overflow-hidden rounded-2xl border border-purple-100 bg-white shadow-sm transition-all"
+        <section id="faq" className="mb-16 ml-8 mr-8 p-4 scroll-mt-28 overflow-hidden bg-purple-100 pb-36 pt-24 sm:mb-20 sm:rounded-br-[10rem] sm:rounded-tl-[10rem] lg:mb-24 lg:rounded-br-[8rem] lg:rounded-tl-[8rem]">
+          <div className="mx-auto max-w-container-max px-6">
+            <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:gap-16">
+              <div className="lg:sticky lg:top-28">
+                <p className="text-sm font-bold uppercase tracking-[0.11em] text-primary">Givera help centre</p>
+                <h2 className="mt-4 text-5xl font-extrabold tracking-tight text-black sm:text-6xl">We’ve got you covered.</h2>
+                <p className="mt-5 max-w-md text-base leading-7 text-black/80">
+                  Find simple answers about creating a campaign, supporting a cause, and following every donation’s impact.
+                </p>
+                <p className="mt-7 text-sm text-black/65">
+                  Still have questions? <a href="#footer" className="font-bold text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">Learn more about how Givera works</a>.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {faqs.map(([question, answer], index) => {
+                  const isOpen = openFaq === index;
+                  return (
+                    <motion.div 
+                      key={question} 
+                    className={`overflow-hidden rounded-2xl border transition-all duration-300 ${isOpen ? "border-primary/25 bg-[#FBF8FF] shadow-sm" : "border-primary/10 bg-white/85 hover:border-primary/25 hover:bg-white"}`}
                     initial={{ opacity: 0, y: 12 }} 
                     whileInView={{ opacity: 1, y: 0 }} 
                     viewport={{ once: true, amount: 0.5 }} 
@@ -476,14 +531,14 @@ export function LandingPage() {
                     <button
                       type="button"
                       onClick={() => toggleFaq(index)}
-                      className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left font-bold text-slate-900 transition-colors hover:text-primary"
+                      className="flex w-full items-center justify-between gap-4 px-6 py-6 text-left font-bold text-slate-900 transition-colors hover:text-primary sm:px-8"
                     >
-                      <span className="text-base font-bold text-slate-800">{question}</span>
+                      <span className="text-base font-bold">{question}</span>
                       <span 
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
                           isOpen 
                             ? "bg-primary text-white" 
-                            : "bg-purple-100/80 text-primary hover:bg-purple-200"
+                            : "bg-white text-primary ring-1 ring-primary/20 hover:bg-primary-fixed"
                         }`}
                       >
                         {isOpen ? <Minus size={16} strokeWidth={2.5} /> : <Plus size={16} strokeWidth={2.5} />}
@@ -497,7 +552,7 @@ export function LandingPage() {
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.25 }}
-                          className="px-6 pb-5 pt-0 text-sm leading-relaxed text-slate-600"
+                          className="max-w-2xl px-6 pb-6 pr-16 text-sm leading-relaxed text-slate-600 sm:px-8"
                         >
                           {answer}
                         </motion.div>
@@ -506,13 +561,14 @@ export function LandingPage() {
                   </motion.div>
                 );
               })}
+              </div>
             </div>
           </div>
         </section>
       </main>
 
       {/* FOOTER */}
-      <footer className="mt-auto w-full border-t border-slate-200 bg-[#f3e8ff] text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
+      <footer className="mt-auto w-full border-t border-slate-200 bg-white text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
         <div className="mx-auto max-w-container-max px-6 py-12">
           <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
             
@@ -612,7 +668,7 @@ export function LandingPage() {
           </div>
 
           {/* Bottom Copyright Bar */}
-          <div className="mt-10 border-t border-slate-200/60 pt-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <div className="mt-10 pt-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
             © {currentYear} Givera. All rights reserved.
           </div>
         </div>
