@@ -58,3 +58,45 @@ class GoogleLoginApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         existing_user.refresh_from_db()
         self.assertEqual(existing_user.google_id, "google-existing-123")
+
+
+class ProfileApiTests(APITestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            email="admin@example.com",
+            username="admin",
+            password="StrongPassword123!",
+            role=User.Role.ADMIN,
+        )
+        self.client.force_authenticate(self.admin)
+
+    def test_admin_can_edit_profile_details(self):
+        response = self.client.patch(
+            reverse("profile"),
+            {
+                "first_name": "Mya",
+                "last_name": "Admin",
+                "phone_number": "+95 9 123 456 789",
+                "country": "Myanmar",
+                "bio": "Givera platform administrator.",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.admin.refresh_from_db()
+        self.assertEqual(self.admin.first_name, "Mya")
+        self.assertEqual(self.admin.phone_number, "+95 9 123 456 789")
+        self.assertEqual(self.admin.bio, "Givera platform administrator.")
+
+    def test_profile_edit_cannot_change_admin_permissions(self):
+        response = self.client.patch(
+            reverse("profile"),
+            {"role": User.Role.DONOR, "is_staff": True},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.admin.refresh_from_db()
+        self.assertEqual(self.admin.role, User.Role.ADMIN)
+        self.assertFalse(self.admin.is_staff)
