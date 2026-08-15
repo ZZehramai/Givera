@@ -36,6 +36,15 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
+    def save(self, *args, **kwargs):
+        # Staff users can access the Givera admin workspace, so their public
+        # application role must always describe the same level of access.
+        if (self.is_staff or self.is_superuser) and self.role != self.Role.ADMIN:
+            self.role = self.Role.ADMIN
+            if kwargs.get('update_fields') is not None:
+                kwargs['update_fields'] = set(kwargs['update_fields']) | {'role'}
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f'{self.email} ({self.role})'
 

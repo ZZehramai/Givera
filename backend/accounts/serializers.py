@@ -22,6 +22,9 @@ class UserSerializer(serializers.ModelSerializer):
             'auth_provider', 'phone_number', 'profile_picture', 'country',
             'bio', 'is_email_verified', 'is_staff', 'created_at'
         ]
+        read_only_fields = [
+            'id', 'role', 'auth_provider', 'is_email_verified', 'is_staff', 'created_at'
+        ]
 
 
 class NotificationSerializer(serializers.ModelSerializer):

@@ -81,7 +81,7 @@ const sidebarItems = [
   },
 ];
 
-/* SIDEBAR USING LANDING PAGE PURPLE (#7451E8) FOR ACTIVE STATE */
+/* SIDEBAR USING LANDING PAGE PURPLE (#7451E8) FOR ACTIVE STATE WITH BOTH SIDES FULLY ROUNDED */
 function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) {
   return (
     <aside className="lg:sticky lg:top-4 lg:self-start">
@@ -102,7 +102,7 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) 
         </div>
 
         {/* NAVIGATION */}
-        <nav className="flex flex-col space-y-1">
+        <nav className="flex flex-col space-y-1 px-3">
           {sidebarItems.map(({ section, label, icon: Icon, iconColor, badge }) => {
             const isActive = activeSection === section;
             const badgeValue =
@@ -113,26 +113,14 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) 
                 : badge;
 
             return (
-              <div key={section} className="relative pl-3">
-                {/* INVERTED CORNER GRAPHICS FOR ACTIVE ITEM */}
-                {isActive && (
-                  <>
-                    <div className="absolute right-0 -top-4 h-4 w-4 bg-[#7451E8]">
-                      <div className="h-full w-full rounded-br-2xl bg-white" />
-                    </div>
-                    <div className="absolute right-0 -bottom-4 h-4 w-4 bg-[#7451E8]">
-                      <div className="h-full w-full rounded-tr-2xl bg-white" />
-                    </div>
-                  </>
-                )}
-
+              <div key={section} className="relative">
                 <button
                   type="button"
                   onClick={() => onSectionChange(section)}
                   className={`relative flex w-full items-center gap-3.5 px-5 py-3.5 text-sm font-bold transition-all ${
                     isActive
-                      ? "rounded-l-full bg-[#7451E8] text-white shadow-sm"
-                      : "text-slate-700 hover:text-[#7451E8] hover:bg-slate-50 rounded-l-full"
+                      ? "rounded-full bg-[#7451E8] text-white shadow-md"
+                      : "text-slate-700 hover:text-[#7451E8] hover:bg-slate-50 rounded-full"
                   }`}
                 >
                   <Icon 

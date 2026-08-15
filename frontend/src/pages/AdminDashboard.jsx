@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowUpRight, BarChart3, CheckCircle2, ChevronLeft, ChevronRight, CircleDollarSign,
-  ClipboardCheck, FileBarChart, Heart, LayoutDashboard, LogOut, Megaphone, Search,
-  ShieldCheck, TrendingUp, Users, X,
+  ClipboardCheck, FileBarChart, Heart, LayoutDashboard, LockKeyhole, LogOut, Mail,
+  MapPin, Megaphone, Phone, Save, Search, Settings, ShieldCheck, TrendingUp, UserRound,
+  Users, X,
 } from "lucide-react";
 
 import api from "../api/axios";
@@ -24,8 +25,8 @@ function StatusBadge({ status, label }) {
 }
 
 function Sidebar({ section, onSection, user, onLogout, pending }) {
-  const items = [["overview", "Overview", LayoutDashboard], ["campaigns", "Campaign review", Megaphone], ["donations", "Transactions", Heart], ["reports", "Insights", FileBarChart]];
-  return <aside className="flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_18px_45px_rgba(41,35,80,.09)] lg:min-h-[calc(100vh-2rem)]"><div className="border-b border-slate-100 px-6 py-7"><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">G</div><div><p className="text-xl font-extrabold tracking-tight text-[#24184a]">Givera</p><p className="text-xs font-medium text-slate-400">Admin workspace</p></div></div></div><nav className="space-y-1 px-3 py-6">{items.map(([key, label, Icon]) => <button key={key} type="button" onClick={() => onSection(key)} className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left text-sm font-bold transition ${section === key ? "bg-[#F0ECFF] text-[#6549C9]" : "text-slate-600 hover:bg-slate-50 hover:text-[#6549C9]"}`}><Icon size={18} /><span className="flex-1">{label}</span>{key === "campaigns" && pending > 0 && <span className={`grid min-w-6 place-items-center rounded-full px-1.5 py-0.5 text-xs ${section === key ? "bg-[#6F52D9] text-white" : "bg-[#E9E2FF] text-[#6549C9]"}`}>{pending}</span>}</button>)}</nav><div className="mt-auto border-t border-slate-100 p-5"><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#FFD66B] to-[#FFAD66] font-extrabold text-[#24184a]">{user?.username?.[0]?.toUpperCase() || "A"}</div><div className="min-w-0"><p className="truncate text-sm font-bold text-slate-800">{user?.username || "Administrator"}</p><p className="text-xs text-slate-400">Platform admin</p></div></div><button type="button" onClick={onLogout} className="mt-5 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"><LogOut size={17} /> Sign out</button></div></aside>;
+  const items = [["overview", "Overview", LayoutDashboard], ["campaigns", "Campaign review", Megaphone], ["donations", "Transactions", Heart], ["reports", "Insights", FileBarChart], ["settings", "Profile & settings", Settings]];
+  return <aside className="flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_18px_45px_rgba(41,35,80,.09)] lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:self-start"><div className="border-b border-slate-100 px-6 py-6"><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">G</div><div><p className="text-xl font-extrabold tracking-tight text-[#24184a]">Givera</p><p className="text-xs font-medium text-slate-400">Admin workspace</p></div></div></div><nav className="space-y-1 px-3 py-4">{items.map(([key, label, Icon]) => <button key={key} type="button" onClick={() => onSection(key)} className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold transition ${section === key ? "bg-[#F0ECFF] text-[#6549C9]" : "text-slate-600 hover:bg-slate-50 hover:text-[#6549C9]"}`}><Icon size={18} /><span className="flex-1">{label}</span>{key === "campaigns" && pending > 0 && <span className={`grid min-w-6 place-items-center rounded-full px-1.5 py-0.5 text-xs ${section === key ? "bg-[#6F52D9] text-white" : "bg-[#E9E2FF] text-[#6549C9]"}`}>{pending}</span>}</button>)}</nav><div className="mt-auto border-t border-slate-100 p-4"><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#FFD66B] to-[#FFAD66] font-extrabold text-[#24184a]">{user?.username?.[0]?.toUpperCase() || "A"}</div><div className="min-w-0"><p className="truncate text-sm font-bold text-slate-800">{user?.username || "Administrator"}</p><p className="text-xs text-slate-400">Platform admin</p></div></div><button type="button" onClick={onLogout} className="mt-3 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"><LogOut size={17} /> Sign out</button></div></aside>;
 }
 
 function MetricCard({ icon: Icon, label, value, note, tone }) {
@@ -50,14 +51,176 @@ function Overview({ report, campaigns, onReview, onSection }) {
   const monthData = report?.donations_by_month || [];
   const peak = Math.max(...monthData.map((item) => Number(item.total)), 1);
   const pending = campaigns.filter((campaign) => campaign.status === "pending");
-  return <div className="space-y-6"><section className="overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-9"><div className="flex flex-wrap items-end justify-between gap-6"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#D7C8FF]">Givera operations</p><h2 className="mt-3 max-w-xl text-3xl font-extrabold tracking-tight md:text-4xl">A clear view of community impact.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">Track the money, verify campaigns, and keep donor trust at the centre of every decision.</p></div><button type="button" onClick={() => onSection("campaigns")} className="rounded-2xl bg-[#FFD66B] px-5 py-3 text-sm font-extrabold text-[#2b1d52] shadow-lg shadow-black/10">Review {pending.length} pending requests</button></div></section><section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><MetricCard icon={CircleDollarSign} label="Total raised" value={kyat(report?.total_raised)} note="Across all recorded donations" tone="bg-violet-100 text-[#6549C9]" /><MetricCard icon={Megaphone} label="Active campaigns" value={report?.active_campaigns ?? "—"} note="Currently accepting support" tone="bg-emerald-100 text-emerald-700" /><MetricCard icon={ClipboardCheck} label="Pending review" value={report?.pending_requests ?? "—"} note="Campaigns awaiting a decision" tone="bg-amber-100 text-amber-700" /><MetricCard icon={Users} label="Unique donors" value={report?.total_donors ?? "—"} note="People who have contributed" tone="bg-sky-100 text-sky-700" /></section><section className="grid gap-6 xl:grid-cols-[1.45fr_.8fr]"><article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]"><div className="flex items-start justify-between"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Fundraising momentum</p><h3 className="mt-2 text-xl font-extrabold text-slate-900">Monthly donation volume</h3></div><span className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]"><TrendingUp size={20} /></span></div><div className="mt-8 flex h-48 items-end gap-3">{monthData.length ? monthData.map((item) => <div key={item.month} className="flex flex-1 flex-col items-center gap-2"><div className="w-full max-w-14 rounded-t-xl bg-gradient-to-t from-[#6F52D9] to-[#B59CFF]" style={{ height: `${Math.max((Number(item.total) / peak) * 100, 8)}%` }} /><span className="text-xs font-bold text-slate-400">{new Date(item.month).toLocaleDateString(undefined, { month: "short" })}</span></div>) : <p className="m-auto text-sm text-slate-400">Donation trends will appear here.</p>}</div></article><article className="rounded-3xl bg-[#FFFAE9] p-6"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#FFD66B] text-[#4C3910]"><ShieldCheck size={21} /></span><p className="mt-6 text-4xl font-extrabold text-[#33260C]">{pending.length}</p><h3 className="mt-2 text-lg font-extrabold text-[#33260C]">Campaigns need review</h3><p className="mt-2 text-sm leading-6 text-[#746037]">Check organizer details and campaign information before publishing.</p><button type="button" onClick={() => onSection("campaigns")} className="mt-6 text-sm font-extrabold text-[#6B4B00]">Open review queue →</button></article></section><section className="rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]"><div className="flex items-center justify-between px-6 py-5"><div><h3 className="text-lg font-extrabold">Priority campaign reviews</h3><p className="mt-1 text-sm text-slate-500">The latest requests waiting for your decision.</p></div><button type="button" onClick={() => onSection("campaigns")} className="text-sm font-bold text-[#6F52D9]">View all</button></div>{pending.slice(0, 4).length ? pending.slice(0, 4).map((campaign) => <div key={campaign.id} className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 px-6 py-4"><div><p className="font-bold text-slate-800">{campaign.title}</p><p className="mt-1 text-xs text-slate-400">{campaign.owner_name} · Goal {kyat(campaign.goal_amount)}</p></div><button type="button" onClick={() => onReview(campaign)} className="rounded-xl bg-[#F0ECFF] px-3.5 py-2 text-xs font-bold text-[#6549C9]">Review request</button></div>) : <p className="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">The review queue is clear.</p>}</section></div>;
+  return <div className="space-y-6"><section className="overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-9"><div className="flex flex-wrap items-end justify-between gap-6"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#D7C8FF]">Givera operations</p><h2 className="mt-3 max-w-xl text-3xl font-extrabold tracking-tight md:text-4xl">A clear view of community impact.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">Track the money, verify campaigns, and keep donor trust at the centre of every decision.</p></div><button type="button" onClick={() => onSection("campaigns")} className="rounded-2xl bg-[#FFD66B] px-5 py-3 text-sm font-extrabold text-[#2b1d52] shadow-lg shadow-black/10">Review {pending.length} pending requests</button></div></section><section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><MetricCard icon={CircleDollarSign} label="Total raised" value={kyat(report?.total_raised)} note="Across all recorded donations" tone="bg-violet-100 text-[#6549C9]" /><MetricCard icon={Megaphone} label="Active campaigns" value={report?.active_campaigns ?? "—"} note="Currently accepting support" tone="bg-emerald-100 text-emerald-700" /><MetricCard icon={ClipboardCheck} label="Pending review" value={report?.pending_requests ?? "—"} note="Campaigns awaiting a decision" tone="bg-amber-100 text-amber-700" /><MetricCard icon={Users} label="Unique donors" value={report?.total_donors ?? "—"} note="People who have contributed" tone="bg-sky-100 text-sky-700" /></section><section className="grid gap-6 xl:grid-cols-[1.45fr_.8fr]"><article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]"><div className="flex items-start justify-between"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Fundraising momentum</p><h3 className="mt-2 text-xl font-extrabold text-slate-900">Monthly donation volume</h3></div><span className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]"><TrendingUp size={20} /></span></div><div className="mt-8 flex h-56 items-stretch gap-3 border-b border-slate-100 pb-2">{monthData.length ? monthData.map((item) => { const percentage = Math.max((Number(item.total) / peak) * 100, 8); return <div key={item.month} className="flex h-full min-w-0 flex-1 flex-col items-center gap-2"><span className="whitespace-nowrap text-[11px] font-extrabold text-[#6549C9]">{kyat(item.total)}</span><div className="flex min-h-0 w-full flex-1 items-end justify-center"><div className="w-full max-w-14 rounded-t-xl bg-gradient-to-t from-[#6F52D9] to-[#B59CFF] shadow-sm shadow-violet-300/40" style={{ height: `${percentage}%` }} /></div><span className="text-xs font-bold text-slate-400">{new Date(item.month).toLocaleDateString(undefined, { month: "short" })}</span></div>; }) : <p className="m-auto text-sm text-slate-400">Donation trends will appear here after the first recorded donation.</p>}</div></article><article className="rounded-3xl bg-[#FFFAE9] p-6"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#FFD66B] text-[#4C3910]"><ShieldCheck size={21} /></span><p className="mt-6 text-4xl font-extrabold text-[#33260C]">{pending.length}</p><h3 className="mt-2 text-lg font-extrabold text-[#33260C]">Campaigns need review</h3><p className="mt-2 text-sm leading-6 text-[#746037]">Check organizer details and campaign information before publishing.</p><button type="button" onClick={() => onSection("campaigns")} className="mt-6 text-sm font-extrabold text-[#6B4B00]">Open review queue →</button></article></section><section className="rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]"><div className="flex items-center justify-between px-6 py-5"><div><h3 className="text-lg font-extrabold">Priority campaign reviews</h3><p className="mt-1 text-sm text-slate-500">The latest requests waiting for your decision.</p></div><button type="button" onClick={() => onSection("campaigns")} className="text-sm font-bold text-[#6F52D9]">View all</button></div>{pending.slice(0, 4).length ? pending.slice(0, 4).map((campaign) => <div key={campaign.id} className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 px-6 py-4"><div><p className="font-bold text-slate-800">{campaign.title}</p><p className="mt-1 text-xs text-slate-400">{campaign.owner_name} · Goal {kyat(campaign.goal_amount)}</p></div><button type="button" onClick={() => onReview(campaign)} className="rounded-xl bg-[#F0ECFF] px-3.5 py-2 text-xs font-bold text-[#6549C9]">Review request</button></div>) : <p className="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">The review queue is clear.</p>}</section></div>;
 }
 
-function Insights({ report }) { const statuses = report?.campaigns_by_status || []; const total = Math.max(statuses.reduce((sum, item) => sum + item.count, 0), 1); return <div className="grid gap-6 lg:grid-cols-2"><section className="rounded-3xl border border-slate-200/80 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)]"><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Campaign health</p><h2 className="mt-2 text-xl font-extrabold">Campaign status mix</h2><div className="mt-8 space-y-5">{statuses.map((item) => <div key={item.status}><div className="mb-2 flex justify-between text-sm"><span className="font-bold capitalize text-slate-700">{item.status}</span><span className="font-bold text-slate-400">{item.count}</span></div><div className="h-3 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#7A5BE6]" style={{ width: `${(item.count / total) * 100}%` }} /></div></div>)}</div></section><section className="rounded-3xl bg-gradient-to-br from-[#6F52D9] to-[#36265F] p-7 text-white"><BarChart3 size={26} className="text-[#FFD66B]" /><p className="mt-10 text-xs font-bold uppercase tracking-[.18em] text-indigo-200">Fundraising total</p><p className="mt-2 text-5xl font-extrabold">{kyat(report?.total_raised)}</p><p className="mt-4 max-w-sm text-sm leading-6 text-indigo-100">This total reflects every recorded donation across approved campaigns.</p></section></div>; }
+function InsightStat({ icon: Icon, label, value, note, tone }) {
+  return <article className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_rgba(43,37,80,.06)]"><span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}><Icon size={20} /></span><p className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">{value}</p><p className="mt-1 text-sm font-bold text-slate-700">{label}</p><p className="mt-1 text-xs leading-5 text-slate-400">{note}</p></article>;
+}
+
+function Insights({ report }) {
+  const statuses = report?.campaigns_by_status || [];
+  const categories = report?.donations_by_category || [];
+  const paymentMethods = report?.payment_methods || [];
+  const topCampaigns = report?.top_campaigns || [];
+  const statusTotal = Math.max(statuses.reduce((sum, item) => sum + item.count, 0), 1);
+  const categoryTotal = Math.max(categories.reduce((sum, item) => sum + Number(item.total), 0), 1);
+  const methodTotal = Math.max(paymentMethods.reduce((sum, item) => sum + item.donations, 0), 1);
+  const anonymousRate = report?.total_donations ? Math.round((report.anonymous_donations / report.total_donations) * 100) : 0;
+  const growth = report?.monthly_growth;
+  const palette = ["bg-[#6F52D9]", "bg-[#FFD66B]", "bg-emerald-500", "bg-sky-500", "bg-rose-400", "bg-orange-400"];
+
+  return <div className="space-y-6">
+    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <InsightStat icon={Heart} label="Completed donations" value={report?.total_donations ?? "—"} note="Successful contributions recorded" tone="bg-rose-50 text-rose-600" />
+      <InsightStat icon={CircleDollarSign} label="Average donation" value={kyat(report?.average_donation)} note="Average value per contribution" tone="bg-violet-100 text-[#6549C9]" />
+      <InsightStat icon={Users} label="Returning donors" value={report?.repeat_donors ?? "—"} note="Supporters who donated more than once" tone="bg-sky-100 text-sky-700" />
+      <InsightStat icon={TrendingUp} label="Monthly change" value={growth == null ? "Not enough data" : `${growth > 0 ? "+" : ""}${growth}%`} note="Compared with the previous recorded month" tone="bg-emerald-100 text-emerald-700" />
+    </section>
+
+    <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+      <article className="rounded-3xl border border-slate-200/80 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+        <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Campaign health</p><h2 className="mt-2 text-xl font-extrabold">Campaign status mix</h2></div><BarChart3 size={21} className="text-[#6F52D9]" /></div>
+        <div className="mt-8 space-y-5">{statuses.length ? statuses.map((item, index) => <div key={item.status}><div className="mb-2 flex justify-between text-sm"><span className="font-bold capitalize text-slate-700">{item.status}</span><span className="font-bold text-slate-400">{item.count} · {Math.round((item.count / statusTotal) * 100)}%</span></div><div className="h-3 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${palette[index % palette.length]}`} style={{ width: `${(item.count / statusTotal) * 100}%` }} /></div></div>) : <p className="py-10 text-center text-sm text-slate-400">No campaign status data yet.</p>}</div>
+      </article>
+
+      <article className="rounded-3xl border border-slate-200/80 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+        <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Cause distribution</p><h2 className="mt-2 text-xl font-extrabold">Donations by category</h2></div><Heart size={21} className="text-[#6F52D9]" /></div>
+        <div className="mt-8 space-y-5">{categories.length ? categories.map((item, index) => <div key={item.category}><div className="mb-2 flex items-center justify-between gap-4 text-sm"><div className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${palette[index % palette.length]}`} /><span className="font-bold text-slate-700">{item.label}</span></div><span className="font-bold text-slate-500">{kyat(item.total)}</span></div><div className="h-2.5 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${palette[index % palette.length]}`} style={{ width: `${(Number(item.total) / categoryTotal) * 100}%` }} /></div><p className="mt-1.5 text-right text-[11px] font-bold text-slate-400">{item.donations} donation{item.donations === 1 ? "" : "s"}</p></div>) : <p className="py-10 text-center text-sm text-slate-400">Category insights will appear after donations are recorded.</p>}</div>
+      </article>
+    </section>
+
+    <section className="grid gap-6 xl:grid-cols-[1.35fr_.65fr]">
+      <article className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+        <div className="px-7 py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Fundraising leaders</p><h2 className="mt-2 text-xl font-extrabold">Top-performing campaigns</h2><p className="mt-1 text-sm text-slate-500">Ranked by total donations received.</p></div>
+        <div className="border-t border-slate-100">{topCampaigns.length ? topCampaigns.map((campaign, index) => { const progress = Math.min(Math.round((Number(campaign.donated_total) / Number(campaign.goal_amount || 1)) * 100), 100); return <div key={campaign.id} className="grid gap-3 border-b border-slate-100 px-7 py-4 last:border-0 sm:grid-cols-[32px_minmax(0,1fr)_auto] sm:items-center"><span className={`grid h-8 w-8 place-items-center rounded-xl text-xs font-extrabold ${index === 0 ? "bg-[#FFD66B] text-[#493600]" : "bg-violet-50 text-[#6549C9]"}`}>{index + 1}</span><div className="min-w-0"><div className="flex items-center justify-between gap-3"><p className="truncate text-sm font-extrabold text-slate-800">{campaign.title}</p><span className="text-xs font-bold text-[#6549C9]">{progress}%</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#7A5BE6]" style={{ width: `${progress}%` }} /></div><p className="mt-1.5 text-xs text-slate-400">{campaign.donation_count} donations from {campaign.donor_count} donors</p></div><p className="whitespace-nowrap text-sm font-extrabold text-slate-700">{kyat(campaign.donated_total)}</p></div>; }) : <p className="px-7 py-12 text-center text-sm text-slate-400">Campaign rankings will appear after the first donation.</p>}</div>
+      </article>
+
+      <div className="space-y-6">
+        <article className="rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15"><ShieldCheck size={25} className="text-[#FFD66B]" /><p className="mt-7 text-xs font-bold uppercase tracking-[.18em] text-indigo-200">Donor privacy</p><p className="mt-2 text-4xl font-extrabold">{anonymousRate}%</p><p className="mt-2 text-sm leading-6 text-indigo-100">{report?.anonymous_donations || 0} of {report?.total_donations || 0} donations were made anonymously.</p></article>
+        <article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]"><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Demo checkout</p><h2 className="mt-2 text-lg font-extrabold">Payment method usage</h2><div className="mt-5 space-y-3">{paymentMethods.length ? paymentMethods.map((method, index) => <div key={method.provider}><div className="flex items-center justify-between text-sm"><span className="font-bold text-slate-700">{method.label}</span><span className="font-extrabold text-[#6549C9]">{method.donations}</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${palette[index % palette.length]}`} style={{ width: `${(method.donations / methodTotal) * 100}%` }} /></div></div>) : <p className="py-5 text-center text-sm text-slate-400">No payment-method data yet.</p>}</div></article>
+      </div>
+    </section>
+  </div>;
+}
+
+const profileFields = [
+  ["First name", "first_name", "text", UserRound, "Your first name"],
+  ["Last name", "last_name", "text", UserRound, "Your last name"],
+  ["Username", "username", "text", UserRound, "Admin username"],
+  ["Email address", "email", "email", Mail, "admin@example.com"],
+  ["Phone number", "phone_number", "tel", Phone, "+95 9 000 000 000"],
+  ["Country / location", "country", "text", MapPin, "Myanmar"],
+];
+
+const apiError = (error, fallback) => {
+  const data = error?.response?.data;
+  if (!data) return fallback;
+  if (typeof data.detail === "string") return data.detail;
+  const first = Object.values(data).flat()[0];
+  return typeof first === "string" ? first : fallback;
+};
+
+function AdminSettings({ user: sessionUser, onUserChange }) {
+  const [profile, setProfile] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ first_name: "", last_name: "", username: "", email: "", phone_number: "", country: "", bio: "" });
+  const [passwords, setPasswords] = useState({ old_password: "", new_password: "", confirm_password: "" });
+  const [saving, setSaving] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [profileMessage, setProfileMessage] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+
+  const fillProfile = (data) => {
+    setProfile(data);
+    setForm({
+      first_name: data.first_name || "",
+      last_name: data.last_name || "",
+      username: data.username || "",
+      email: data.email || "",
+      phone_number: data.phone_number || "",
+      country: data.country || "",
+      bio: data.bio || "",
+    });
+  };
+
+  useEffect(() => {
+    api.get("/auth/profile/").then(({ data }) => fillProfile(data)).catch(() => setProfileMessage("Your admin profile could not be loaded."));
+  }, []);
+
+  const saveProfile = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setProfileMessage("");
+    try {
+      const { data } = await api.patch("/auth/profile/", form);
+      fillProfile(data);
+      localStorage.setItem("user", JSON.stringify(data));
+      window.dispatchEvent(new Event("userUpdated"));
+      onUserChange(data);
+      setEditing(false);
+      setProfileMessage("Profile details saved successfully.");
+    } catch (error) {
+      setProfileMessage(apiError(error, "Profile details could not be saved."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const changePassword = async (event) => {
+    event.preventDefault();
+    setPasswordMessage("");
+    if (passwords.new_password !== passwords.confirm_password) {
+      setPasswordMessage("The new passwords do not match.");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const { data } = await api.post("/auth/change-password/", { old_password: passwords.old_password, new_password: passwords.new_password });
+      setPasswords({ old_password: "", new_password: "", confirm_password: "" });
+      setPasswordMessage(data.detail || "Password updated successfully.");
+    } catch (error) {
+      setPasswordMessage(apiError(error, "Your password could not be changed."));
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  if (!profile) return <div className="rounded-3xl border border-slate-200 bg-white px-6 py-20 text-center text-sm text-slate-400">{profileMessage || "Loading admin profile…"}</div>;
+  const displayName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.username;
+  const initial = displayName?.[0]?.toUpperCase() || sessionUser?.username?.[0]?.toUpperCase() || "A";
+  const effectiveRole = profile.is_staff ? "admin" : profile.role;
+  const profileMessageSuccess = profileMessage.includes("successfully");
+  const passwordMessageSuccess = passwordMessage.includes("successfully");
+
+  return <div className="grid items-start gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
+    <aside className="space-y-6 xl:sticky xl:top-4">
+      <section className="overflow-hidden rounded-3xl bg-[#25194B] text-white shadow-xl shadow-violet-950/15"><div className="h-20 bg-gradient-to-r from-[#6F52D9] to-[#9C7CF1]" /><div className="px-6 pb-7"><div className="-mt-10 grid h-20 w-20 place-items-center overflow-hidden rounded-3xl border-4 border-[#25194B] bg-[#FFD66B] text-3xl font-extrabold text-[#302250]">{profile.profile_picture ? <img src={profile.profile_picture} alt="" className="h-full w-full object-cover" /> : initial}</div><h2 className="mt-4 text-xl font-extrabold">{displayName}</h2><p className="mt-1 break-all text-sm text-indigo-200">{profile.email}</p><span className="mt-4 inline-flex rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold text-[#FFD66B]">Platform administrator</span></div></section>
+      <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]"><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Account details</p><div className="mt-5 space-y-4 text-sm"><div className="flex items-center justify-between gap-3"><span className="text-slate-400">Access level</span><span className="font-bold capitalize text-slate-700">{effectiveRole}</span></div><div className="flex items-center justify-between gap-3"><span className="text-slate-400">Sign-in method</span><span className="font-bold capitalize text-slate-700">{profile.auth_provider}</span></div><div className="flex items-center justify-between gap-3"><span className="text-slate-400">Email status</span><span className={`font-bold ${profile.is_email_verified ? "text-emerald-600" : "text-amber-600"}`}>{profile.is_email_verified ? "Verified" : "Not verified"}</span></div><div className="border-t border-slate-100 pt-4"><p className="text-slate-400">Administrator since</p><p className="mt-1 font-bold text-slate-700">{new Date(profile.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</p></div></div></section>
+    </aside>
+
+    <div className="space-y-6">
+      {!editing ? <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Personal information</p><h2 className="mt-2 text-xl font-extrabold">Admin details</h2><p className="mt-1 text-sm text-slate-500">Your contact and public account information.</p></div><button type="button" onClick={() => { setProfileMessage(""); setEditing(true); }} className="inline-flex items-center gap-2 rounded-xl bg-[#F0ECFF] px-4 py-2.5 text-sm font-bold text-[#6549C9] hover:bg-[#E5DDFF]"><UserRound size={17} /> Edit profile</button></div>
+        <div className="mt-7 grid gap-4 md:grid-cols-2">{profileFields.map(([label, name, , Icon]) => <div key={name} className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#6F52D9] shadow-sm"><Icon size={17} /></span><div className="min-w-0"><p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</p><p className="mt-1 break-words text-sm font-bold text-slate-700">{profile[name] || "Not provided"}</p></div></div>)}</div>
+        <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-4"><p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">About you</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">{profile.bio || "No administrator bio has been added yet."}</p></div>
+        {profileMessage && <p className={`mt-4 rounded-xl px-4 py-3 text-sm font-bold ${profileMessageSuccess ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{profileMessage}</p>}
+      </section> : <form onSubmit={saveProfile} className="rounded-3xl border border-[#D8CCFF] bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7">
+        <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Editing profile</p><h2 className="mt-2 text-xl font-extrabold">Update admin details</h2><p className="mt-1 text-sm text-slate-500">Change the fields below, then save your updates.</p></div><span className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]"><UserRound size={20} /></span></div>
+        <div className="mt-7 grid gap-5 md:grid-cols-2">{profileFields.map(([label, name, type, Icon, placeholder]) => <label key={name} className="text-sm font-bold text-slate-700">{label}<div className="mt-2 flex items-center gap-3 rounded-xl border border-slate-200 px-3.5 focus-within:border-[#7A5BE6] focus-within:ring-2 focus-within:ring-violet-100"><Icon size={17} className="shrink-0 text-slate-400" /><input required={["username", "email"].includes(name)} type={type} value={form[name]} onChange={(event) => setForm((current) => ({ ...current, [name]: event.target.value }))} placeholder={placeholder} className="min-w-0 flex-1 bg-transparent py-3 text-sm font-normal text-slate-800 outline-none" /></div></label>)}</div>
+        <label className="mt-5 block text-sm font-bold text-slate-700">About you<textarea value={form.bio} onChange={(event) => setForm((current) => ({ ...current, bio: event.target.value }))} rows={4} maxLength={1000} placeholder="A short administrator bio" className="mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-normal text-slate-800 outline-none focus:border-[#7A5BE6] focus:ring-2 focus:ring-violet-100" /></label>
+        {profileMessage && <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{profileMessage}</p>}
+        <div className="mt-6 flex justify-end gap-3"><button type="button" disabled={saving} onClick={() => { fillProfile(profile); setProfileMessage(""); setEditing(false); }} className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 disabled:opacity-50">Cancel</button><button disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-[#6F52D9] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-300/30 disabled:opacity-50"><Save size={17} /> {saving ? "Saving…" : "Save changes"}</button></div>
+      </form>}
+
+      <form onSubmit={changePassword} className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Security</p><h2 className="mt-2 text-xl font-extrabold">Change password</h2><p className="mt-1 text-sm text-slate-500">Use a strong password that you do not use elsewhere.</p></div><span className="rounded-xl bg-amber-50 p-2.5 text-amber-700"><LockKeyhole size={20} /></span></div>{profile.auth_provider === "google" && <p className="mt-6 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">This account uses Google Sign-In. Password changes are available only when the account has a password.</p>}<div className="mt-7 grid gap-5 md:grid-cols-3">{[["Current password", "old_password"], ["New password", "new_password"], ["Confirm new password", "confirm_password"]].map(([label, name]) => <label key={name} className="text-sm font-bold text-slate-700">{label}<input required type="password" minLength={8} autoComplete={name === "old_password" ? "current-password" : "new-password"} value={passwords[name]} onChange={(event) => setPasswords((current) => ({ ...current, [name]: event.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-normal outline-none focus:border-[#7A5BE6] focus:ring-2 focus:ring-violet-100" /></label>)}</div>{passwordMessage && <p className={`mt-4 rounded-xl px-4 py-3 text-sm font-bold ${passwordMessageSuccess ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{passwordMessage}</p>}<div className="mt-6 flex justify-end"><button disabled={changingPassword} className="inline-flex items-center gap-2 rounded-xl border border-[#6F52D9] px-5 py-3 text-sm font-bold text-[#6549C9] disabled:opacity-50"><LockKeyhole size={17} /> {changingPassword ? "Updating…" : "Update password"}</button></div></form>
+    </div>
+  </div>;
+}
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user") || "null"));
   const [section, setSection] = useState("overview");
   const [report, setReport] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
@@ -71,9 +234,9 @@ export default function AdminDashboard() {
   useEffect(() => { Promise.all([api.get("/reports/dashboard/"), api.get("/campaigns/admin/all/")]).then(([reportResponse, campaignResponse]) => { setReport(reportResponse.data); setCampaigns(campaignResponse.data); }).catch(() => setNotice("Dashboard data could not be loaded.")); }, []);
   useEffect(() => { const params = new URLSearchParams({ page: String(donationPage), page_size: "10" }); if (donationSearch.trim()) params.set("q", donationSearch.trim()); api.get(`/donations/admin/all/?${params}`).then(({ data }) => { setDonations(data.results || []); setDonationMeta({ count: data.count || 0, next: data.next, previous: data.previous }); }).catch(() => setNotice("Donation transactions could not be loaded.")); }, [donationPage, donationSearch]);
   const pending = campaigns.filter((campaign) => campaign.status === "pending");
-  const title = { overview: "Good morning", campaigns: "Campaign review", donations: "Donation transactions", reports: "Platform insights" }[section];
-  const subtitle = { overview: "Here is the latest activity across Givera.", campaigns: "Review applications and protect the quality of every fundraiser.", donations: "Search, audit, and reconcile every recorded donation.", reports: "Understand campaign status and fundraising performance." }[section];
+  const title = { overview: "Good morning", campaigns: "Campaign review", donations: "Donation transactions", reports: "Platform insights", settings: "Profile & settings" }[section];
+  const subtitle = { overview: "Here is the latest activity across Givera.", campaigns: "Review applications and protect the quality of every fundraiser.", donations: "Search, audit, and reconcile every recorded donation.", reports: "Understand campaign status and fundraising performance.", settings: "Manage your administrator details and account security." }[section];
   const review = async (campaign, status, rejection_reason = "") => { try { await api.patch(`/campaigns/${campaign.id}/review/`, { status, rejection_reason }); setCampaigns((items) => items.map((item) => item.id === campaign.id ? { ...item, status, status_label: status === "approved" ? "Approved" : "Rejected" } : item)); setReport((current) => current && ({ ...current, pending_requests: Math.max(current.pending_requests - 1, 0), active_campaigns: status === "approved" ? current.active_campaigns + 1 : current.active_campaigns })); setSelectedCampaign(null); setNotice(`“${campaign.title}” was ${status}.`); } catch { setNotice("The campaign review could not be saved."); } };
-  const content = useMemo(() => ({ overview: <Overview report={report} campaigns={campaigns} onReview={setSelectedCampaign} onSection={setSection} />, campaigns: <Campaigns campaigns={campaigns} onReview={setSelectedCampaign} onView={(campaign) => navigate(`/campaigns/${campaign.id}`)} />, donations: <Transactions donations={donations} meta={donationMeta} page={donationPage} search={donationSearch} onSearch={(value) => { setDonationSearch(value); setDonationPage(1); }} onPageChange={setDonationPage} />, reports: <Insights report={report} /> }), [report, campaigns, donations, donationMeta, donationPage, donationSearch, navigate]);
+  const content = useMemo(() => ({ overview: <Overview report={report} campaigns={campaigns} onReview={setSelectedCampaign} onSection={setSection} />, campaigns: <Campaigns campaigns={campaigns} onReview={setSelectedCampaign} onView={(campaign) => navigate(`/campaigns/${campaign.id}`)} />, donations: <Transactions donations={donations} meta={donationMeta} page={donationPage} search={donationSearch} onSearch={(value) => { setDonationSearch(value); setDonationPage(1); }} onPageChange={setDonationPage} />, reports: <Insights report={report} />, settings: <AdminSettings user={user} onUserChange={setUser} /> }), [report, campaigns, donations, donationMeta, donationPage, donationSearch, navigate, user]);
   return <div className="min-h-screen bg-[#F6F6FB] text-slate-900"><div className="mx-auto max-w-[1500px] p-4 lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-6"><Sidebar section={section} onSection={setSection} user={user} pending={pending.length} onLogout={() => { logout(); navigate("/login"); }} /><main className="min-w-0 py-6 lg:py-4"><header className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#7A5BE6]">Administration</p><h1 className="mt-2 text-3xl font-extrabold tracking-tight text-[#201A36] md:text-4xl">{title}</h1><p className="mt-2 text-sm text-slate-500">{subtitle}</p></div><div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm"><span className="h-2 w-2 rounded-full bg-emerald-500" /><span className="text-sm font-bold text-slate-600">System operational</span></div></header>{notice && <div className="mb-6 flex items-center justify-between rounded-2xl bg-[#EEE9FF] px-4 py-3 text-sm font-bold text-[#563DAF]"><span>{notice}</span><button type="button" onClick={() => setNotice("")}><X size={16} /></button></div>}{content[section]}</main></div>{selectedCampaign && <ReviewModal campaign={selectedCampaign} onClose={() => setSelectedCampaign(null)} onReview={review} />}</div>;
 }
