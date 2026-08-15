@@ -100,3 +100,13 @@ class ProfileApiTests(APITestCase):
         self.admin.refresh_from_db()
         self.assertEqual(self.admin.role, User.Role.ADMIN)
         self.assertFalse(self.admin.is_staff)
+
+    def test_staff_account_is_automatically_given_admin_role(self):
+        staff_user = User.objects.create_user(
+            email="staff@example.com",
+            username="staff",
+            password="StrongPassword123!",
+            is_staff=True,
+        )
+
+        self.assertEqual(staff_user.role, User.Role.ADMIN)
