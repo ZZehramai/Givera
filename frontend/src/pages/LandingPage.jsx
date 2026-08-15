@@ -270,7 +270,7 @@ export function LandingPage() {
         </section> */}
 
         {/* TRANSPARENCY SECTION */}
-        <section className="relative overflow-hidden rounded-t-[50%_10%] bg-gray-100 pb-28 pt-36">
+        <section className="relative overflow-hidden  rounded-t-[50%_10%] bg-gray-100 pb-28 pt-36">
           <div className="relative mx-auto max-w-container-max px-6">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">See where every gift makes an impact.</h2>
@@ -308,7 +308,7 @@ export function LandingPage() {
             <div className="mb-10 flex flex-wrap items-end justify-between gap-6 border-b border-slate-200/60 pb-8 dark:border-slate-800">
               <div className="max-w-2xl">
                 <h2 className="text-5xl font-bold text-slate-900 sm:text-5xl md:text-6xl">
-                   <span className="text-primary">Featured Campaigns</span>
+                   <span className="text-slate-900">Featured Campaigns</span>
                 </h2>
                 
                 <p className="mt-3 text-base font-medium leading-relaxed text-on-surface-variant md:text-lg">
@@ -355,7 +355,11 @@ export function LandingPage() {
         </section>
 
         {/* COMMUNITY PROPOSALS SECTION */}
-        <section id="campaign-request" className="bg-white py-12 border-y border-outline-variant/40">
+        <section
+          id="campaign-request"
+          className="bg-purple-100 pb-28 pt-14 rounded-b-[50%_10%] md:pb-36 md:pt-20"
+          // style={{ clipPath: "ellipse(86% 100% at 50% 0%)" }}
+        >
           <div className="mx-auto max-w-container-max px-6">
             <motion.div
               className="relative overflow-hidden py-8 md:py-12"
@@ -366,16 +370,16 @@ export function LandingPage() {
             >
               <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
                 <div className="flex flex-col items-start">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-primary-fixed/80 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                  <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-purple-500">
                     <Sparkles size={14} aria-hidden="true" />
                     Demo Feature • Community Proposals
                   </div>
 
-                  <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-on-surface md:text-5xl">
-                    Request a Campaign for <span className="text-primary">100% Direct Funding</span>
+                  <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-352B0B][# md:text-5xl">
+                    Request a Campaign for 100% Direct Funding
                   </h2>
 
-                  <p className="mt-3 text-base leading-relaxed text-on-surface-variant md:text-lg">
+                  <p className="mt-3 text-base leading-relaxed text-slate-600 md:text-lg">
                     Are you a frontline project director or donor nominating a community initiative? Propose a cause for our zero-overhead, GPS-audited funding pipeline.
                   </p>
 
@@ -383,32 +387,32 @@ export function LandingPage() {
                     <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
                       <Link
                         to="/campaigns/create"
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-7 py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 sm:w-auto"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#6F52D9] px-7 py-4 font-bold text-white shadow-lg shadow-[#6F52D9]/25 transition hover:-translate-y-0.5 hover:bg-[#5D42C4] sm:w-auto"
                       >
-                        <PlusCircle size={18} aria-hidden="true" /> Request Now
+                        {/* <PlusCircle size={18} aria-hidden="true" /> Request Now */} Request Now
                       </Link>
                     </motion.div>
 
                     <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
                       <Link
                         to="/campaigns"
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-outline-variant bg-surface px-7 py-4 font-bold text-on-surface transition hover:border-primary/40 hover:text-primary sm:w-auto"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white bg-white px-7 py-4 font-bold text-[#6F52D9] shadow-sm transition sm:w-auto"
                       >
-                        <Clock size={18} aria-hidden="true" /> Current Campaigns
+                        {/* <Clock size={18} aria-hidden="true" /> Current Campaigns */}Current Campaigns
                       </Link>
                     </motion.div>
                   </div>
                 </div>
 
                 <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
-                  <div className="relative overflow-hidden rounded-[2rem] border-4 border-white bg-surface-container-low shadow-xl transition-all duration-300 hover:shadow-2xl">
+                  <div className="relative overflow-hidden rounded-[2rem] border-4 border-white bg-surface-container-low">
                     <img
                       src={communityHeroImage}
                       alt="Frontline project initiative"
                       className="aspect-[4/3] w-full object-cover transition-transform duration-700 hover:scale-105"
                     />
                   </div>
-                  <div className="pointer-events-none absolute -bottom-4 -right-4 -z-10 h-full w-full rounded-[2rem] bg-primary/10 blur-xl" />
+                  <div className="pointer-events-none absolute -bottom-4 -right-4 -z-10 h-full w-full rounded-[2rem] bg-[#8A6C16]/15 blur-xl" />
                 </div>
               </div>
             </motion.div>
@@ -418,7 +422,7 @@ export function LandingPage() {
         {/* HOW IT WORKS SECTION */}
         <section
           id="how-it-works"
-          className="relative scroll-mt-20 overflow-hidden bg-white py-24 min-h-[calc(100vh-5rem)] flex items-center justify-center"
+          className="relative mt-8 mb-16 scroll-mt-20 overflow-hidden bg-white py-24 min-h-[calc(100vh-5rem)] flex items-center justify-center"
         >
           <div className="relative mx-auto max-w-container-max px-6 w-full">
             

@@ -67,7 +67,7 @@ export default function AppHeader() {
     "text-sm font-semibold text-on-surface-variant transition hover:text-primary";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-outline-variant/30 bg-white/80 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-outline-variant/30 bg-white backdrop-blur">
       <nav className="relative mx-auto flex h-18 max-w-container-max items-center justify-between px-6">
         
         {/* LEFT SIDE: Brand Logo */}
