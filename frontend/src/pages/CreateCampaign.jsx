@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import api from "../api/axios";
 import AppHeader from "../components/AppHeader";
+import { mediaUrl } from "../utils/mediaUrl";
 
 const initialForm = {
   title: "",
@@ -22,10 +24,41 @@ const minimumDeadline = tomorrow.toISOString().split("T")[0];
 
 export default function CreateCampaign() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditing = Boolean(id);
   const [form, setForm] = useState(initialForm);
   const [imagePreview, setImagePreview] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(isEditing);
   const [error, setError] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
+
+  useEffect(() => {
+    if (!isEditing) return;
+
+    api.get(`/campaigns/${id}/`)
+      .then(({ data }) => {
+        if (data.status !== "rejected") {
+          setError("Only rejected campaigns can be edited and resubmitted from this page.");
+          return;
+        }
+        setForm({
+          title: data.title || "",
+          summary: data.summary || "",
+          story: data.story || "",
+          category: data.category || "community",
+          beneficiary: data.beneficiary || "",
+          location: data.location || "",
+          goal_amount: data.goal_amount || "",
+          cover_image: null,
+          deadline: data.deadline || "",
+        });
+        setImagePreview(mediaUrl(data.cover_image, ""));
+        setRejectionReason(data.rejection_reason || "Review the campaign details before resubmitting.");
+      })
+      .catch((requestError) => setError(requestError.response?.data?.detail || "This campaign could not be loaded."))
+      .finally(() => setLoading(false));
+  }, [id, isEditing]);
 
   const update = (event) => {
     if (event.target.name === "cover_image") {
@@ -56,9 +89,14 @@ export default function CreateCampaign() {
           payload.append(key, value);
         }
       });
-      await api.post("/campaigns/", payload);
-      navigate("/my-campaigns", {
-        state: { message: "Campaign submitted for admin review." },
+      const { data } = isEditing
+        ? await api.patch(`/campaigns/${id}/`, payload)
+        : await api.post("/campaigns/", payload);
+      navigate(`/dashboard?section=my-campaigns&submitted=${data.id}`, {
+        state: {
+          submissionMessage: isEditing ? "Campaign updated and resubmitted" : "Campaign submitted successfully",
+          campaignTitle: data.title,
+        },
       });
     } catch (requestError) {
       const data = requestError.response?.data;
@@ -75,17 +113,38 @@ export default function CreateCampaign() {
   const inputClass =
     "w-full rounded-xl border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/10";
 
+  if (loading) {
+    return <div className="min-h-screen bg-surface"><AppHeader /><p className="py-24 text-center text-on-surface-variant">Loading campaign…</p></div>;
+  }
+
   return (
     <div className="min-h-screen bg-surface">
       <AppHeader />
       <main className="mx-auto max-w-3xl px-6 py-12">
         <p className="text-sm font-bold uppercase tracking-widest text-primary">
-          Start making an impact
+          {isEditing ? "Campaign revision" : "Start making an impact"}
         </p>
-        <h1 className="mt-2 text-4xl font-bold text-on-surface">Create a campaign</h1>
+        <h1 className="mt-2 text-4xl font-bold text-on-surface">{isEditing ? "Fix and resubmit your campaign" : "Create a campaign"}</h1>
         <p className="mt-3 text-on-surface-variant">
-          Your submission will remain private until an administrator approves it.
+          {isEditing ? "Update the requested details below. Your campaign will return to the admin review queue." : "Your submission will remain private until an administrator approves it."}
         </p>
+
+        {isEditing && rejectionReason && (
+          <section className="mt-8 overflow-hidden rounded-2xl border border-rose-200 bg-white shadow-sm">
+            <div className="flex gap-3 bg-rose-50 px-5 py-4 text-rose-800">
+              <AlertTriangle className="mt-0.5 shrink-0" size={20} />
+              <div><p className="font-extrabold">Why your campaign was rejected</p><p className="mt-1 text-sm leading-6">{rejectionReason}</p></div>
+            </div>
+            <div className="px-5 py-4">
+              <p className="text-sm font-extrabold text-slate-800">Suggested places to review</p>
+              <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                {["Title and short summary", "Story and planned use of funds", "Goal, beneficiary, and location", "Deadline and cover image"].map((item) => (
+                  <p key={item} className="flex items-center gap-2"><CheckCircle2 size={15} className="shrink-0 text-primary" /> {item}</p>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         <form onSubmit={submit} className="mt-10 space-y-6 rounded-3xl bg-white p-8 shadow-sm">
           {error && <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</div>}
@@ -147,7 +206,7 @@ export default function CreateCampaign() {
               </select>
             </label>
             <label>
-              <span className="mb-2 block text-sm font-bold">Goal amount (USD)</span>
+              <span className="mb-2 block text-sm font-bold">Goal amount (Ks)</span>
               <input
                 required
                 min="1"
@@ -202,7 +261,7 @@ export default function CreateCampaign() {
             <label>
               <span className="mb-2 block text-sm font-bold">Cover image</span>
               <input
-                required
+                required={!isEditing}
                 accept="image/jpeg,image/png,image/webp"
                 type="file"
                 name="cover_image"
@@ -226,7 +285,7 @@ export default function CreateCampaign() {
             disabled={saving}
             className="w-full rounded-xl bg-primary px-6 py-4 font-bold text-white hover:opacity-90 disabled:opacity-50"
           >
-            {saving ? "Submitting…" : "Submit for review"}
+            {saving ? (isEditing ? "Resubmitting…" : "Submitting…") : (isEditing ? "Save changes and resubmit" : "Submit for review")}
           </button>
         </form>
       </main>

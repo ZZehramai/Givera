@@ -39,6 +39,14 @@ function App() {
             }
           />
           <Route
+            path="/campaigns/:id/edit"
+            element={
+              <ProtectedRoute>
+                <CreateCampaign />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/my-campaigns"
             element={
               <ProtectedRoute>

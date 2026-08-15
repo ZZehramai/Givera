@@ -69,17 +69,22 @@ export default function MyCampaigns() {
                   </div>
                   <p className="mt-2 text-sm text-on-surface-variant">{campaign.summary}</p>
                   {campaign.rejection_reason && (
-                    <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-                      <strong>Review note:</strong> {campaign.rejection_reason}
-                    </p>
+                    <div className="mt-3 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
+                      <p><strong>Why it was rejected:</strong> {campaign.rejection_reason}</p>
+                      <p className="mt-2 text-xs text-red-600">Open the revision form to update the fields mentioned in this feedback.</p>
+                    </div>
                   )}
                 </div>
-                <Link
-                  to={`/campaigns/${campaign.id}`}
-                  className="font-semibold text-primary hover:underline"
-                >
-                  View details →
-                </Link>
+                <div className="flex flex-wrap gap-3 md:justify-end">
+                  {campaign.status === "rejected" && (
+                    <Link to={`/campaigns/${campaign.id}/edit`} className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white">
+                      Fix and resubmit
+                    </Link>
+                  )}
+                  <Link to={`/campaigns/${campaign.id}`} className="px-2 py-2.5 font-semibold text-primary hover:underline">
+                    View details →
+                  </Link>
+                </div>
               </div>
             ))}
           </div>

@@ -110,6 +110,29 @@ class CampaignApiTests(APITestCase):
         notification = Notification.objects.get(recipient=self.owner)
         self.assertEqual(notification.type, Notification.Type.CAMPAIGN_APPROVED)
 
+    def test_owner_can_fix_and_resubmit_rejected_campaign(self):
+        campaign = Campaign.objects.create(
+            owner=self.owner,
+            status=Campaign.Status.REJECTED,
+            rejection_reason="Explain how the campaign funds will be used.",
+            **self.payload,
+        )
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.patch(
+            reverse("campaign-detail", kwargs={"pk": campaign.pk}),
+            {
+                "story": "Our neighborhood needs a safe place to read. Funds will purchase books, shelves, and study tables.",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        campaign.refresh_from_db()
+        self.assertEqual(campaign.status, Campaign.Status.PENDING)
+        self.assertEqual(campaign.rejection_reason, "")
+        self.assertIn("Funds will purchase books", campaign.story)
+
     def test_organizer_update_notifies_campaign_donors(self):
         donor = User.objects.create_user(
             email="donor@example.com",

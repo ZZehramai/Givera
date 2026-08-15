@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -317,7 +317,8 @@ function BrowseCampaigns({ campaigns, loading }) {
   );
 }
 
-function MyCampaignsPanel({ campaigns, loading }) {
+function MyCampaignsPanel({ campaigns, loading, submittedId, submissionMessage, campaignTitle, onDismissSubmission, onViewSubmission, onBackToDashboard }) {
+  const submittedCampaign = campaigns.find((campaign) => String(campaign.id) === String(submittedId));
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <div className="relative overflow-hidden rounded-[2rem] bg-[#7451E8] p-7 text-white shadow-md md:p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -329,12 +330,43 @@ function MyCampaignsPanel({ campaigns, loading }) {
           Request Campaign
         </Link>
       </div>
+      {submittedId && (
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative mt-7 overflow-hidden rounded-3xl border border-emerald-200 bg-white p-6 shadow-sm md:p-7"
+        >
+          <button type="button" onClick={onDismissSubmission} aria-label="Dismiss confirmation" className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X size={18} /></button>
+          <div className="flex gap-4 pr-10">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700"><Check size={24} strokeWidth={3} /></span>
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-700">Request received</p>
+              <h2 className="mt-1 text-2xl font-extrabold text-slate-900">{submissionMessage || "Campaign submitted successfully"}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600"><strong>{submittedCampaign?.title || campaignTitle || "Your campaign"}</strong> is now pending administrator review. You’ll receive a notification when it is approved or needs changes.</p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {[["1", "Submitted", "Complete"], ["2", "Admin review", "In progress"], ["3", "Decision", "You’ll be notified"]].map(([number, label, note], index) => (
+              <div key={label} className={`rounded-2xl border p-4 ${index === 0 ? "border-emerald-200 bg-emerald-50" : index === 1 ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-slate-50"}`}>
+                <div className="flex items-center gap-3"><span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-extrabold ${index === 0 ? "bg-emerald-600 text-white" : index === 1 ? "bg-amber-400 text-amber-950" : "bg-slate-200 text-slate-500"}`}>{index === 0 ? <Check size={14} strokeWidth={3} /> : number}</span><p className="font-bold text-slate-800">{label}</p></div>
+                <p className="ml-10 mt-1 text-xs text-slate-500">{note}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button type="button" onClick={onViewSubmission} className="inline-flex items-center gap-2 rounded-full bg-[#7451E8] px-5 py-3 text-sm font-bold text-white">View submitted campaign <ArrowRight size={16} /></button>
+            <button type="button" onClick={onBackToDashboard} className="rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:border-[#7451E8] hover:text-[#7451E8]">Back to dashboard</button>
+          </div>
+        </motion.section>
+      )}
       {loading ? (
         <p className="py-20 text-center text-slate-500">Loading campaigns…</p>
       ) : campaigns.length ? (
         <div className="mt-7 space-y-4">
           {campaigns.map((campaign) => (
-            <article key={campaign.id} className="grid gap-4 rounded-2xl border border-slate-100 bg-white p-6 md:grid-cols-[1fr_auto] md:items-center">
+            <article key={campaign.id} className={`grid gap-4 rounded-2xl border bg-white p-6 transition md:grid-cols-[1fr_auto] md:items-center ${String(campaign.id) === String(submittedId) ? "border-[#7451E8] ring-4 ring-[#7451E8]/10" : "border-slate-100"}`}>
               <div>
                 <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-xl font-bold text-slate-800">{campaign.title}</h2>
@@ -344,14 +376,22 @@ function MyCampaignsPanel({ campaigns, loading }) {
                 </div>
                 <p className="mt-2 text-sm text-slate-500">{campaign.summary}</p>
                 {campaign.rejection_reason && (
-                  <p className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
-                    <strong>Review note:</strong> {campaign.rejection_reason}
-                  </p>
+                  <div className="mt-3 rounded-xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
+                    <p><strong>Why it was rejected:</strong> {campaign.rejection_reason}</p>
+                    <p className="mt-2 text-xs text-rose-600">Use the revision form to fix the details mentioned by the administrator.</p>
+                  </div>
                 )}
               </div>
-              <Link to={`/campaigns/${campaign.id}`} className="font-semibold text-[#7451E8] hover:underline">
-                View details →
-              </Link>
+              <div className="flex flex-wrap gap-3 md:justify-end">
+                {campaign.status === "rejected" && (
+                  <Link to={`/campaigns/${campaign.id}/edit`} className="rounded-xl bg-[#7451E8] px-4 py-2.5 text-sm font-bold text-white">
+                    Fix and resubmit
+                  </Link>
+                )}
+                <Link to={`/campaigns/${campaign.id}`} className="px-2 py-2.5 font-semibold text-[#7451E8] hover:underline">
+                  View details →
+                </Link>
+              </div>
             </article>
           ))}
         </div>
@@ -487,13 +527,17 @@ function ProfilePanel({ onLogout }) {
 
 function UserDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const initialParams = new URLSearchParams(location.search);
+  const submittedId = initialParams.get("submitted");
   const storedUser = JSON.parse(localStorage.getItem("user") || "null");
   const [owned, setOwned] = useState([]);
   const [discover, setDiscover] = useState([]);
   const [donated, setDonated] = useState([]);
   const [demoPayments, setDemoPayments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState("overview");
+  const [activeSection, setActiveSection] = useState(initialParams.get("section") || "overview");
+  const [showSubmissionSuccess, setShowSubmissionSuccess] = useState(Boolean(submittedId));
 
   useEffect(() => {
     Promise.allSettled([
@@ -522,6 +566,27 @@ function UserDashboard() {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const clearSubmissionConfirmation = () => {
+    setShowSubmissionSuccess(false);
+    navigate("/dashboard?section=my-campaigns", { replace: true, state: {} });
+  };
+
+  const handleSectionChange = (section) => {
+    setActiveSection(section);
+    if (section !== "my-campaigns") setShowSubmissionSuccess(false);
+  };
+
+  const backToDashboard = () => {
+    setShowSubmissionSuccess(false);
+    setActiveSection("overview");
+    navigate("/dashboard", { replace: true, state: {} });
+  };
+
+  const viewSubmittedCampaign = () => {
+    setShowSubmissionSuccess(false);
+    navigate(`/campaigns/${submittedId}`, { replace: true, state: {} });
   };
 
   const statCardsData = [
@@ -561,7 +626,7 @@ function UserDashboard() {
         <DashboardSidebar
           onLogout={handleLogout}
           activeSection={activeSection}
-          onSectionChange={setActiveSection}
+          onSectionChange={handleSectionChange}
           counts={{ myCampaigns: owned.length, history: donated.length }}
         />
 
@@ -569,7 +634,16 @@ function UserDashboard() {
           {activeSection === "browse" ? (
             <BrowseCampaigns campaigns={discover} loading={loading} />
           ) : activeSection === "my-campaigns" ? (
-            <MyCampaignsPanel campaigns={owned} loading={loading} />
+            <MyCampaignsPanel
+              campaigns={owned}
+              loading={loading}
+              submittedId={showSubmissionSuccess ? submittedId : null}
+              submissionMessage={location.state?.submissionMessage}
+              campaignTitle={location.state?.campaignTitle}
+              onDismissSubmission={clearSubmissionConfirmation}
+              onViewSubmission={viewSubmittedCampaign}
+              onBackToDashboard={backToDashboard}
+            />
           ) : activeSection === "history" ? (
             <HistoryPanel donations={donated} campaigns={owned} demoPayments={demoPayments} />
           ) : activeSection === "profile" ? (
