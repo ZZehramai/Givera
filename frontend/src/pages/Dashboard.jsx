@@ -317,90 +317,162 @@ function BrowseCampaigns({ campaigns, loading }) {
   );
 }
 
-function MyCampaignsPanel({ campaigns, loading, submittedId, submissionMessage, campaignTitle, onDismissSubmission, onViewSubmission, onBackToDashboard }) {
-  const submittedCampaign = campaigns.find((campaign) => String(campaign.id) === String(submittedId));
+function MyCampaignsPanel({
+  campaigns,
+  loading,
+  submittedId,
+  submissionMessage,
+  campaignTitle,
+  onDismissSubmission,
+  onViewSubmission,
+  onBackToDashboard,
+}) {
+  const submittedCampaign = campaigns.find(
+    (campaign) => String(campaign.id) === String(submittedId)
+  );
+
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      {/* HEADER BANNER */}
       <div className="relative overflow-hidden rounded-[2rem] bg-[#7451E8] p-7 text-white shadow-md md:p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFC72C]">Organizer area</p>
+          <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFC72C]">
+            Organizer area
+          </p>
           <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">My campaigns</h1>
         </div>
-        <Link to="/campaigns/create" className="rounded-full bg-[#FFC72C] px-5 py-3 font-bold text-[#7451E8] shadow-md hover:bg-amber-300 transition">
+        <Link
+          to="/campaigns/create"
+          className="rounded-full bg-[#FFC72C] px-5 py-3 font-bold text-[#7451E8] shadow-md hover:bg-amber-300 transition"
+        >
           Request Campaign
         </Link>
       </div>
+
+      {/* SUBMISSION SUCCESS BANNER */}
       {submittedId && (
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           className="relative mt-7 overflow-hidden rounded-3xl border border-emerald-200 bg-white p-6 shadow-sm md:p-7"
         >
-          <button type="button" onClick={onDismissSubmission} aria-label="Dismiss confirmation" className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X size={18} /></button>
+          <button
+            type="button"
+            onClick={onDismissSubmission}
+            aria-label="Dismiss confirmation"
+            className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          >
+            <X size={18} />
+          </button>
           <div className="flex gap-4 pr-10">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700"><Check size={24} strokeWidth={3} /></span>
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+              <Check size={24} strokeWidth={3} />
+            </span>
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-700">Request received</p>
-              <h2 className="mt-1 text-2xl font-extrabold text-slate-900">{submissionMessage || "Campaign submitted successfully"}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600"><strong>{submittedCampaign?.title || campaignTitle || "Your campaign"}</strong> is now pending administrator review. You’ll receive a notification when it is approved or needs changes.</p>
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-700">
+                Request received
+              </p>
+              <h2 className="mt-1 text-2xl font-extrabold text-slate-900">
+                {submissionMessage || "Campaign submitted successfully"}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                <strong>{submittedCampaign?.title || campaignTitle || "Your campaign"}</strong> is now pending administrator review. You’ll receive a notification when it is approved or needs changes.
+              </p>
             </div>
           </div>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {[["1", "Submitted", "Complete"], ["2", "Admin review", "In progress"], ["3", "Decision", "You’ll be notified"]].map(([number, label, note], index) => (
-              <div key={label} className={`rounded-2xl border p-4 ${index === 0 ? "border-emerald-200 bg-emerald-50" : index === 1 ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-slate-50"}`}>
-                <div className="flex items-center gap-3"><span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-extrabold ${index === 0 ? "bg-emerald-600 text-white" : index === 1 ? "bg-amber-400 text-amber-950" : "bg-slate-200 text-slate-500"}`}>{index === 0 ? <Check size={14} strokeWidth={3} /> : number}</span><p className="font-bold text-slate-800">{label}</p></div>
+            {[
+              ["1", "Submitted", "Complete"],
+              ["2", "Admin review", "In progress"],
+              ["3", "Decision", "You’ll be notified"],
+            ].map(([number, label, note], index) => (
+              <div
+                key={label}
+                className={`rounded-2xl border p-4 ${
+                  index === 0
+                    ? "border-emerald-200 bg-emerald-50"
+                    : index === 1
+                    ? "border-amber-200 bg-amber-50"
+                    : "border-slate-200 bg-slate-50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`grid h-7 w-7 place-items-center rounded-full text-xs font-extrabold ${
+                      index === 0
+                        ? "bg-emerald-600 text-white"
+                        : index === 1
+                        ? "bg-amber-400 text-amber-950"
+                        : "bg-slate-200 text-slate-500"
+                    }`}
+                  >
+                    {index === 0 ? <Check size={14} strokeWidth={3} /> : number}
+                  </span>
+                  <p className="font-bold text-slate-800">{label}</p>
+                </div>
                 <p className="ml-10 mt-1 text-xs text-slate-500">{note}</p>
               </div>
             ))}
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <button type="button" onClick={onViewSubmission} className="inline-flex items-center gap-2 rounded-full bg-[#7451E8] px-5 py-3 text-sm font-bold text-white">View submitted campaign <ArrowRight size={16} /></button>
-            <button type="button" onClick={onBackToDashboard} className="rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:border-[#7451E8] hover:text-[#7451E8]">Back to dashboard</button>
+            <button
+              type="button"
+              onClick={onViewSubmission}
+              className="inline-flex items-center gap-2 rounded-full bg-[#7451E8] px-5 py-3 text-sm font-bold text-white"
+            >
+              View submitted campaign <ArrowRight size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={onBackToDashboard}
+              className="rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:border-[#7451E8] hover:text-[#7451E8]"
+            >
+              Back to dashboard
+            </button>
           </div>
         </motion.section>
       )}
-      {loading ? (
-        <p className="py-20 text-center text-slate-500">Loading campaigns…</p>
-      ) : campaigns.length ? (
-        <div className="mt-7 space-y-4">
-          {campaigns.map((campaign) => (
-            <article key={campaign.id} className={`grid gap-4 rounded-2xl border bg-white p-6 transition md:grid-cols-[1fr_auto] md:items-center ${String(campaign.id) === String(submittedId) ? "border-[#7451E8] ring-4 ring-[#7451E8]/10" : "border-slate-100"}`}>
-              <div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <h2 className="text-xl font-bold text-slate-800">{campaign.title}</h2>
-                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusColor[campaign.status] || statusColor.draft}`}>
-                    {campaign.status_label || campaign.status}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm text-slate-500">{campaign.summary}</p>
+
+      {/* CAMPAIGN CARDS GRID (3 COLUMNS) */}
+      <div className="mt-7">
+        {loading ? (
+          <p className="py-20 text-center text-slate-500">Loading campaigns…</p>
+        ) : campaigns.length ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {campaigns.map((campaign) => (
+              <div key={campaign.id} className="relative">
+                <CampaignCard campaign={campaign} />
+
+                {/* REJECTION NOTICE OVERLAY (IF REJECTED) */}
                 {campaign.rejection_reason && (
-                  <div className="mt-3 rounded-xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
-                    <p><strong>Why it was rejected:</strong> {campaign.rejection_reason}</p>
-                    <p className="mt-2 text-xs text-rose-600">Use the revision form to fix the details mentioned by the administrator.</p>
+                  <div className="mt-3 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
+                    <p>
+                      <strong>Why it was rejected:</strong> {campaign.rejection_reason}
+                    </p>
+                    <Link
+                      to={`/campaigns/${campaign.id}/edit`}
+                      className="mt-2 inline-block rounded-xl bg-[#7451E8] px-4 py-2 text-xs font-bold text-white"
+                    >
+                      Fix and resubmit
+                    </Link>
                   </div>
                 )}
               </div>
-              <div className="flex flex-wrap gap-3 md:justify-end">
-                {campaign.status === "rejected" && (
-                  <Link to={`/campaigns/${campaign.id}/edit`} className="rounded-xl bg-[#7451E8] px-4 py-2.5 text-sm font-bold text-white">
-                    Fix and resubmit
-                  </Link>
-                )}
-                <Link to={`/campaigns/${campaign.id}`} className="px-2 py-2.5 font-semibold text-[#7451E8] hover:underline">
-                  View details →
-                </Link>
-              </div>
-            </article>
-          ))}
-        </div>
-      ) : (
-        <div className="mt-7 rounded-3xl bg-white px-6 py-20 text-center">
-          <h2 className="text-2xl font-bold text-slate-800">You have not submitted a campaign yet</h2>
-          <p className="mt-2 text-slate-500">Tell your story and send it to the review team.</p>
-        </div>
-      )}
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-3xl bg-white px-6 py-20 text-center">
+            <h2 className="text-2xl font-bold text-slate-800">
+              You have not submitted a campaign yet
+            </h2>
+            <p className="mt-2 text-slate-500">
+              Tell your story and send it to the review team.
+            </p>
+          </div>
+        )}
+      </div>
     </motion.section>
   );
 }
