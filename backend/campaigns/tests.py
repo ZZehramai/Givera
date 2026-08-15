@@ -2,6 +2,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -180,13 +181,19 @@ class CampaignApiTests(APITestCase):
         self.assertEqual(denied.status_code, status.HTTP_403_FORBIDDEN)
 
         self.client.force_authenticate(self.admin)
+        attachment = SimpleUploadedFile(
+            "receipt.pdf",
+            b"%PDF-1.4 supporting receipt",
+            content_type="application/pdf",
+        )
         created = self.client.post(
             reverse("fund-utilization", kwargs={"pk": campaign.pk}),
-            {"title": "Bought books", "description": "Books for the library shelves.", "amount_spent": "2000.00", "spent_on": str(timezone.localdate())},
-            format="json",
+            {"title": "Bought books", "description": "Books for the library shelves.", "amount_spent": "2000.00", "spent_on": str(timezone.localdate()), "evidence": attachment},
+            format="multipart",
         )
         self.assertEqual(created.status_code, status.HTTP_201_CREATED)
         self.assertEqual(created.data["status"], FundUtilization.Status.APPROVED)
+        self.assertTrue(created.data["evidence"].endswith("receipt.pdf"))
 
         self.client.force_authenticate(user=None)
         public = self.client.get(reverse("fund-utilization", kwargs={"pk": campaign.pk}))

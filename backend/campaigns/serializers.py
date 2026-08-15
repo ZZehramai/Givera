@@ -116,7 +116,7 @@ class FundUtilizationSerializer(serializers.ModelSerializer):
 
     def validate_evidence(self, value):
         if value and value.size > 5 * 1024 * 1024:
-            raise serializers.ValidationError("Evidence image must be 5 MB or smaller.")
+            raise serializers.ValidationError("The attachment must be 5 MB or smaller.")
         return value
 
 

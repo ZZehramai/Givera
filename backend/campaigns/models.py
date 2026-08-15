@@ -117,7 +117,7 @@ class FundUtilization(models.Model):
     description = models.TextField(max_length=2000)
     amount_spent = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("1.00"))])
     spent_on = models.DateField()
-    evidence = models.ImageField(upload_to="fund-utilization/", blank=True, null=True)
+    evidence = models.FileField(upload_to="fund-utilization/", blank=True, null=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     review_note = models.CharField(max_length=500, blank=True)
     reviewed_at = models.DateTimeField(null=True, blank=True)
