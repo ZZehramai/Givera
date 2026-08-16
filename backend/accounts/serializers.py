@@ -3,7 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Notification, User
+from .models import AdminUserAction, Notification, User
 
 
 def tokens_for_user(user):
@@ -25,6 +25,46 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'role', 'auth_provider', 'is_email_verified', 'is_staff', 'created_at'
         ]
+
+
+class AdminUserActionSerializer(serializers.ModelSerializer):
+    actor_name = serializers.CharField(source="actor.username", read_only=True)
+    action_label = serializers.CharField(source="get_action_display", read_only=True)
+
+    class Meta:
+        model = AdminUserAction
+        fields = ["id", "actor_name", "action", "action_label", "previous_value", "new_value", "created_at"]
+        read_only_fields = fields
+
+
+class AdminUserSerializer(UserSerializer):
+    campaign_count = serializers.IntegerField(read_only=True)
+    donation_count = serializers.IntegerField(read_only=True)
+    total_donated = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + ["is_active", "campaign_count", "donation_count", "total_donated"]
+        read_only_fields = fields
+
+
+class AdminUserDetailSerializer(AdminUserSerializer):
+    recent_admin_actions = serializers.SerializerMethodField()
+
+    class Meta(AdminUserSerializer.Meta):
+        fields = AdminUserSerializer.Meta.fields + ["recent_admin_actions"]
+
+    def get_recent_admin_actions(self, obj):
+        return AdminUserActionSerializer(obj.admin_actions_received.select_related("actor")[:8], many=True).data
+
+
+class AdminUserUpdateSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=User.Role.choices, required=False)
+    is_active = serializers.BooleanField(required=False)
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError("Choose a role or account-status change.")
+        return attrs
 
 
 class NotificationSerializer(serializers.ModelSerializer):

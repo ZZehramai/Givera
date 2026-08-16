@@ -9,6 +9,8 @@ urlpatterns = [
     path('token/refresh/', views.TokenRefreshView.as_view(), name='token-refresh'),
 
     path('profile/', views.ProfileView.as_view(), name='profile'),
+    path('admin/users/', views.AdminUserListView.as_view(), name='admin-user-list'),
+    path('admin/users/<uuid:pk>/', views.AdminUserDetailView.as_view(), name='admin-user-detail'),
     path('notifications/', views.NotificationListView.as_view(), name='notification-list'),
     path('notifications/read-all/', views.NotificationMarkAllReadView.as_view(), name='notification-read-all'),
     path('notifications/<uuid:pk>/read/', views.NotificationReadView.as_view(), name='notification-read'),

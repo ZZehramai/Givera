@@ -1,7 +1,12 @@
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
+from django.db.models import Count, DecimalField, IntegerField, OuterRef, Subquery, Sum, Value
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status, permissions
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenRefreshView as BaseTokenRefreshView
@@ -11,9 +16,11 @@ from rest_framework_simplejwt.exceptions import TokenError
 from .serializers import (
     RegisterSerializer, LoginSerializer, GoogleLoginSerializer,
     NotificationSerializer, UserSerializer, ChangePasswordSerializer, ForgotPasswordSerializer,
-    ResetPasswordSerializer, tokens_for_user,
+    ResetPasswordSerializer, AdminUserDetailSerializer, AdminUserSerializer,
+    AdminUserUpdateSerializer, tokens_for_user,
 )
-from .models import Notification, PasswordResetOTP
+from .models import AdminUserAction, Notification, PasswordResetOTP
+from .permissions import IsAdmin
 from .google_auth import verify_google_token
 from .utils import generate_otp, send_password_reset_email, send_welcome_email
 
@@ -126,6 +133,127 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+def admin_user_queryset():
+    from campaigns.models import Campaign
+    from donations.models import Donation
+
+    campaign_counts = (
+        Campaign.objects.filter(owner=OuterRef("pk"))
+        .values("owner")
+        .annotate(total=Count("id"))
+        .values("total")
+    )
+    donation_stats = (
+        Donation.objects.filter(donor=OuterRef("pk"))
+        .values("donor")
+        .annotate(total_count=Count("id"), total_amount=Sum("amount"))
+    )
+    return User.objects.annotate(
+        campaign_count=Coalesce(Subquery(campaign_counts, output_field=IntegerField()), Value(0)),
+        donation_count=Coalesce(Subquery(donation_stats.values("total_count"), output_field=IntegerField()), Value(0)),
+        total_donated=Coalesce(
+            Subquery(donation_stats.values("total_amount"), output_field=DecimalField(max_digits=14, decimal_places=2)),
+            Value(Decimal("0.00")),
+            output_field=DecimalField(max_digits=14, decimal_places=2),
+        ),
+    ).order_by("-created_at")
+
+
+class AdminUserPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 50
+
+
+class AdminUserListView(generics.ListAPIView):
+    serializer_class = AdminUserSerializer
+    permission_classes = [IsAdmin]
+    pagination_class = AdminUserPagination
+
+    def get_queryset(self):
+        queryset = admin_user_queryset()
+        query = self.request.query_params.get("q", "").strip()
+        role = self.request.query_params.get("role", "").strip()
+        account_status = self.request.query_params.get("status", "").strip()
+        if query:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(email__icontains=query)
+                | Q(username__icontains=query)
+                | Q(first_name__icontains=query)
+                | Q(last_name__icontains=query)
+            )
+        if role in {User.Role.ADMIN, User.Role.DONOR}:
+            queryset = queryset.filter(role=role)
+        if account_status == "active":
+            queryset = queryset.filter(is_active=True)
+        elif account_status == "suspended":
+            queryset = queryset.filter(is_active=False)
+        return queryset
+
+
+class AdminUserDetailView(APIView):
+    permission_classes = [IsAdmin]
+
+    def get_user(self, pk):
+        return get_object_or_404(admin_user_queryset(), pk=pk)
+
+    def get(self, request, pk):
+        return Response(AdminUserDetailSerializer(self.get_user(pk)).data)
+
+    def patch(self, request, pk):
+        target = self.get_user(pk)
+        serializer = AdminUserUpdateSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        changes = serializer.validated_data
+
+        if target == request.user and (
+            changes.get("role") == User.Role.DONOR
+            or changes.get("is_active") is False
+        ):
+            return Response(
+                {"detail": "You cannot demote or suspend your own administrator account."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if target.is_staff and changes.get("role") == User.Role.DONOR:
+            return Response(
+                {"detail": "Django staff access must be removed before changing this account to Donor."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        active_admins = User.objects.filter(role=User.Role.ADMIN, is_active=True).count()
+        removing_admin = (
+            target.role == User.Role.ADMIN
+            and target.is_active
+            and (changes.get("role") == User.Role.DONOR or changes.get("is_active") is False)
+        )
+        if removing_admin and active_admins <= 1:
+            return Response(
+                {"detail": "At least one active administrator must remain."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        update_fields = []
+        actions = []
+        if "role" in changes and changes["role"] != target.role:
+            previous = target.role
+            target.role = changes["role"]
+            update_fields.append("role")
+            actions.append(AdminUserAction(actor=request.user, target=target, action=AdminUserAction.Action.ROLE_CHANGED, previous_value=previous, new_value=target.role))
+        if "is_active" in changes and changes["is_active"] != target.is_active:
+            previous = str(target.is_active)
+            target.is_active = changes["is_active"]
+            update_fields.append("is_active")
+            action = AdminUserAction.Action.ACTIVATED if target.is_active else AdminUserAction.Action.SUSPENDED
+            actions.append(AdminUserAction(actor=request.user, target=target, action=action, previous_value=previous, new_value=str(target.is_active)))
+
+        if update_fields:
+            target.save(update_fields=update_fields)
+            AdminUserAction.objects.bulk_create(actions)
+        target = self.get_user(pk)
+        return Response(AdminUserDetailSerializer(target).data)
 
 
 class NotificationListView(generics.ListAPIView):

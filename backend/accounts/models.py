@@ -93,3 +93,26 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.recipient.email}: {self.title}"
+
+
+class AdminUserAction(models.Model):
+    """Audit trail for administrator changes to user access."""
+
+    class Action(models.TextChoices):
+        ROLE_CHANGED = "role_changed", "Role changed"
+        ACTIVATED = "activated", "Account activated"
+        SUSPENDED = "suspended", "Account suspended"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    actor = models.ForeignKey(User, on_delete=models.PROTECT, related_name="admin_actions_performed")
+    target = models.ForeignKey(User, on_delete=models.CASCADE, related_name="admin_actions_received")
+    action = models.CharField(max_length=24, choices=Action.choices)
+    previous_value = models.CharField(max_length=50, blank=True)
+    new_value = models.CharField(max_length=50, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.actor.email}: {self.action} for {self.target.email}"

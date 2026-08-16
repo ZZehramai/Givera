@@ -4,7 +4,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import User
+from .models import AdminUserAction, User
 
 
 class GoogleLoginApiTests(APITestCase):
@@ -110,3 +110,65 @@ class ProfileApiTests(APITestCase):
         )
 
         self.assertEqual(staff_user.role, User.Role.ADMIN)
+
+
+class AdminUserManagementApiTests(APITestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            email="manager@example.com",
+            username="manager",
+            password="StrongPassword123!",
+            role=User.Role.ADMIN,
+        )
+        self.donor = User.objects.create_user(
+            email="member@example.com",
+            username="member",
+            password="StrongPassword123!",
+        )
+        self.client.force_authenticate(self.admin)
+
+    def test_admin_can_search_paginated_user_directory(self):
+        response = self.client.get(reverse("admin-user-list"), {"q": "member", "role": "donor"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["email"], self.donor.email)
+        self.assertIn("campaign_count", response.data["results"][0])
+        self.assertIn("total_donated", response.data["results"][0])
+
+    def test_admin_can_change_role_and_suspend_user_with_audit_log(self):
+        role_response = self.client.patch(
+            reverse("admin-user-detail", kwargs={"pk": self.donor.pk}),
+            {"role": User.Role.ADMIN},
+            format="json",
+        )
+        suspend_response = self.client.patch(
+            reverse("admin-user-detail", kwargs={"pk": self.donor.pk}),
+            {"is_active": False},
+            format="json",
+        )
+
+        self.assertEqual(role_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(suspend_response.status_code, status.HTTP_200_OK)
+        self.donor.refresh_from_db()
+        self.assertEqual(self.donor.role, User.Role.ADMIN)
+        self.assertFalse(self.donor.is_active)
+        self.assertEqual(AdminUserAction.objects.filter(target=self.donor).count(), 2)
+
+    def test_admin_cannot_suspend_self(self):
+        response = self.client.patch(
+            reverse("admin-user-detail", kwargs={"pk": self.admin.pk}),
+            {"is_active": False},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.admin.refresh_from_db()
+        self.assertTrue(self.admin.is_active)
+
+    def test_donor_cannot_access_user_management(self):
+        self.client.force_authenticate(self.donor)
+
+        response = self.client.get(reverse("admin-user-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
