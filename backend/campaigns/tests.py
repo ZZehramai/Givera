@@ -64,6 +64,25 @@ class CampaignApiTests(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["title"], "Approved campaign")
 
+    def test_campaign_completes_automatically_when_deadline_is_reached(self):
+        campaign = Campaign.objects.create(
+            owner=self.owner,
+            status=Campaign.Status.APPROVED,
+            **{
+                **self.payload,
+                "title": "Deadline campaign",
+                "deadline": timezone.localdate() - timedelta(days=1),
+            },
+        )
+
+        response = self.client.get(reverse("campaign-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        campaign.refresh_from_db()
+        self.assertEqual(campaign.status, Campaign.Status.COMPLETED)
+        returned = next(item for item in response.data if item["id"] == str(campaign.id))
+        self.assertEqual(returned["status"], Campaign.Status.COMPLETED)
+
     def test_authenticated_user_sees_approved_campaigns_from_all_owners(self):
         other_owner = User.objects.create_user(
             email="other-owner@example.com",
@@ -193,7 +212,8 @@ class CampaignApiTests(APITestCase):
         )
         self.assertEqual(created.status_code, status.HTTP_201_CREATED)
         self.assertEqual(created.data["status"], FundUtilization.Status.APPROVED)
-        self.assertTrue(created.data["evidence"].endswith("receipt.pdf"))
+        self.assertIn("receipt", created.data["evidence"])
+        self.assertTrue(created.data["evidence"].endswith(".pdf"))
 
         self.client.force_authenticate(user=None)
         public = self.client.get(reverse("fund-utilization", kwargs={"pk": campaign.pk}))

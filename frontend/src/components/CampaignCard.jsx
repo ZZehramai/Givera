@@ -9,6 +9,7 @@ export default function CampaignCard({ campaign }) {
   const amountRaised = Number(campaign.amount_raised || 0);
   const goalAmount = Number(campaign.goal_amount || 1);
   const progress = Math.min(Math.round((amountRaised / goalAmount) * 100), 100);
+  const isCompleted = campaign.status === "completed";
   const daysRemaining = campaign.deadline
     ? Math.max(0, Math.ceil((new Date(campaign.deadline).getTime() - Date.now()) / 86400000))
     : null;
@@ -44,16 +45,16 @@ export default function CampaignCard({ campaign }) {
           <h2 className="line-clamp-2 text-base font-extrabold leading-snug text-slate-900">
             {campaign.title}
           </h2>
-          {daysRemaining !== null && (
-            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap pt-0.5 text-[11px] font-semibold text-slate-500">
-              <CalendarDays size={13} /> {daysRemaining ? `${daysRemaining} days left` : "Ending today"}
+          {(isCompleted || daysRemaining !== null) && (
+            <span className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-bold ${isCompleted ? "bg-[#EEE9FF] text-[#6549C9]" : "text-slate-500"}`}>
+              {isCompleted ? "Completed" : <><CalendarDays size={13} /> {daysRemaining ? `${daysRemaining} days left` : "Ending today"}</>}
             </span>
           )}
         </div>
         <div className="mt-4">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
-              className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+              className={`h-full rounded-full transition-all duration-500 ${isCompleted ? "bg-[#6F52D9]" : "bg-emerald-500"}`}
               style={{ width: `${progress}%` }}
             />
           </div>

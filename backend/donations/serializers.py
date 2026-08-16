@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from campaigns.models import Campaign
 from campaigns.serializers import CampaignSerializer
+from campaigns.services import complete_campaign_if_due
 
 from .models import DemoPayment, Donation
 
@@ -35,6 +36,7 @@ class DonationSerializer(serializers.ModelSerializer):
         return obj.donor.get_full_name() or obj.donor.username
 
     def validate_campaign_id(self, campaign):
+        complete_campaign_if_due(campaign)
         if campaign.status != Campaign.Status.APPROVED:
             raise serializers.ValidationError(
                 "Only approved campaigns can receive donations."
@@ -88,6 +90,7 @@ class DemoPaymentCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "status", "created_at"]
 
     def validate_campaign_id(self, campaign):
+        complete_campaign_if_due(campaign)
         if campaign.status != Campaign.Status.APPROVED:
             raise serializers.ValidationError("Only approved campaigns can receive donations.")
         return campaign

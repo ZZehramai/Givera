@@ -11,6 +11,7 @@ from accounts.permissions import IsAdmin
 
 from .models import Campaign, CampaignUpdate, FundUtilization
 from .serializers import AdminCampaignSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer
+from .services import complete_campaign_if_due, complete_due_campaigns
 
 
 class CampaignListCreateView(generics.ListCreateAPIView):
@@ -22,7 +23,8 @@ class CampaignListCreateView(generics.ListCreateAPIView):
         return [permissions.AllowAny()]
 
     def get_queryset(self):
-        queryset = Campaign.objects.filter(status=Campaign.Status.APPROVED).select_related("owner")
+        complete_due_campaigns()
+        queryset = Campaign.objects.filter(status__in=[Campaign.Status.APPROVED, Campaign.Status.COMPLETED]).select_related("owner")
         query = self.request.query_params.get("q", "").strip()
         category = self.request.query_params.get("category", "").strip()
         if query:
@@ -49,15 +51,16 @@ class CampaignDetailView(generics.RetrieveUpdateDestroyAPIView):
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
+        complete_due_campaigns()
         queryset = Campaign.objects.select_related("owner")
         user = self.request.user
         if user.is_authenticated:
             if user.is_admin_role or user.is_staff:
                 return queryset
             return queryset.filter(
-                Q(status=Campaign.Status.APPROVED) | Q(owner=user)
+                Q(status__in=[Campaign.Status.APPROVED, Campaign.Status.COMPLETED]) | Q(owner=user)
             ).distinct()
-        return queryset.filter(status=Campaign.Status.APPROVED)
+        return queryset.filter(status__in=[Campaign.Status.APPROVED, Campaign.Status.COMPLETED])
 
     def perform_update(self, serializer):
         campaign = self.get_object()
@@ -92,6 +95,7 @@ class MyCampaignListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        complete_due_campaigns(Campaign.objects.filter(owner=self.request.user))
         return Campaign.objects.filter(owner=self.request.user).select_related("owner")
 
 
@@ -108,6 +112,7 @@ class AdminCampaignListView(generics.ListAPIView):
     permission_classes = [IsAdmin]
 
     def get_queryset(self):
+        complete_due_campaigns()
         return Campaign.objects.select_related("owner")
 
 
@@ -132,6 +137,8 @@ class CampaignReviewView(APIView):
         campaign.save(
             update_fields=["status", "rejection_reason", "approved_at", "updated_at"]
         )
+        if decision == Campaign.Status.APPROVED:
+            complete_campaign_if_due(campaign)
         if decision == Campaign.Status.APPROVED:
             Notification.objects.create(
                 recipient=campaign.owner,
@@ -160,9 +167,10 @@ class CampaignUpdateListCreateView(generics.ListCreateAPIView):
         return [permissions.AllowAny()]
 
     def get_campaign(self):
+        complete_due_campaigns(Campaign.objects.filter(pk=self.kwargs["pk"]))
         campaign = get_object_or_404(Campaign.objects.select_related("owner"), pk=self.kwargs["pk"])
         user = self.request.user
-        can_view = campaign.status == Campaign.Status.APPROVED or (
+        can_view = campaign.status in {Campaign.Status.APPROVED, Campaign.Status.COMPLETED} or (
             user.is_authenticated and (campaign.owner == user or user.is_admin_role or user.is_staff)
         )
         if not can_view:
@@ -201,7 +209,8 @@ class CampaignDonorListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, *args, **kwargs):
-        campaign = get_object_or_404(Campaign, pk=kwargs["pk"], status=Campaign.Status.APPROVED)
+        complete_due_campaigns(Campaign.objects.filter(pk=kwargs["pk"]))
+        campaign = get_object_or_404(Campaign, pk=kwargs["pk"], status__in=[Campaign.Status.APPROVED, Campaign.Status.COMPLETED])
         from donations.models import Donation
 
         donations = Donation.objects.filter(campaign=campaign).select_related("donor")
@@ -224,9 +233,10 @@ class FundUtilizationListCreateView(generics.ListCreateAPIView):
         return [IsAdmin()] if self.request.method == "POST" else [permissions.AllowAny()]
 
     def get_campaign(self):
+        complete_due_campaigns(Campaign.objects.filter(pk=self.kwargs["pk"]))
         campaign = get_object_or_404(Campaign.objects.select_related("owner"), pk=self.kwargs["pk"])
         user = self.request.user
-        can_view = campaign.status == Campaign.Status.APPROVED or (user.is_authenticated and (campaign.owner == user or user.is_admin_role or user.is_staff))
+        can_view = campaign.status in {Campaign.Status.APPROVED, Campaign.Status.COMPLETED} or (user.is_authenticated and (campaign.owner == user or user.is_admin_role or user.is_staff))
         if not can_view:
             raise PermissionDenied("This campaign is not available.")
         return campaign

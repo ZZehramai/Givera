@@ -47,6 +47,25 @@ class DonationApiTests(APITestCase):
         self.campaign.refresh_from_db()
         self.assertEqual(self.campaign.amount_raised, Decimal("25.00"))
 
+    def test_campaign_completes_when_donation_reaches_goal(self):
+        response = self.client.post(
+            "/api/donations/",
+            {"campaign_id": self.campaign.id, "amount": "1000.00"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.campaign.refresh_from_db()
+        self.assertEqual(self.campaign.amount_raised, Decimal("1000.00"))
+        self.assertEqual(self.campaign.status, Campaign.Status.COMPLETED)
+
+        blocked = self.client.post(
+            "/api/donations/",
+            {"campaign_id": self.campaign.id, "amount": "10.00"},
+            format="json",
+        )
+        self.assertEqual(blocked.status_code, 400)
+
     def test_my_donations_only_returns_current_users_donations(self):
         Donation.objects.create(
             donor=self.donor,
@@ -87,6 +106,23 @@ class DonationApiTests(APITestCase):
         self.assertEqual(Donation.objects.count(), 1)
         self.campaign.refresh_from_db()
         self.assertEqual(self.campaign.amount_raised, Decimal("25.00"))
+
+    def test_demo_payment_completes_campaign_at_goal(self):
+        checkout = self.client.post(
+            "/api/donations/demo-checkout/",
+            {"campaign_id": self.campaign.id, "provider": "kbzpay", "amount": "1000.00"},
+            format="json",
+        )
+
+        response = self.client.post(
+            f'/api/donations/demo-checkout/{checkout.data["id"]}/simulate/',
+            {"outcome": "success"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.campaign.refresh_from_db()
+        self.assertEqual(self.campaign.status, Campaign.Status.COMPLETED)
 
     def test_failed_demo_payment_does_not_create_a_donation(self):
         checkout = self.client.post(

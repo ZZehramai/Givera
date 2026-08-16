@@ -6,12 +6,14 @@ from rest_framework.views import APIView
 from accounts.permissions import IsAdmin
 from campaigns.models import Campaign
 from donations.models import DemoPayment, Donation
+from campaigns.services import complete_due_campaigns
 
 
 class AdminDashboardReportView(APIView):
     permission_classes = [IsAdmin]
 
     def get(self, request):
+        complete_due_campaigns()
         monthly = list(
             Donation.objects.annotate(month=TruncMonth("created_at"))
             .values("month")

@@ -1,16 +1,16 @@
 from django.db import transaction
-from django.db.models import F
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from datetime import timedelta
 from uuid import uuid4
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, serializers, status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import IsAdmin
 from campaigns.models import Campaign
+from campaigns.services import campaign_is_due, complete_campaign_if_due
 
 from .models import DemoPayment, Donation
 from .serializers import AdminDonationSerializer, DemoPaymentCreateSerializer, DemoPaymentSerializer, DonationSerializer
@@ -25,10 +25,13 @@ class DonationCreateView(generics.CreateAPIView):
         campaign = Campaign.objects.select_for_update().get(
             pk=serializer.validated_data["campaign"].pk
         )
+        if complete_campaign_if_due(campaign) or campaign.status != Campaign.Status.APPROVED:
+            raise serializers.ValidationError("This campaign can no longer receive donations.")
         donation = serializer.save(donor=self.request.user, campaign=campaign)
-        Campaign.objects.filter(pk=campaign.pk).update(
-            amount_raised=F("amount_raised") + donation.amount
-        )
+        campaign.amount_raised += donation.amount
+        if campaign_is_due(campaign):
+            campaign.status = Campaign.Status.COMPLETED
+        campaign.save(update_fields=["amount_raised", "status", "updated_at"])
 
 
 class MyDonationListView(generics.ListAPIView):
@@ -105,17 +108,21 @@ class DemoPaymentConfirmView(APIView):
             payment.status = DemoPayment.Status.EXPIRED
             payment.save(update_fields=["status"])
             return Response({"detail": "This demo checkout has expired."}, status=status.HTTP_400_BAD_REQUEST)
-        if payment.campaign.status != Campaign.Status.APPROVED:
+        campaign = Campaign.objects.select_for_update().get(pk=payment.campaign_id)
+        if complete_campaign_if_due(campaign) or campaign.status != Campaign.Status.APPROVED:
             return Response({"detail": "This campaign can no longer receive donations."}, status=status.HTTP_400_BAD_REQUEST)
 
         donation = Donation.objects.create(
             donor=request.user,
-            campaign=payment.campaign,
+            campaign=campaign,
             amount=payment.amount,
             message=payment.message,
             is_anonymous=payment.is_anonymous,
         )
-        Campaign.objects.filter(pk=payment.campaign_id).update(amount_raised=F("amount_raised") + payment.amount)
+        campaign.amount_raised += payment.amount
+        if campaign_is_due(campaign):
+            campaign.status = Campaign.Status.COMPLETED
+        campaign.save(update_fields=["amount_raised", "status", "updated_at"])
         payment.status = DemoPayment.Status.PAID
         payment.donation = donation
         payment.completed_at = timezone.now()
