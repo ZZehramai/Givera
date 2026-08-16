@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import { logout } from "../services/authService";
 import api from "../api/axios";
 
-export default function AppHeader() {
+export default function AppHeader({ minimal = false }) {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user") || "null"));
@@ -78,7 +78,7 @@ export default function AppHeader() {
         </div>
 
         {/* CENTER Navigation Links */}
-        <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex">
+        {!minimal && <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex">
           <a href="#hero" className={sectionClass}>
             Home
           </a>
@@ -94,7 +94,7 @@ export default function AppHeader() {
           <a href="#faq" className={sectionClass}>
             FAQ
           </a>
-        </div>
+        </div>}
 
         {/* RIGHT SIDE: Notifications & User Menu */}
         <div className="flex items-center gap-4 sm:gap-5">
@@ -179,7 +179,7 @@ export default function AppHeader() {
               </div>
 
               {/* Dynamic Profile Avatar */}
-              <Link to="/dashboard" className="hidden sm:block">
+              <Link to="/dashboard" className={minimal ? "block" : "hidden sm:block"}>
                 <div className="h-10 w-10 overflow-hidden rounded-full border border-purple-200 shadow-xs transition hover:opacity-90 hover:ring-2 hover:ring-purple-400">
                   {user?.avatar ? (
                     <img
@@ -196,13 +196,15 @@ export default function AppHeader() {
               </Link>
 
               {/* Log out Button */}
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="rounded-xl border border-outline-variant px-4 py-2 text-sm font-semibold text-on-surface hover:bg-surface-container-low"
-              >
-                Log out
-              </button>
+              {!minimal && (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="rounded-xl border border-outline-variant px-4 py-2 text-sm font-semibold text-on-surface hover:bg-surface-container-low"
+                >
+                  Log out
+                </button>
+              )}
             </>
           ) : (
             <>
@@ -213,20 +215,22 @@ export default function AppHeader() {
                 Sign In
               </Link>
 
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90"
-              >
-                Donate Now
-                <ArrowUpRight size={16} aria-hidden="true" />
-              </Link>
+              {!minimal && (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90"
+                >
+                  Donate Now
+                  <ArrowUpRight size={16} aria-hidden="true" />
+                </Link>
+              )}
             </>
           )}
         </div>
       </nav>
 
       {/* MOBILE SECONDARY NAV ROW */}
-      <nav
+      {!minimal && <nav
         aria-label="Mobile Navigation"
         className="mx-auto flex max-w-container-max justify-center gap-2 overflow-x-auto border-t border-outline-variant/30 px-4 py-2 lg:hidden"
       >
@@ -254,7 +258,7 @@ export default function AppHeader() {
         >
           FAQ
         </a>
-      </nav>
+      </nav>}
     </header>
   );
 }
