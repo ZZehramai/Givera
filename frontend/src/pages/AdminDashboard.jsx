@@ -1,17 +1,41 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowUpRight, BarChart3, CheckCircle2, ChevronLeft, ChevronRight, CircleDollarSign,
-  ClipboardCheck, Download, FileBarChart, FileSpreadsheet, FileText, Heart, LayoutDashboard, LockKeyhole, LogOut, Mail,
-  MapPin, Megaphone, Phone, Save, Search, Settings, ShieldCheck, TrendingUp, UserRound,
-  UserCog, Users, X,
+  ArrowUpRight,
+  BarChart3,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  CircleDollarSign,
+  ClipboardCheck,
+  Download,
+  FileBarChart,
+  FileSpreadsheet,
+  FileText,
+  Heart,
+  LayoutDashboard,
+  LockKeyhole,
+  LogOut,
+  Mail,
+  MapPin,
+  Megaphone,
+  Phone,
+  Save,
+  Search,
+  Settings,
+  ShieldCheck,
+  TrendingUp,
+  UserRound,
+  UserCog,
+  Users,
+  X,
 } from "lucide-react";
 
 import api from "../api/axios";
 import { logout } from "../services/authService";
 
 const kyat = (value) => `${Number(value || 0).toLocaleString()} Ks`;
-const dateTime = (value) => value ? new Date(value).toLocaleString() : "—";
+const dateTime = (value) => (value ? new Date(value).toLocaleString() : "—");
 const campaignTone = {
   approved: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   pending: "bg-amber-50 text-amber-700 ring-amber-200",
@@ -21,75 +45,1040 @@ const campaignTone = {
 };
 
 function StatusBadge({ status, label }) {
-  return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${campaignTone[status] || campaignTone.draft}`}>{label || status}</span>;
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${campaignTone[status] || campaignTone.draft}`}
+    >
+      {label || status}
+    </span>
+  );
 }
 
 function Sidebar({ section, onSection, user, onLogout, pending }) {
-  const items = [["overview", "Overview", LayoutDashboard], ["campaigns", "Campaign review", Megaphone], ["donations", "Transactions", Heart], ["users", "User management", UserCog], ["reports", "Insights", FileBarChart], ["settings", "Profile & settings", Settings]];
-  return <aside className="flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_18px_45px_rgba(41,35,80,.09)] lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:self-start"><div className="border-b border-slate-100 px-6 py-6"><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">G</div><div><p className="text-xl font-extrabold tracking-tight text-[#24184a]">Givera</p><p className="text-xs font-medium text-slate-400">Admin workspace</p></div></div></div><nav className="space-y-1 px-3 py-4">{items.map(([key, label, Icon]) => <button key={key} type="button" onClick={() => onSection(key)} className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold transition ${section === key ? "bg-[#F0ECFF] text-[#6549C9]" : "text-slate-600 hover:bg-slate-50 hover:text-[#6549C9]"}`}><Icon size={18} /><span className="flex-1">{label}</span>{key === "campaigns" && pending > 0 && <span className={`grid min-w-6 place-items-center rounded-full px-1.5 py-0.5 text-xs ${section === key ? "bg-[#6F52D9] text-white" : "bg-[#E9E2FF] text-[#6549C9]"}`}>{pending}</span>}</button>)}</nav><div className="mt-auto border-t border-slate-100 p-4"><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#FFD66B] to-[#FFAD66] font-extrabold text-[#24184a]">{user?.username?.[0]?.toUpperCase() || "A"}</div><div className="min-w-0"><p className="truncate text-sm font-bold text-slate-800">{user?.username || "Administrator"}</p><p className="text-xs text-slate-400">Platform admin</p></div></div><button type="button" onClick={onLogout} className="mt-3 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"><LogOut size={17} /> Sign out</button></div></aside>;
+  const items = [
+    ["overview", "Overview", LayoutDashboard],
+    ["campaigns", "Campaign review", Megaphone],
+    ["donations", "Transactions", Heart],
+    ["users", "User management", UserCog],
+    ["reports", "Insights", FileBarChart],
+    ["settings", "Profile & settings", Settings],
+  ];
+  return (
+    <aside className="flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_18px_45px_rgba(41,35,80,.09)] lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:self-start">
+      <div className="border-b border-slate-100 px-6 py-6">
+        <div className="flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">
+            G
+          </div>
+          <div>
+            <p className="text-xl font-extrabold tracking-tight text-[#24184a]">
+              Givera
+            </p>
+            <p className="text-xs font-medium text-slate-400">
+              Admin workspace
+            </p>
+          </div>
+        </div>
+      </div>
+      <nav className="space-y-1 px-3 py-4">
+        {items.map(([key, label, Icon]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => onSection(key)}
+            className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold transition ${section === key ? "bg-[#F0ECFF] text-[#6549C9]" : "text-slate-600 hover:bg-slate-50 hover:text-[#6549C9]"}`}
+          >
+            <Icon size={18} />
+            <span className="flex-1">{label}</span>
+            {key === "campaigns" && pending > 0 && (
+              <span
+                className={`grid min-w-6 place-items-center rounded-full px-1.5 py-0.5 text-xs ${section === key ? "bg-[#6F52D9] text-white" : "bg-[#E9E2FF] text-[#6549C9]"}`}
+              >
+                {pending}
+              </span>
+            )}
+          </button>
+        ))}
+      </nav>
+      <div className="mt-auto border-t border-slate-100 p-4">
+        <div className="flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#FFD66B] to-[#FFAD66] font-extrabold text-[#24184a]">
+            {user?.username?.[0]?.toUpperCase() || "A"}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-slate-800">
+              {user?.username || "Administrator"}
+            </p>
+            <p className="text-xs text-slate-400">Platform admin</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="mt-3 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
+        >
+          <LogOut size={17} /> Sign out
+        </button>
+      </div>
+    </aside>
+  );
 }
 
 function MetricCard({ icon: Icon, label, value, note, tone }) {
-  return <article className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_rgba(43,37,80,.06)]"><div className="flex items-start justify-between"><span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}><Icon size={21} /></span><ArrowUpRight size={18} className="text-slate-300" /></div><p className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">{value}</p><p className="mt-1 text-sm font-bold text-slate-700">{label}</p><p className="mt-1 text-xs text-slate-400">{note}</p></article>;
+  return (
+    <article className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+      <div className="flex items-start justify-between">
+        <span
+          className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}
+        >
+          <Icon size={21} />
+        </span>
+        <ArrowUpRight size={18} className="text-slate-300" />
+      </div>
+      <p className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">
+        {value}
+      </p>
+      <p className="mt-1 text-sm font-bold text-slate-700">{label}</p>
+      <p className="mt-1 text-xs text-slate-400">{note}</p>
+    </article>
+  );
 }
 
 function ReviewModal({ campaign, onClose, onReview }) {
   const [reason, setReason] = useState("");
-  return <div className="fixed inset-0 z-50 overflow-y-auto bg-[#17112e]/55 p-4 backdrop-blur-sm"><div className="mx-auto my-8 max-w-3xl overflow-hidden rounded-[28px] bg-white shadow-2xl"><div className="flex items-start justify-between bg-[#25194B] px-7 py-6 text-white"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#D9CBFF]">Campaign verification</p><h2 className="mt-2 text-2xl font-extrabold">{campaign.title}</h2></div><button type="button" onClick={onClose} className="rounded-xl p-2 hover:bg-white/10"><X size={21} /></button></div><div className="grid gap-7 p-7 md:grid-cols-[1.35fr_.65fr]"><div><p className="text-xs font-bold uppercase tracking-wide text-slate-400">Campaign story</p><p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">{campaign.story}</p><div className="mt-6 grid grid-cols-2 gap-3"><Info label="Goal" value={kyat(campaign.goal_amount)} /><Info label="Beneficiary" value={campaign.beneficiary} /><Info label="Location" value={campaign.location} /><Info label="Deadline" value={new Date(campaign.deadline).toLocaleDateString()} /></div></div><div className="rounded-2xl bg-slate-50 p-5"><p className="text-xs font-bold uppercase tracking-wide text-slate-400">Organizer</p><p className="mt-3 font-extrabold text-slate-900">{campaign.owner_name}</p><p className="mt-1 break-all text-sm text-slate-500">{campaign.owner_email}</p><div className="mt-5 border-t border-slate-200 pt-4 text-sm"><p className="font-bold text-slate-700">{campaign.owner_phone_number || "No phone number"}</p><p className="mt-1 text-slate-500">{campaign.owner_country || "No location supplied"}</p></div></div></div><div className="border-t border-slate-100 bg-slate-50/70 px-7 py-5"><label className="text-sm font-bold text-slate-700">Rejection feedback <span className="font-normal text-slate-400">(required when rejecting)</span><textarea rows={2} value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Tell the organizer what to update" className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#7A5BE6]" /></label><div className="mt-4 flex flex-wrap justify-end gap-3"><button type="button" onClick={onClose} className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500">Cancel</button><button type="button" disabled={!reason.trim()} onClick={() => onReview(campaign, "rejected", reason)} className="rounded-xl bg-rose-100 px-4 py-2.5 text-sm font-bold text-rose-700 disabled:opacity-40">Request changes</button><button type="button" onClick={() => onReview(campaign, "approved")} className="rounded-xl bg-[#6F52D9] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/20">Approve campaign</button></div></div></div></div>;
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#17112e]/55 p-4 backdrop-blur-sm">
+      <div className="mx-auto my-8 max-w-3xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
+        <div className="flex items-start justify-between bg-[#25194B] px-7 py-6 text-white">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-[#D9CBFF]">
+              Campaign verification
+            </p>
+            <h2 className="mt-2 text-2xl font-extrabold">{campaign.title}</h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl p-2 hover:bg-white/10"
+          >
+            <X size={21} />
+          </button>
+        </div>
+        <div className="grid gap-7 p-7 md:grid-cols-[1.35fr_.65fr]">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+              Campaign story
+            </p>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">
+              {campaign.story}
+            </p>
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <Info label="Goal" value={kyat(campaign.goal_amount)} />
+              <Info label="Beneficiary" value={campaign.beneficiary} />
+              <Info label="Location" value={campaign.location} />
+              <Info
+                label="Deadline"
+                value={new Date(campaign.deadline).toLocaleDateString()}
+              />
+            </div>
+          </div>
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+              Organizer
+            </p>
+            <p className="mt-3 font-extrabold text-slate-900">
+              {campaign.owner_name}
+            </p>
+            <p className="mt-1 break-all text-sm text-slate-500">
+              {campaign.owner_email}
+            </p>
+            <div className="mt-5 border-t border-slate-200 pt-4 text-sm">
+              <p className="font-bold text-slate-700">
+                {campaign.owner_phone_number || "No phone number"}
+              </p>
+              <p className="mt-1 text-slate-500">
+                {campaign.owner_country || "No location supplied"}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-slate-100 bg-slate-50/70 px-7 py-5">
+          <label className="text-sm font-bold text-slate-700">
+            Rejection feedback{" "}
+            <span className="font-normal text-slate-400">
+              (required when rejecting)
+            </span>
+            <textarea
+              rows={2}
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Tell the organizer what to update"
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#7A5BE6]"
+            />
+          </label>
+          <div className="mt-4 flex flex-wrap justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={!reason.trim()}
+              onClick={() => onReview(campaign, "rejected", reason)}
+              className="rounded-xl bg-rose-100 px-4 py-2.5 text-sm font-bold text-rose-700 disabled:opacity-40"
+            >
+              Request changes
+            </button>
+            <button
+              type="button"
+              onClick={() => onReview(campaign, "approved")}
+              className="rounded-xl bg-[#6F52D9] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/20"
+            >
+              Approve campaign
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function Info({ label, value }) { return <div className="rounded-xl border border-slate-100 p-3"><p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</p><p className="mt-1 text-sm font-bold text-slate-700">{value}</p></div>; }
+function Info({ label, value }) {
+  return (
+    <div className="rounded-xl border border-slate-100 p-3">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-bold text-slate-700">{value}</p>
+    </div>
+  );
+}
 
 function Campaigns({ campaigns, page, onPageChange, onReview, onView }) {
   const pageSize = 10;
   const pages = Math.max(1, Math.ceil(campaigns.length / pageSize));
   const pageCampaigns = campaigns.slice((page - 1) * pageSize, page * pageSize);
 
-  return <section className="rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]"><div className="flex flex-wrap items-end justify-between gap-3 px-6 py-5"><div><h2 className="text-lg font-extrabold">Campaign review queue</h2><p className="mt-1 text-sm text-slate-500">Verify organizers and decide which campaigns can go live.</p></div><span className="rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-[#6549C9]">{campaigns.length} total</span></div><div className="overflow-x-auto"><table className="w-full min-w-[820px] text-left text-sm"><thead className="border-y border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400"><tr><th className="px-6 py-3">Campaign</th><th className="px-6 py-3">Organizer</th><th className="px-6 py-3">Goal</th><th className="px-6 py-3">Status</th><th className="px-6 py-3" /></tr></thead><tbody>{pageCampaigns.map((campaign) => <tr key={campaign.id} className="border-b border-slate-100 last:border-0"><td className="px-6 py-4"><p className="font-bold text-slate-800">{campaign.title}</p><p className="mt-1 text-xs text-slate-400">{campaign.category_label} · {campaign.location}</p></td><td className="px-6 py-4"><p className="font-semibold text-slate-700">{campaign.owner_name}</p><p className="mt-1 text-xs text-slate-400">{campaign.owner_email}</p></td><td className="px-6 py-4 font-bold text-[#6549C9]">{kyat(campaign.goal_amount)}</td><td className="px-6 py-4"><StatusBadge status={campaign.status} label={campaign.status_label} /></td><td className="px-6 py-4"><div className="flex justify-end gap-2"><button type="button" onClick={() => onView(campaign)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:border-[#C8BAFF] hover:text-[#6549C9]">View details</button>{campaign.status === "pending" && <button type="button" onClick={() => onReview(campaign)} className="rounded-xl bg-[#F0ECFF] px-3 py-2 text-xs font-bold text-[#6549C9] hover:bg-[#E3DBFF]">Review</button>}</div></td></tr>)}</tbody></table></div><AdminPagination page={page} pages={pages} count={campaigns.length} hasPrevious={page > 1} hasNext={page < pages} onPageChange={onPageChange} /></section>;
+  return (
+    <section className="rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+      {/* <div className="flex flex-wrap items-end justify-between gap-3 px-6 py-5">
+        <div>
+          <h2 className="text-lg font-extrabold">Campaign review queue</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Verify organizers and decide which campaigns can go live.
+          </p>
+        </div>
+        <span className="rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-[#6549C9]">
+          {campaigns.length} total
+        </span>
+      </div> */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[820px] text-left text-sm">
+          <thead className="border-y border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400">
+            <tr>
+              <th className="px-6 py-3">Campaign</th>
+              <th className="px-6 py-3">Organizer</th>
+              <th className="px-6 py-3">Goal</th>
+              <th className="px-6 py-3">Status</th>
+              <th className="px-6 py-3 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageCampaigns.map((campaign) => (
+              <tr
+                key={campaign.id}
+                className="border-b border-slate-100 last:border-0"
+              >
+                <td className="px-6 py-4 text-left">
+                  <p className="font-bold text-slate-800">{campaign.title}</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {campaign.category_label} · {campaign.location}
+                  </p>
+                </td>
+                <td className="px-6 py-4">
+                  <p className="font-semibold text-slate-700">
+                    {campaign.owner_name}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {campaign.owner_email}
+                  </p>
+                </td>
+                <td className="px-6 py-4 font-bold text-[#6549C9]">
+                  {kyat(campaign.goal_amount)}
+                </td>
+                <td className="px-6 py-4">
+                  <StatusBadge
+                    status={campaign.status}
+                    label={campaign.status_label}
+                  />
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onView(campaign)}
+                      className="rounded-xl border border-[#ffe96e] bg-[#ffe96e] px-3 py-2 text-xs font-bold text-[#4C3910] shadow-sm transition hover:bg-[#fce249]"
+                    >
+                      View details
+                    </button>
+                    {campaign.status === "pending" && (
+                      <button
+                        type="button"
+                        onClick={() => onReview(campaign)}
+                        className="rounded-xl bg-[#F0ECFF] px-3 py-2 text-xs font-bold text-[#6549C9] hover:bg-[#E3DBFF]"
+                      >
+                        Review
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <AdminPagination
+        page={page}
+        pages={pages}
+        count={campaigns.length}
+        hasPrevious={page > 1}
+        hasNext={page < pages}
+        onPageChange={onPageChange}
+      />
+    </section>
+  );
 }
 
-function Transactions({ donations, meta, page, search, onSearch, onPageChange }) {
+function Transactions({
+  donations,
+  meta,
+  page,
+  search,
+  onSearch,
+  onPageChange,
+}) {
   const pages = Math.max(1, Math.ceil(meta.count / 10));
-  return <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]"><div className="flex flex-wrap items-end justify-between gap-4 px-6 py-5"><div><h2 className="text-lg font-extrabold">Donation transactions</h2><p className="mt-1 text-sm text-slate-500">Full payment and donor record for every completed contribution.</p></div><label className="flex w-full max-w-sm items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-400 focus-within:border-[#7A5BE6] focus-within:bg-white"><Search size={17} /><input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search donor, campaign, reference…" className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none" /></label></div><div className="overflow-x-auto"><table className="w-full min-w-[1130px] text-left text-sm"><thead className="border-y border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400"><tr><th className="px-5 py-3">Donor details</th><th className="px-5 py-3">Campaign</th><th className="px-5 py-3">Amount</th><th className="px-5 py-3">Method</th><th className="px-5 py-3">Reference ID</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Date & time</th></tr></thead><tbody>{donations.length ? donations.map((donation) => <tr key={donation.id} className="border-b border-slate-100 last:border-0"><td className="px-5 py-4"><p className="font-bold text-slate-800">{donation.donor_name}</p><p className="mt-1 text-xs text-slate-500">{donation.donor_email}</p>{donation.donor_phone_number && <p className="mt-1 text-xs text-slate-400">{donation.donor_phone_number}</p>}</td><td className="px-5 py-4"><p className="font-semibold text-slate-800">{donation.campaign_title}</p><p className="mt-1 text-xs text-slate-400">By {donation.campaign_owner_name}</p></td><td className="px-5 py-4 font-extrabold text-[#6549C9]">{kyat(donation.amount)}</td><td className="px-5 py-4 text-slate-600">{donation.payment_method}</td><td className="px-5 py-4 font-mono text-xs font-bold text-slate-600">{donation.payment_reference}</td><td className="px-5 py-4"><StatusBadge status={donation.payment_status === "paid" || donation.payment_status === "recorded" ? "approved" : "pending"} label={donation.payment_status_label} /></td><td className="px-5 py-4 whitespace-nowrap text-xs text-slate-500">{dateTime(donation.created_at)}</td></tr>) : <tr><td colSpan="7" className="px-5 py-14 text-center text-sm text-slate-400">No transactions match this search.</td></tr>}</tbody></table></div><AdminPagination page={page} pages={pages} count={meta.count} hasPrevious={Boolean(meta.previous)} hasNext={Boolean(meta.next)} onPageChange={onPageChange} /></section>;
+  return (
+    <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+      <div className="flex flex-wrap items-end justify-between gap-4 px-6 py-5">
+        {/* <div>
+          <h2 className="text-lg font-extrabold">Donation transactions</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Full payment and donor record for every completed contribution.
+          </p>
+        </div> */}
+        <label className="flex w-full max-w-sm items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-400">
+          <Search size={17} />
+          <input
+            value={search}
+            onChange={(event) => onSearch(event.target.value)}
+            placeholder="Search donor, campaign, reference…"
+            className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none"
+          />
+        </label>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1130px] text-left text-sm">
+          <thead className="border-y border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400">
+            <tr>
+              <th className="px-5 py-3">Donor details</th>
+              <th className="px-5 py-3">Campaign</th>
+              <th className="px-5 py-3">Amount</th>
+              <th className="px-5 py-3">Method</th>
+              <th className="px-5 py-3">Reference ID</th>
+              <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3">Date & time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {donations.length ? (
+              donations.map((donation) => (
+                <tr
+                  key={donation.id}
+                  className="border-b border-slate-100 last:border-0"
+                >
+                  <td className="px-5 py-4">
+                    <p className="font-bold text-slate-800">
+                      {donation.donor_name}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {donation.donor_email}
+                    </p>
+                    {donation.donor_phone_number && (
+                      <p className="mt-1 text-xs text-slate-400">
+                        {donation.donor_phone_number}
+                      </p>
+                    )}
+                  </td>
+                  <td className="px-5 py-4">
+                    <p className="font-semibold text-slate-800">
+                      {donation.campaign_title}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      By {donation.campaign_owner_name}
+                    </p>
+                  </td>
+                  <td className="px-5 py-4 font-extrabold text-[#6549C9]">
+                    {kyat(donation.amount)}
+                  </td>
+                  <td className="px-5 py-4 text-slate-600">
+                    {donation.payment_method}
+                  </td>
+                  <td className="px-5 py-4 font-mono text-xs font-bold text-slate-600">
+                    {donation.payment_reference}
+                  </td>
+                  <td className="px-5 py-4">
+                    <StatusBadge
+                      status={
+                        donation.payment_status === "paid" ||
+                        donation.payment_status === "recorded"
+                          ? "approved"
+                          : "pending"
+                      }
+                      label={donation.payment_status_label}
+                    />
+                  </td>
+                  <td className="px-5 py-4 whitespace-nowrap text-xs text-slate-500">
+                    {dateTime(donation.created_at)}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="7"
+                  className="px-5 py-14 text-center text-sm text-slate-400"
+                >
+                  No transactions match this search.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <AdminPagination
+        page={page}
+        pages={pages}
+        count={meta.count}
+        hasPrevious={Boolean(meta.previous)}
+        hasNext={Boolean(meta.next)}
+        onPageChange={onPageChange}
+      />
+    </section>
+  );
 }
 
-function AdminPagination({ page, pages, count, hasPrevious, hasNext, onPageChange }) {
+function AdminPagination({
+  page,
+  pages,
+  count,
+  hasPrevious,
+  hasNext,
+  onPageChange,
+}) {
   const firstPage = Math.max(1, Math.min(page - 2, Math.max(pages - 4, 1)));
-  const pageNumbers = Array.from({ length: Math.min(5, pages) }, (_, index) => firstPage + index);
+  const pageNumbers = Array.from(
+    { length: Math.min(5, pages) },
+    (_, index) => firstPage + index,
+  );
   const firstItem = count ? (page - 1) * 10 + 1 : 0;
   const lastItem = Math.min(page * 10, count);
 
-  return <div className="flex flex-col gap-4 border-t border-slate-100 bg-slate-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-slate-500">Showing <strong className="text-slate-700">{firstItem}–{lastItem}</strong> of <strong className="text-slate-700">{count}</strong></p><nav className="flex items-center gap-1.5" aria-label="Pagination"><button type="button" disabled={!hasPrevious} onClick={() => onPageChange(page - 1)} aria-label="Previous page" className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-[#B7A6F2] hover:text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-35"><ChevronLeft size={17} /></button>{pageNumbers.map((pageNumber) => <button key={pageNumber} type="button" onClick={() => onPageChange(pageNumber)} aria-current={pageNumber === page ? "page" : undefined} className={`grid h-9 min-w-9 place-items-center rounded-xl px-2 text-sm font-extrabold transition ${pageNumber === page ? "bg-[#6F52D9] text-white shadow-md shadow-violet-200" : "border border-transparent bg-white text-slate-600 hover:border-[#CFC3F7] hover:text-[#6549C9]"}`}>{pageNumber}</button>)}<button type="button" disabled={!hasNext} onClick={() => onPageChange(page + 1)} aria-label="Next page" className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-[#B7A6F2] hover:text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-35"><ChevronRight size={17} /></button></nav></div>;
+  return (
+    <div className="flex flex-col gap-4 border-t border-slate-100 bg-slate-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm text-slate-500">
+        Showing{" "}
+        <strong className="text-slate-700">
+          {firstItem}–{lastItem}
+        </strong>{" "}
+        of <strong className="text-slate-700">{count}</strong>
+      </p>
+      <nav className="flex items-center gap-1.5" aria-label="Pagination">
+        <button
+          type="button"
+          disabled={!hasPrevious}
+          onClick={() => onPageChange(page - 1)}
+          aria-label="Previous page"
+          className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-[#B7A6F2] hover:text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          <ChevronLeft size={17} />
+        </button>
+        {pageNumbers.map((pageNumber) => (
+          <button
+            key={pageNumber}
+            type="button"
+            onClick={() => onPageChange(pageNumber)}
+            aria-current={pageNumber === page ? "page" : undefined}
+            className={`grid h-9 min-w-9 place-items-center rounded-xl px-2 text-sm font-extrabold transition ${pageNumber === page ? "bg-[#6F52D9] text-white shadow-md shadow-violet-200" : "border border-transparent bg-white text-slate-600 hover:border-[#CFC3F7] hover:text-[#6549C9]"}`}
+          >
+            {pageNumber}
+          </button>
+        ))}
+        <button
+          type="button"
+          disabled={!hasNext}
+          onClick={() => onPageChange(page + 1)}
+          aria-label="Next page"
+          className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-[#B7A6F2] hover:text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          <ChevronRight size={17} />
+        </button>
+      </nav>
+    </div>
+  );
 }
 
 function UserDetailModal({ user, currentUser, onClose, onChange }) {
   if (!user) return null;
   const isSelf = user.id === currentUser?.id;
-  const name = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.username;
-  return <div className="fixed inset-0 z-50 overflow-y-auto bg-[#17112e]/55 p-4 backdrop-blur-sm"><div className="mx-auto my-8 max-w-2xl overflow-hidden rounded-[28px] bg-white shadow-2xl"><div className="flex items-start justify-between bg-[#25194B] px-7 py-6 text-white"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#D9CBFF]">User account</p><h2 className="mt-2 text-2xl font-extrabold">{name}</h2><p className="mt-1 text-sm text-indigo-200">{user.email}</p></div><button type="button" onClick={onClose} className="rounded-xl p-2 hover:bg-white/10"><X size={21} /></button></div><div className="p-7"><div className="grid gap-3 sm:grid-cols-3"><Info label="Role" value={user.role === "admin" ? "Administrator" : "Donor"} /><Info label="Status" value={user.is_active ? "Active" : "Suspended"} /><Info label="Joined" value={new Date(user.created_at).toLocaleDateString()} /><Info label="Campaigns" value={user.campaign_count} /><Info label="Donations" value={user.donation_count} /><Info label="Total donated" value={kyat(user.total_donated)} /></div><div className="mt-6 rounded-2xl bg-slate-50 p-5"><p className="text-xs font-bold uppercase tracking-wide text-slate-400">Contact and account</p><div className="mt-4 grid gap-3 text-sm sm:grid-cols-2"><p><span className="text-slate-400">Phone:</span> <strong>{user.phone_number || "Not provided"}</strong></p><p><span className="text-slate-400">Country:</span> <strong>{user.country || "Not provided"}</strong></p><p><span className="text-slate-400">Sign-in:</span> <strong className="capitalize">{user.auth_provider}</strong></p><p><span className="text-slate-400">Email:</span> <strong>{user.is_email_verified ? "Verified" : "Not verified"}</strong></p></div></div><div className="mt-6"><p className="text-xs font-bold uppercase tracking-wide text-slate-400">Recent admin changes</p><div className="mt-3 divide-y divide-slate-100 rounded-2xl border border-slate-100">{user.recent_admin_actions?.length ? user.recent_admin_actions.map((action) => <div key={action.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm"><div><p className="font-bold text-slate-700">{action.action_label}</p><p className="mt-1 text-xs text-slate-400">By {action.actor_name} · {dateTime(action.created_at)}</p></div><p className="text-xs font-bold text-[#6549C9]">{action.previous_value} → {action.new_value}</p></div>) : <p className="px-4 py-6 text-center text-sm text-slate-400">No administrative changes recorded.</p>}</div></div><div className="mt-6 flex flex-wrap justify-end gap-3"><button type="button" disabled={isSelf || user.is_staff} onClick={() => onChange(user, { role: user.role === "admin" ? "donor" : "admin" })} className="rounded-xl bg-[#F0ECFF] px-4 py-2.5 text-sm font-bold text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-40">{user.role === "admin" ? "Change to donor" : "Promote to admin"}</button><button type="button" disabled={isSelf} onClick={() => onChange(user, { is_active: !user.is_active })} className={`rounded-xl px-4 py-2.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40 ${user.is_active ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}`}>{user.is_active ? "Suspend account" : "Activate account"}</button></div>{isSelf && <p className="mt-3 text-right text-xs text-slate-400">You cannot change your own access from this screen.</p>}</div></div></div>;
+  const name =
+    [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+    user.username;
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#17112e]/55 p-4 backdrop-blur-sm">
+      <div className="mx-auto my-8 max-w-2xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
+        <div className="flex items-start justify-between bg-[#25194B] px-7 py-6 text-white">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-[#D9CBFF]">
+              User account
+            </p>
+            <h2 className="mt-2 text-2xl font-extrabold">{name}</h2>
+            <p className="mt-1 text-sm text-indigo-200">{user.email}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl p-2 hover:bg-white/10"
+          >
+            <X size={21} />
+          </button>
+        </div>
+        <div className="p-7">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Info
+              label="Role"
+              value={user.role === "admin" ? "Administrator" : "Donor"}
+            />
+            <Info
+              label="Status"
+              value={user.is_active ? "Active" : "Suspended"}
+            />
+            <Info
+              label="Joined"
+              value={new Date(user.created_at).toLocaleDateString()}
+            />
+            <Info label="Campaigns" value={user.campaign_count} />
+            <Info label="Donations" value={user.donation_count} />
+            <Info label="Total donated" value={kyat(user.total_donated)} />
+          </div>
+          <div className="mt-6 rounded-2xl bg-slate-50 p-5">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+              Contact and account
+            </p>
+            <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+              <p>
+                <span className="text-slate-400">Phone:</span>{" "}
+                <strong>{user.phone_number || "Not provided"}</strong>
+              </p>
+              <p>
+                <span className="text-slate-400">Country:</span>{" "}
+                <strong>{user.country || "Not provided"}</strong>
+              </p>
+              <p>
+                <span className="text-slate-400">Sign-in:</span>{" "}
+                <strong className="capitalize">{user.auth_provider}</strong>
+              </p>
+              <p>
+                <span className="text-slate-400">Email:</span>{" "}
+                <strong>
+                  {user.is_email_verified ? "Verified" : "Not verified"}
+                </strong>
+              </p>
+            </div>
+          </div>
+          <div className="mt-6">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+              Recent admin changes
+            </p>
+            <div className="mt-3 divide-y divide-slate-100 rounded-2xl border border-slate-100">
+              {user.recent_admin_actions?.length ? (
+                user.recent_admin_actions.map((action) => (
+                  <div
+                    key={action.id}
+                    className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm"
+                  >
+                    <div>
+                      <p className="font-bold text-slate-700">
+                        {action.action_label}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        By {action.actor_name} · {dateTime(action.created_at)}
+                      </p>
+                    </div>
+                    <p className="text-xs font-bold text-[#6549C9]">
+                      {action.previous_value} → {action.new_value}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="px-4 py-6 text-center text-sm text-slate-400">
+                  No administrative changes recorded.
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap justify-end gap-3">
+            <button
+              type="button"
+              disabled={isSelf || user.is_staff}
+              onClick={() =>
+                onChange(user, {
+                  role: user.role === "admin" ? "donor" : "admin",
+                })
+              }
+              className="rounded-xl bg-[#F0ECFF] px-4 py-2.5 text-sm font-bold text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {user.role === "admin" ? "Change to donor" : "Promote to admin"}
+            </button>
+            <button
+              type="button"
+              disabled={isSelf}
+              onClick={() => onChange(user, { is_active: !user.is_active })}
+              className={`rounded-xl px-4 py-2.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40 ${user.is_active ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}`}
+            >
+              {user.is_active ? "Suspend account" : "Activate account"}
+            </button>
+          </div>
+          {isSelf && (
+            <p className="mt-3 text-right text-xs text-slate-400">
+              You cannot change your own access from this screen.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function UserManagement({ users, meta, page, search, role, accountStatus, currentUser, onSearch, onRole, onStatus, onPageChange, onView, onChange }) {
+function UserManagement({
+  users,
+  meta,
+  page,
+  search,
+  role,
+  accountStatus,
+  currentUser,
+  onSearch,
+  onRole,
+  onStatus,
+  onPageChange,
+  onView,
+  onChange,
+}) {
   const pages = Math.max(1, Math.ceil(meta.count / 10));
-  return <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]"><div className="px-6 py-5"><div className="flex flex-wrap items-end justify-between gap-4"><div><h2 className="text-lg font-extrabold">Registered users</h2><p className="mt-1 text-sm text-slate-500">Review account activity and control platform access.</p></div><span className="rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-[#6549C9]">{meta.count} users</span></div><div className="mt-5 grid gap-3 md:grid-cols-[minmax(240px,1fr)_180px_180px]"><label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-400 focus-within:border-[#7A5BE6] focus-within:bg-white"><Search size={17} /><input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search name or email…" className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none" /></label><select value={role} onChange={(event) => onRole(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-600 outline-none focus:border-[#7A5BE6]"><option value="">All roles</option><option value="donor">Donors</option><option value="admin">Administrators</option></select><select value={accountStatus} onChange={(event) => onStatus(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-600 outline-none focus:border-[#7A5BE6]"><option value="">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option></select></div></div><div className="overflow-x-auto"><table className="w-full min-w-[980px] text-left text-sm"><thead className="border-y border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400"><tr><th className="px-5 py-3">User</th><th className="px-5 py-3">Role</th><th className="px-5 py-3">Activity</th><th className="px-5 py-3">Total donated</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Joined</th><th className="px-5 py-3" /></tr></thead><tbody>{users.length ? users.map((item) => { const isSelf = item.id === currentUser?.id; return <tr key={item.id} className="border-b border-slate-100 last:border-0"><td className="px-5 py-4"><div className="flex items-center gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#EEE9FF] font-extrabold text-[#6549C9]">{item.username?.[0]?.toUpperCase()}</span><div><p className="font-bold text-slate-800">{[item.first_name, item.last_name].filter(Boolean).join(" ") || item.username}{isSelf && <span className="ml-2 text-xs text-slate-400">You</span>}</p><p className="mt-1 text-xs text-slate-500">{item.email}</p></div></div></td><td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${item.role === "admin" ? "bg-violet-50 text-[#6549C9]" : "bg-sky-50 text-sky-700"}`}>{item.role === "admin" ? "Admin" : "Donor"}</span></td><td className="px-5 py-4 text-xs text-slate-500"><p><strong className="text-slate-700">{item.campaign_count}</strong> campaigns</p><p className="mt-1"><strong className="text-slate-700">{item.donation_count}</strong> donations</p></td><td className="px-5 py-4 font-extrabold text-[#6549C9]">{kyat(item.total_donated)}</td><td className="px-5 py-4"><span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${item.is_active ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}><span className={`h-1.5 w-1.5 rounded-full ${item.is_active ? "bg-emerald-500" : "bg-rose-500"}`} />{item.is_active ? "Active" : "Suspended"}</span></td><td className="px-5 py-4 whitespace-nowrap text-xs text-slate-500">{new Date(item.created_at).toLocaleDateString()}</td><td className="px-5 py-4"><div className="flex justify-end gap-2"><button type="button" onClick={() => onView(item)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:text-[#6549C9]">View</button><button type="button" disabled={isSelf} onClick={() => onChange(item, { is_active: !item.is_active })} className={`rounded-xl px-3 py-2 text-xs font-bold disabled:opacity-40 ${item.is_active ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}>{item.is_active ? "Suspend" : "Activate"}</button></div></td></tr>; }) : <tr><td colSpan="7" className="px-5 py-16 text-center text-sm text-slate-400">No users match these filters.</td></tr>}</tbody></table></div><AdminPagination page={page} pages={pages} count={meta.count} hasPrevious={Boolean(meta.previous)} hasNext={Boolean(meta.next)} onPageChange={onPageChange} /></section>;
+  return (
+    <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+      <div className="px-6 py-5">
+        {/* <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-extrabold">Registered users</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Review account activity and control platform access.
+            </p>
+          </div>
+          <span className="rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-[#6549C9]">
+            {meta.count} users
+          </span>
+        </div> */}
+        <div className="mt-5 grid gap-3 md:grid-cols-[minmax(240px,1fr)_180px_180px]">
+          <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-400 focus-within:border-[#7A5BE6] focus-within:bg-white">
+            <Search size={17} />
+            <input
+              value={search}
+              onChange={(event) => onSearch(event.target.value)}
+              placeholder="Search name or email…"
+              className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none"
+            />
+          </label>
+          <select
+            value={role}
+            onChange={(event) => onRole(event.target.value)}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-600 outline-none focus:border-[#7A5BE6]"
+          >
+            <option value="">All roles</option>
+            <option value="donor">Donors</option>
+            <option value="admin">Administrators</option>
+          </select>
+          <select
+            value={accountStatus}
+            onChange={(event) => onStatus(event.target.value)}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-600 outline-none focus:border-[#7A5BE6]"
+          >
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[980px] text-left text-sm">
+          <thead className="border-y border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400">
+            <tr>
+              <th className="px-5 py-3">User</th>
+              <th className="px-5 py-3">Role</th>
+              <th className="px-5 py-3">Activity</th>
+              <th className="px-5 py-3">Total donated</th>
+              <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3">Joined</th>
+              <th className="px-5 py-3" />
+            </tr>
+          </thead>
+          <tbody>
+            {users.length ? (
+              users.map((item) => {
+                const isSelf = item.id === currentUser?.id;
+                return (
+                  <tr
+                    key={item.id}
+                    className="border-b border-slate-100 last:border-0"
+                  >
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#EEE9FF] font-extrabold text-[#6549C9]">
+                          {item.username?.[0]?.toUpperCase()}
+                        </span>
+                        <div>
+                          <p className="font-bold text-slate-800">
+                            {[item.first_name, item.last_name]
+                              .filter(Boolean)
+                              .join(" ") || item.username}
+                            {isSelf && (
+                              <span className="ml-2 text-xs text-slate-400">
+                                You
+                              </span>
+                            )}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {item.email}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-bold ${item.role === "admin" ? "bg-violet-50 text-[#6549C9]" : "bg-sky-50 text-sky-700"}`}
+                      >
+                        {item.role === "admin" ? "Admin" : "Donor"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-xs text-slate-500">
+                      <p>
+                        <strong className="text-slate-700">
+                          {item.campaign_count}
+                        </strong>{" "}
+                        campaigns
+                      </p>
+                      <p className="mt-1">
+                        <strong className="text-slate-700">
+                          {item.donation_count}
+                        </strong>{" "}
+                        donations
+                      </p>
+                    </td>
+                    <td className="px-5 py-4 font-extrabold text-[#6549C9]">
+                      {kyat(item.total_donated)}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${item.is_active ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${item.is_active ? "bg-emerald-500" : "bg-rose-500"}`}
+                        />
+                        {item.is_active ? "Active" : "Suspended"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap text-xs text-slate-500">
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onView(item)}
+                          className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:text-[#6549C9]"
+                        >
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isSelf}
+                          onClick={() =>
+                            onChange(item, { is_active: !item.is_active })
+                          }
+                          className={`rounded-xl px-3 py-2 text-xs font-bold disabled:opacity-40 ${item.is_active ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}
+                        >
+                          {item.is_active ? "Suspend" : "Activate"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td
+                  colSpan="7"
+                  className="px-5 py-16 text-center text-sm text-slate-400"
+                >
+                  No users match these filters.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <AdminPagination
+        page={page}
+        pages={pages}
+        count={meta.count}
+        hasPrevious={Boolean(meta.previous)}
+        hasNext={Boolean(meta.next)}
+        onPageChange={onPageChange}
+      />
+    </section>
+  );
 }
 
 function Overview({ report, campaigns, onReview, onSection }) {
   const monthData = report?.donations_by_month || [];
   const peak = Math.max(...monthData.map((item) => Number(item.total)), 1);
   const pending = campaigns.filter((campaign) => campaign.status === "pending");
-  return <div className="space-y-6"><section className="overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-9"><div className="flex flex-wrap items-end justify-between gap-6"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#D7C8FF]">Givera operations</p><h2 className="mt-3 max-w-xl text-3xl font-extrabold tracking-tight md:text-4xl">A clear view of community impact.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">Track the money, verify campaigns, and keep donor trust at the centre of every decision.</p></div><button type="button" onClick={() => onSection("campaigns")} className="rounded-2xl bg-[#FFD66B] px-5 py-3 text-sm font-extrabold text-[#2b1d52] shadow-lg shadow-black/10">Review {pending.length} pending requests</button></div></section><section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><MetricCard icon={CircleDollarSign} label="Total raised" value={kyat(report?.total_raised)} note="Across all recorded donations" tone="bg-violet-100 text-[#6549C9]" /><MetricCard icon={Megaphone} label="Active campaigns" value={report?.active_campaigns ?? "—"} note="Currently accepting support" tone="bg-emerald-100 text-emerald-700" /><MetricCard icon={ClipboardCheck} label="Pending review" value={report?.pending_requests ?? "—"} note="Campaigns awaiting a decision" tone="bg-amber-100 text-amber-700" /><MetricCard icon={Users} label="Unique donors" value={report?.total_donors ?? "—"} note="People who have contributed" tone="bg-sky-100 text-sky-700" /></section><section className="grid gap-6 xl:grid-cols-[1.45fr_.8fr]"><article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]"><div className="flex items-start justify-between"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Fundraising momentum</p><h3 className="mt-2 text-xl font-extrabold text-slate-900">Monthly donation volume</h3></div><span className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]"><TrendingUp size={20} /></span></div><div className="mt-8 flex h-56 items-stretch gap-3 border-b border-slate-100 pb-2">{monthData.length ? monthData.map((item) => { const percentage = Math.max((Number(item.total) / peak) * 100, 8); return <div key={item.month} className="flex h-full min-w-0 flex-1 flex-col items-center gap-2"><span className="whitespace-nowrap text-[11px] font-extrabold text-[#6549C9]">{kyat(item.total)}</span><div className="flex min-h-0 w-full flex-1 items-end justify-center"><div className="w-full max-w-14 rounded-t-xl bg-gradient-to-t from-[#6F52D9] to-[#B59CFF] shadow-sm shadow-violet-300/40" style={{ height: `${percentage}%` }} /></div><span className="text-xs font-bold text-slate-400">{new Date(item.month).toLocaleDateString(undefined, { month: "short" })}</span></div>; }) : <p className="m-auto text-sm text-slate-400">Donation trends will appear here after the first recorded donation.</p>}</div></article><article className="rounded-3xl bg-[#FFFAE9] p-6"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#FFD66B] text-[#4C3910]"><ShieldCheck size={21} /></span><p className="mt-6 text-4xl font-extrabold text-[#33260C]">{pending.length}</p><h3 className="mt-2 text-lg font-extrabold text-[#33260C]">Campaigns need review</h3><p className="mt-2 text-sm leading-6 text-[#746037]">Check organizer details and campaign information before publishing.</p><button type="button" onClick={() => onSection("campaigns")} className="mt-6 text-sm font-extrabold text-[#6B4B00]">Open review queue →</button></article></section><section className="rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]"><div className="flex items-center justify-between px-6 py-5"><div><h3 className="text-lg font-extrabold">Priority campaign reviews</h3><p className="mt-1 text-sm text-slate-500">The latest requests waiting for your decision.</p></div><button type="button" onClick={() => onSection("campaigns")} className="text-sm font-bold text-[#6F52D9]">View all</button></div>{pending.slice(0, 4).length ? pending.slice(0, 4).map((campaign) => <div key={campaign.id} className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 px-6 py-4"><div><p className="font-bold text-slate-800">{campaign.title}</p><p className="mt-1 text-xs text-slate-400">{campaign.owner_name} · Goal {kyat(campaign.goal_amount)}</p></div><button type="button" onClick={() => onReview(campaign)} className="rounded-xl bg-[#F0ECFF] px-3.5 py-2 text-xs font-bold text-[#6549C9]">Review request</button></div>) : <p className="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">The review queue is clear.</p>}</section></div>;
+  return (
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-9">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[.2em] text-[#D7C8FF]">
+              Givera operations
+            </p>
+            <h2 className="mt-3 max-w-xl text-3xl font-extrabold tracking-tight md:text-4xl">
+              A clear view of community impact.
+            </h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
+              Track the money, verify campaigns, and keep donor trust at the
+              centre of every decision.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onSection("campaigns")}
+            className="rounded-2xl bg-[#FFD66B] px-5 py-3 text-sm font-extrabold text-[#2b1d52] shadow-lg shadow-black/10"
+          >
+            Review {pending.length} pending requests
+          </button>
+        </div>
+      </section>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          icon={CircleDollarSign}
+          label="Total raised"
+          value={kyat(report?.total_raised)}
+          note="Across all recorded donations"
+          tone="bg-violet-100 text-[#6549C9]"
+        />
+        <MetricCard
+          icon={Megaphone}
+          label="Active campaigns"
+          value={report?.active_campaigns ?? "—"}
+          note="Currently accepting support"
+          tone="bg-emerald-100 text-emerald-700"
+        />
+        <MetricCard
+          icon={ClipboardCheck}
+          label="Pending review"
+          value={report?.pending_requests ?? "—"}
+          note="Campaigns awaiting a decision"
+          tone="bg-amber-100 text-amber-700"
+        />
+        <MetricCard
+          icon={Users}
+          label="Unique donors"
+          value={report?.total_donors ?? "—"}
+          note="People who have contributed"
+          tone="bg-sky-100 text-sky-700"
+        />
+      </section>
+      <section className="grid gap-6 xl:grid-cols-[1.45fr_.8fr]">
+        <article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+          <div className="flex items-start justify-between">
+            <div>
+              {/* <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+                Fundraising momentum
+              </p> */}
+              <h3 className="mt-2 text-2xl font-extrabold text-slate-900">
+                Monthly donation volume
+              </h3>
+            </div>
+            <span className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]">
+              <TrendingUp size={20} />
+            </span>
+          </div>
+          <div className="mt-8 flex h-56 items-stretch gap-3 border-b border-slate-100 pb-2">
+            {monthData.length ? (
+              monthData.map((item) => {
+                const percentage = Math.max(
+                  (Number(item.total) / peak) * 100,
+                  8,
+                );
+                return (
+                  <div
+                    key={item.month}
+                    className="flex h-full min-w-0 flex-1 flex-col items-center gap-2"
+                  >
+                    <span className="whitespace-nowrap text-[11px] font-extrabold text-[#6549C9]">
+                      {kyat(item.total)}
+                    </span>
+                    <div className="flex min-h-0 w-full flex-1 items-end justify-center">
+                      <div
+                        className="w-full max-w-14 rounded-t-xl bg-gradient-to-t from-[#6F52D9] to-[#B59CFF] shadow-sm shadow-violet-300/40"
+                        style={{ height: `${percentage}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold text-slate-400">
+                      {new Date(item.month).toLocaleDateString(undefined, {
+                        month: "short",
+                      })}
+                    </span>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="m-auto text-sm text-slate-400">
+                Donation trends will appear here after the first recorded
+                donation.
+              </p>
+            )}
+          </div>
+        </article>
+        <article className="rounded-3xl bg-[#FFFAE9] p-6">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#FFD66B] text-[#4C3910]">
+            <ShieldCheck size={21} />
+          </span>
+          <p className="mt-6 text-4xl font-extrabold text-[#33260C]">
+            {pending.length}
+          </p>
+          <h3 className="mt-2 text-lg font-extrabold text-[#33260C]">
+            Campaigns need review
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-[#746037]">
+            Check organizer details and campaign information before publishing.
+          </p>
+          <button
+            type="button"
+            onClick={() => onSection("campaigns")}
+            className="mt-6 text-sm font-extrabold text-[#6B4B00] bg-[#FFF1B8] rounded-xl px-4 py-2.5 hover:bg-[#FFE58F]"
+          >
+            Open review queue
+          </button>
+        </article>
+      </section>
+      <section className="rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+        <div className="flex items-center justify-between px-6 py-5">
+          <div>
+            <h3 className="text-2xl font-extrabold">
+              Priority campaign reviews
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              The latest requests waiting for your decision.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onSection("campaigns")}
+            className="text-sm font-bold text-[#6F52D9]"
+          >
+            View all
+          </button>
+        </div>
+        {pending.slice(0, 4).length ? (
+          pending.slice(0, 4).map((campaign) => (
+            <div
+              key={campaign.id}
+              className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 px-6 py-4"
+            >
+              <div>
+                <p className="font-bold text-slate-800">{campaign.title}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {campaign.owner_name} · Goal {kyat(campaign.goal_amount)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onReview(campaign)}
+                className="rounded-xl bg-[#F0ECFF] px-3.5 py-2 text-xs font-bold text-[#6549C9]"
+              >
+                Review request
+              </button>
+            </div>
+          ))
+        ) : (
+          <p className="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
+            The review queue is clear.
+          </p>
+        )}
+      </section>
+    </div>
+  );
 }
 
 function InsightStat({ icon: Icon, label, value, note, tone }) {
-  return <article className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_rgba(43,37,80,.06)]"><span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}><Icon size={20} /></span><p className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">{value}</p><p className="mt-1 text-sm font-bold text-slate-700">{label}</p><p className="mt-1 text-xs leading-5 text-slate-400">{note}</p></article>;
+  return (
+    <article className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+      <span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}>
+        <Icon size={20} />
+      </span>
+      <p className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">
+        {value}
+      </p>
+      <p className="mt-1 text-sm font-bold text-slate-700">{label}</p>
+      <p className="mt-1 text-xs leading-5 text-slate-400">{note}</p>
+    </article>
+  );
 }
 
 const exportDatasets = [
-  ["transactions", "Transactions", "Donors, amounts, payment methods, references, and dates.", Heart, "bg-rose-50 text-rose-600"],
-  ["campaigns", "Campaigns", "Organizer, goal, progress, category, status, and deadline.", Megaphone, "bg-violet-100 text-[#6549C9]"],
-  ["users", "Users", "Account access, activity totals, donation totals, and join dates.", Users, "bg-sky-100 text-sky-700"],
-  ["utilization", "Utilization reports", "Campaign expenses, evidence filenames, status, and descriptions.", FileBarChart, "bg-amber-100 text-amber-700"],
+  [
+    "transactions",
+    "Transactions",
+    "Donors, amounts, payment methods, references, and dates.",
+    Heart,
+    "bg-rose-50 text-rose-600",
+  ],
+  [
+    "campaigns",
+    "Campaigns",
+    "Organizer, goal, progress, category, status, and deadline.",
+    Megaphone,
+    "bg-violet-100 text-[#6549C9]",
+  ],
+  [
+    "users",
+    "Users",
+    "Account access, activity totals, donation totals, and join dates.",
+    Users,
+    "bg-sky-100 text-sky-700",
+  ],
+  [
+    "utilization",
+    "Utilization reports",
+    "Campaign expenses, evidence filenames, status, and descriptions.",
+    FileBarChart,
+    "bg-amber-100 text-amber-700",
+  ],
 ];
 
 function ExportCenter() {
@@ -106,8 +1095,9 @@ function ExportCenter() {
         responseType: "blob",
       });
       const disposition = response.headers["content-disposition"] || "";
-      const filename = disposition.match(/filename="?([^";]+)"?/)?.[1]
-        || `givera-${resource}.${fileFormat}`;
+      const filename =
+        disposition.match(/filename="?([^";]+)"?/)?.[1] ||
+        `givera-${resource}.${fileFormat}`;
       const url = URL.createObjectURL(response.data);
       const link = document.createElement("a");
       link.href = url;
@@ -123,7 +1113,69 @@ function ExportCenter() {
     }
   };
 
-  return <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]"><div className="flex flex-wrap items-start justify-between gap-4 px-6 py-6 md:px-7"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Administrative records</p><h2 className="mt-2 text-xl font-extrabold text-slate-900">Download complete data exports</h2><p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">Choose CSV for spreadsheets or PDF for a presentation-ready table. Exports include every record, not only the current page.</p></div><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#FFF4C7] text-[#7A5B00]"><Download size={21} /></span></div><div className="grid border-t border-slate-100 sm:grid-cols-2 xl:grid-cols-4">{exportDatasets.map(([resource, label, description, Icon, tone], index) => <article key={resource} className={`p-5 ${index ? "border-t border-slate-100 sm:border-l sm:border-t-0" : ""} ${index === 2 ? "sm:border-l-0 xl:border-l" : ""} ${index > 1 ? "sm:border-t xl:border-t-0" : ""}`}><span className={`grid h-10 w-10 place-items-center rounded-xl ${tone}`}><Icon size={19} /></span><h3 className="mt-4 font-extrabold text-slate-800">{label}</h3><p className="mt-1 min-h-10 text-xs leading-5 text-slate-400">{description}</p><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" disabled={Boolean(downloading)} onClick={() => download(resource, "csv")} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-extrabold text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-45"><FileSpreadsheet size={15} /> {downloading === `${resource}-csv` ? "Preparing…" : "CSV"}</button><button type="button" disabled={Boolean(downloading)} onClick={() => download(resource, "pdf")} className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#6F52D9] px-3 py-2.5 text-xs font-extrabold text-white transition hover:bg-[#6044C7] disabled:opacity-45"><FileText size={15} /> {downloading === `${resource}-pdf` ? "Preparing…" : "PDF"}</button></div></article>)}</div>{error && <p className="border-t border-rose-100 bg-rose-50 px-6 py-3 text-sm font-bold text-rose-700">{error}</p>}</section>;
+  return (
+    <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+      <div className="flex flex-wrap items-start justify-between gap-4 px-6 py-6 md:px-7">
+        <div>
+          <h2 className="mt-2 text-3xl font-bold text-slate-900">
+            Download complete data exports
+          </h2>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+            Choose CSV for spreadsheets or PDF for a presentation-ready table.
+            Exports include every record, not only the current page.
+          </p>
+        </div>
+        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#FFF4C7] text-[#7A5B00]">
+          <Download size={21} />
+        </span>
+      </div>
+      <div className="grid border-t border-slate-100 sm:grid-cols-2 xl:grid-cols-4">
+        {exportDatasets.map(
+          ([resource, label, description, Icon, tone], index) => (
+            <article
+              key={resource}
+              className={`p-5 ${index ? "border-t border-slate-100 sm:border-l sm:border-t-0" : ""} ${index === 2 ? "sm:border-l-0 xl:border-l" : ""} ${index > 1 ? "sm:border-t xl:border-t-0" : ""}`}
+            >
+              <span
+                className={`grid h-10 w-10 place-items-center rounded-xl ${tone}`}
+              >
+                <Icon size={19} />
+              </span>
+              <h3 className="mt-4 font-extrabold text-slate-800">{label}</h3>
+              <p className="mt-1 min-h-10 text-xs leading-5 text-slate-400">
+                {description}
+              </p>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={Boolean(downloading)}
+                  onClick={() => download(resource, "csv")}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-extrabold text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-45"
+                >
+                  <FileSpreadsheet size={15} />{" "}
+                  {downloading === `${resource}-csv` ? "Preparing…" : "CSV"}
+                </button>
+                <button
+                  type="button"
+                  disabled={Boolean(downloading)}
+                  onClick={() => download(resource, "pdf")}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#6F52D9] px-3 py-2.5 text-xs font-extrabold text-white transition hover:bg-[#6044C7] disabled:opacity-45"
+                >
+                  <FileText size={15} />{" "}
+                  {downloading === `${resource}-pdf` ? "Preparing…" : "PDF"}
+                </button>
+              </div>
+            </article>
+          ),
+        )}
+      </div>
+      {error && (
+        <p className="border-t border-rose-100 bg-rose-50 px-6 py-3 text-sm font-bold text-rose-700">
+          {error}
+        </p>
+      )}
+    </section>
+  );
 }
 
 function Insights({ report }) {
@@ -131,46 +1183,282 @@ function Insights({ report }) {
   const categories = report?.donations_by_category || [];
   const paymentMethods = report?.payment_methods || [];
   const topCampaigns = report?.top_campaigns || [];
-  const statusTotal = Math.max(statuses.reduce((sum, item) => sum + item.count, 0), 1);
-  const categoryTotal = Math.max(categories.reduce((sum, item) => sum + Number(item.total), 0), 1);
-  const methodTotal = Math.max(paymentMethods.reduce((sum, item) => sum + item.donations, 0), 1);
-  const anonymousRate = report?.total_donations ? Math.round((report.anonymous_donations / report.total_donations) * 100) : 0;
+  const statusTotal = Math.max(
+    statuses.reduce((sum, item) => sum + item.count, 0),
+    1,
+  );
+  const categoryTotal = Math.max(
+    categories.reduce((sum, item) => sum + Number(item.total), 0),
+    1,
+  );
+  const methodTotal = Math.max(
+    paymentMethods.reduce((sum, item) => sum + item.donations, 0),
+    1,
+  );
+  const anonymousRate = report?.total_donations
+    ? Math.round((report.anonymous_donations / report.total_donations) * 100)
+    : 0;
   const growth = report?.monthly_growth;
-  const palette = ["bg-[#6F52D9]", "bg-[#FFD66B]", "bg-emerald-500", "bg-sky-500", "bg-rose-400", "bg-orange-400"];
+  const palette = [
+    "bg-[#6F52D9]",
+    "bg-[#FFD66B]",
+    "bg-emerald-500",
+    "bg-sky-500",
+    "bg-rose-400",
+    "bg-orange-400",
+  ];
 
-  return <div className="space-y-6">
-    <ExportCenter />
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <InsightStat icon={Heart} label="Completed donations" value={report?.total_donations ?? "—"} note="Successful contributions recorded" tone="bg-rose-50 text-rose-600" />
-      <InsightStat icon={CircleDollarSign} label="Average donation" value={kyat(report?.average_donation)} note="Average value per contribution" tone="bg-violet-100 text-[#6549C9]" />
-      <InsightStat icon={Users} label="Returning donors" value={report?.repeat_donors ?? "—"} note="Supporters who donated more than once" tone="bg-sky-100 text-sky-700" />
-      <InsightStat icon={TrendingUp} label="Monthly change" value={growth == null ? "Not enough data" : `${growth > 0 ? "+" : ""}${growth}%`} note="Compared with the previous recorded month" tone="bg-emerald-100 text-emerald-700" />
-    </section>
+  return (
+    <div className="space-y-6">
+      <ExportCenter />
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <InsightStat
+          icon={Heart}
+          label="Completed donations"
+          value={report?.total_donations ?? "—"}
+          note="Successful contributions recorded"
+          tone="bg-rose-50 text-rose-600"
+        />
+        <InsightStat
+          icon={CircleDollarSign}
+          label="Average donation"
+          value={kyat(report?.average_donation)}
+          note="Average value per contribution"
+          tone="bg-violet-100 text-[#6549C9]"
+        />
+        <InsightStat
+          icon={Users}
+          label="Returning donors"
+          value={report?.repeat_donors ?? "—"}
+          note="Supporters who donated more than once"
+          tone="bg-sky-100 text-sky-700"
+        />
+        <InsightStat
+          icon={TrendingUp}
+          label="Monthly change"
+          value={
+            growth == null
+              ? "Not enough data"
+              : `${growth > 0 ? "+" : ""}${growth}%`
+          }
+          note="Compared with the previous recorded month"
+          tone="bg-emerald-100 text-emerald-700"
+        />
+      </section>
 
-    <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-      <article className="rounded-3xl border border-slate-200/80 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-        <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Campaign health</p><h2 className="mt-2 text-xl font-extrabold">Campaign status mix</h2></div><BarChart3 size={21} className="text-[#6F52D9]" /></div>
-        <div className="mt-8 space-y-5">{statuses.length ? statuses.map((item, index) => <div key={item.status}><div className="mb-2 flex justify-between text-sm"><span className="font-bold capitalize text-slate-700">{item.status}</span><span className="font-bold text-slate-400">{item.count} · {Math.round((item.count / statusTotal) * 100)}%</span></div><div className="h-3 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${palette[index % palette.length]}`} style={{ width: `${(item.count / statusTotal) * 100}%` }} /></div></div>) : <p className="py-10 text-center text-sm text-slate-400">No campaign status data yet.</p>}</div>
-      </article>
+      <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <article className="rounded-3xl border border-slate-200/80 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+                Campaign health
+              </p>
+              <h2 className="mt-2 text-xl font-extrabold">
+                Campaign status mix
+              </h2>
+            </div>
+            <BarChart3 size={21} className="text-[#6F52D9]" />
+          </div>
+          <div className="mt-8 space-y-5">
+            {statuses.length ? (
+              statuses.map((item, index) => (
+                <div key={item.status}>
+                  <div className="mb-2 flex justify-between text-sm">
+                    <span className="font-bold capitalize text-slate-700">
+                      {item.status}
+                    </span>
+                    <span className="font-bold text-slate-400">
+                      {item.count} ·{" "}
+                      {Math.round((item.count / statusTotal) * 100)}%
+                    </span>
+                  </div>
+                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className={`h-full rounded-full ${palette[index % palette.length]}`}
+                      style={{ width: `${(item.count / statusTotal) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="py-10 text-center text-sm text-slate-400">
+                No campaign status data yet.
+              </p>
+            )}
+          </div>
+        </article>
 
-      <article className="rounded-3xl border border-slate-200/80 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-        <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Cause distribution</p><h2 className="mt-2 text-xl font-extrabold">Donations by category</h2></div><Heart size={21} className="text-[#6F52D9]" /></div>
-        <div className="mt-8 space-y-5">{categories.length ? categories.map((item, index) => <div key={item.category}><div className="mb-2 flex items-center justify-between gap-4 text-sm"><div className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${palette[index % palette.length]}`} /><span className="font-bold text-slate-700">{item.label}</span></div><span className="font-bold text-slate-500">{kyat(item.total)}</span></div><div className="h-2.5 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${palette[index % palette.length]}`} style={{ width: `${(Number(item.total) / categoryTotal) * 100}%` }} /></div><p className="mt-1.5 text-right text-[11px] font-bold text-slate-400">{item.donations} donation{item.donations === 1 ? "" : "s"}</p></div>) : <p className="py-10 text-center text-sm text-slate-400">Category insights will appear after donations are recorded.</p>}</div>
-      </article>
-    </section>
+        <article className="rounded-3xl border border-slate-200/80 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+                Cause distribution
+              </p>
+              <h2 className="mt-2 text-xl font-extrabold">
+                Donations by category
+              </h2>
+            </div>
+            <Heart size={21} className="text-[#6F52D9]" />
+          </div>
+          <div className="mt-8 space-y-5">
+            {categories.length ? (
+              categories.map((item, index) => (
+                <div key={item.category}>
+                  <div className="mb-2 flex items-center justify-between gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${palette[index % palette.length]}`}
+                      />
+                      <span className="font-bold text-slate-700">
+                        {item.label}
+                      </span>
+                    </div>
+                    <span className="font-bold text-slate-500">
+                      {kyat(item.total)}
+                    </span>
+                  </div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className={`h-full rounded-full ${palette[index % palette.length]}`}
+                      style={{
+                        width: `${(Number(item.total) / categoryTotal) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-right text-[11px] font-bold text-slate-400">
+                    {item.donations} donation{item.donations === 1 ? "" : "s"}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="py-10 text-center text-sm text-slate-400">
+                Category insights will appear after donations are recorded.
+              </p>
+            )}
+          </div>
+        </article>
+      </section>
 
-    <section className="grid gap-6 xl:grid-cols-[1.35fr_.65fr]">
-      <article className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-        <div className="px-7 py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Fundraising leaders</p><h2 className="mt-2 text-xl font-extrabold">Top-performing campaigns</h2><p className="mt-1 text-sm text-slate-500">Ranked by total donations received.</p></div>
-        <div className="border-t border-slate-100">{topCampaigns.length ? topCampaigns.map((campaign, index) => { const progress = Math.min(Math.round((Number(campaign.donated_total) / Number(campaign.goal_amount || 1)) * 100), 100); return <div key={campaign.id} className="grid gap-3 border-b border-slate-100 px-7 py-4 last:border-0 sm:grid-cols-[32px_minmax(0,1fr)_auto] sm:items-center"><span className={`grid h-8 w-8 place-items-center rounded-xl text-xs font-extrabold ${index === 0 ? "bg-[#FFD66B] text-[#493600]" : "bg-violet-50 text-[#6549C9]"}`}>{index + 1}</span><div className="min-w-0"><div className="flex items-center justify-between gap-3"><p className="truncate text-sm font-extrabold text-slate-800">{campaign.title}</p><span className="text-xs font-bold text-[#6549C9]">{progress}%</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#7A5BE6]" style={{ width: `${progress}%` }} /></div><p className="mt-1.5 text-xs text-slate-400">{campaign.donation_count} donations from {campaign.donor_count} donors</p></div><p className="whitespace-nowrap text-sm font-extrabold text-slate-700">{kyat(campaign.donated_total)}</p></div>; }) : <p className="px-7 py-12 text-center text-sm text-slate-400">Campaign rankings will appear after the first donation.</p>}</div>
-      </article>
+      <section className="grid gap-6 xl:grid-cols-[1.35fr_.65fr]">
+        <article className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+          <div className="px-7 py-6">
+            <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+              Fundraising leaders
+            </p>
+            <h2 className="mt-2 text-xl font-extrabold">
+              Top-performing campaigns
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Ranked by total donations received.
+            </p>
+          </div>
+          <div className="border-t border-slate-100">
+            {topCampaigns.length ? (
+              topCampaigns.map((campaign, index) => {
+                const progress = Math.min(
+                  Math.round(
+                    (Number(campaign.donated_total) /
+                      Number(campaign.goal_amount || 1)) *
+                      100,
+                  ),
+                  100,
+                );
+                return (
+                  <div
+                    key={campaign.id}
+                    className="grid gap-3 border-b border-slate-100 px-7 py-4 last:border-0 sm:grid-cols-[32px_minmax(0,1fr)_auto] sm:items-center"
+                  >
+                    <span
+                      className={`grid h-8 w-8 place-items-center rounded-xl text-xs font-extrabold ${index === 0 ? "bg-[#FFD66B] text-[#493600]" : "bg-violet-50 text-[#6549C9]"}`}
+                    >
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="truncate text-sm font-extrabold text-slate-800">
+                          {campaign.title}
+                        </p>
+                        <span className="text-xs font-bold text-[#6549C9]">
+                          {progress}%
+                        </span>
+                      </div>
+                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div
+                          className="h-full rounded-full bg-[#7A5BE6]"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                      <p className="mt-1.5 text-xs text-slate-400">
+                        {campaign.donation_count} donations from{" "}
+                        {campaign.donor_count} donors
+                      </p>
+                    </div>
+                    <p className="whitespace-nowrap text-sm font-extrabold text-slate-700">
+                      {kyat(campaign.donated_total)}
+                    </p>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="px-7 py-12 text-center text-sm text-slate-400">
+                Campaign rankings will appear after the first donation.
+              </p>
+            )}
+          </div>
+        </article>
 
-      <div className="space-y-6">
-        <article className="rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15"><ShieldCheck size={25} className="text-[#FFD66B]" /><p className="mt-7 text-xs font-bold uppercase tracking-[.18em] text-indigo-200">Donor privacy</p><p className="mt-2 text-4xl font-extrabold">{anonymousRate}%</p><p className="mt-2 text-sm leading-6 text-indigo-100">{report?.anonymous_donations || 0} of {report?.total_donations || 0} donations were made anonymously.</p></article>
-        <article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]"><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Demo checkout</p><h2 className="mt-2 text-lg font-extrabold">Payment method usage</h2><div className="mt-5 space-y-3">{paymentMethods.length ? paymentMethods.map((method, index) => <div key={method.provider}><div className="flex items-center justify-between text-sm"><span className="font-bold text-slate-700">{method.label}</span><span className="font-extrabold text-[#6549C9]">{method.donations}</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${palette[index % palette.length]}`} style={{ width: `${(method.donations / methodTotal) * 100}%` }} /></div></div>) : <p className="py-5 text-center text-sm text-slate-400">No payment-method data yet.</p>}</div></article>
-      </div>
-    </section>
-  </div>;
+        <div className="space-y-6">
+          <article className="rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15">
+            <ShieldCheck size={25} className="text-[#FFD66B]" />
+            <p className="mt-7 text-xs font-bold uppercase tracking-[.18em] text-indigo-200">
+              Donor privacy
+            </p>
+            <p className="mt-2 text-4xl font-extrabold">{anonymousRate}%</p>
+            <p className="mt-2 text-sm leading-6 text-indigo-100">
+              {report?.anonymous_donations || 0} of{" "}
+              {report?.total_donations || 0} donations were made anonymously.
+            </p>
+          </article>
+          <article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+            <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+              Demo checkout
+            </p>
+            <h2 className="mt-2 text-lg font-extrabold">
+              Payment method usage
+            </h2>
+            <div className="mt-5 space-y-3">
+              {paymentMethods.length ? (
+                paymentMethods.map((method, index) => (
+                  <div key={method.provider}>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-bold text-slate-700">
+                        {method.label}
+                      </span>
+                      <span className="font-extrabold text-[#6549C9]">
+                        {method.donations}
+                      </span>
+                    </div>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className={`h-full rounded-full ${palette[index % palette.length]}`}
+                        style={{
+                          width: `${(method.donations / methodTotal) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="py-5 text-center text-sm text-slate-400">
+                  No payment-method data yet.
+                </p>
+              )}
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+  );
 }
 
 const profileFields = [
@@ -193,8 +1481,20 @@ const apiError = (error, fallback) => {
 function AdminSettings({ user: sessionUser, onUserChange }) {
   const [profile, setProfile] = useState(null);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ first_name: "", last_name: "", username: "", email: "", phone_number: "", country: "", bio: "" });
-  const [passwords, setPasswords] = useState({ old_password: "", new_password: "", confirm_password: "" });
+  const [form, setForm] = useState({
+    first_name: "",
+    last_name: "",
+    username: "",
+    email: "",
+    phone_number: "",
+    country: "",
+    bio: "",
+  });
+  const [passwords, setPasswords] = useState({
+    old_password: "",
+    new_password: "",
+    confirm_password: "",
+  });
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
@@ -214,7 +1514,12 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
   };
 
   useEffect(() => {
-    api.get("/auth/profile/").then(({ data }) => fillProfile(data)).catch(() => setProfileMessage("Your admin profile could not be loaded."));
+    api
+      .get("/auth/profile/")
+      .then(({ data }) => fillProfile(data))
+      .catch(() =>
+        setProfileMessage("Your admin profile could not be loaded."),
+      );
   }, []);
 
   const saveProfile = async (event) => {
@@ -245,51 +1550,335 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
     }
     setChangingPassword(true);
     try {
-      const { data } = await api.post("/auth/change-password/", { old_password: passwords.old_password, new_password: passwords.new_password });
-      setPasswords({ old_password: "", new_password: "", confirm_password: "" });
+      const { data } = await api.post("/auth/change-password/", {
+        old_password: passwords.old_password,
+        new_password: passwords.new_password,
+      });
+      setPasswords({
+        old_password: "",
+        new_password: "",
+        confirm_password: "",
+      });
       setPasswordMessage(data.detail || "Password updated successfully.");
     } catch (error) {
-      setPasswordMessage(apiError(error, "Your password could not be changed."));
+      setPasswordMessage(
+        apiError(error, "Your password could not be changed."),
+      );
     } finally {
       setChangingPassword(false);
     }
   };
 
-  if (!profile) return <div className="rounded-3xl border border-slate-200 bg-white px-6 py-20 text-center text-sm text-slate-400">{profileMessage || "Loading admin profile…"}</div>;
-  const displayName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.username;
-  const initial = displayName?.[0]?.toUpperCase() || sessionUser?.username?.[0]?.toUpperCase() || "A";
+  if (!profile)
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-white px-6 py-20 text-center text-sm text-slate-400">
+        {profileMessage || "Loading admin profile…"}
+      </div>
+    );
+  const displayName =
+    [profile.first_name, profile.last_name].filter(Boolean).join(" ") ||
+    profile.username;
+  const initial =
+    displayName?.[0]?.toUpperCase() ||
+    sessionUser?.username?.[0]?.toUpperCase() ||
+    "A";
   const effectiveRole = profile.is_staff ? "admin" : profile.role;
   const profileMessageSuccess = profileMessage.includes("successfully");
   const passwordMessageSuccess = passwordMessage.includes("successfully");
 
-  return <div className="grid items-start gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
-    <aside className="space-y-6 xl:sticky xl:top-4">
-      <section className="overflow-hidden rounded-3xl bg-[#25194B] text-white shadow-xl shadow-violet-950/15"><div className="h-20 bg-gradient-to-r from-[#6F52D9] to-[#9C7CF1]" /><div className="px-6 pb-7"><div className="-mt-10 grid h-20 w-20 place-items-center overflow-hidden rounded-3xl border-4 border-[#25194B] bg-[#FFD66B] text-3xl font-extrabold text-[#302250]">{profile.profile_picture ? <img src={profile.profile_picture} alt="" className="h-full w-full object-cover" /> : initial}</div><h2 className="mt-4 text-xl font-extrabold">{displayName}</h2><p className="mt-1 break-all text-sm text-indigo-200">{profile.email}</p><span className="mt-4 inline-flex rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold text-[#FFD66B]">Platform administrator</span></div></section>
-      <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]"><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Account details</p><div className="mt-5 space-y-4 text-sm"><div className="flex items-center justify-between gap-3"><span className="text-slate-400">Access level</span><span className="font-bold capitalize text-slate-700">{effectiveRole}</span></div><div className="flex items-center justify-between gap-3"><span className="text-slate-400">Sign-in method</span><span className="font-bold capitalize text-slate-700">{profile.auth_provider}</span></div><div className="flex items-center justify-between gap-3"><span className="text-slate-400">Email status</span><span className={`font-bold ${profile.is_email_verified ? "text-emerald-600" : "text-amber-600"}`}>{profile.is_email_verified ? "Verified" : "Not verified"}</span></div><div className="border-t border-slate-100 pt-4"><p className="text-slate-400">Administrator since</p><p className="mt-1 font-bold text-slate-700">{new Date(profile.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</p></div></div></section>
-    </aside>
+  return (
+    <div className="grid items-start gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
+      <aside className="space-y-6 xl:sticky xl:top-4">
+        <section className="overflow-hidden rounded-3xl bg-[#25194B] text-white shadow-xl shadow-violet-950/15">
+          <div className="h-20 bg-gradient-to-r from-[#6F52D9] to-[#9C7CF1]" />
+          <div className="px-6 pb-7">
+            <div className="-mt-10 grid h-20 w-20 place-items-center overflow-hidden rounded-3xl border-4 border-[#25194B] bg-[#FFD66B] text-3xl font-extrabold text-[#302250]">
+              {profile.profile_picture ? (
+                <img
+                  src={profile.profile_picture}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                initial
+              )}
+            </div>
+            <h2 className="mt-4 text-xl font-extrabold">{displayName}</h2>
+            <p className="mt-1 break-all text-sm text-indigo-200">
+              {profile.email}
+            </p>
+            <span className="mt-4 inline-flex rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold text-[#FFD66B]">
+              Platform administrator
+            </span>
+          </div>
+        </section>
+        <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+          <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+            Account details
+          </p>
+          <div className="mt-5 space-y-4 text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-slate-400">Access level</span>
+              <span className="font-bold capitalize text-slate-700">
+                {effectiveRole}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-slate-400">Sign-in method</span>
+              <span className="font-bold capitalize text-slate-700">
+                {profile.auth_provider}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-slate-400">Email status</span>
+              <span
+                className={`font-bold ${profile.is_email_verified ? "text-emerald-600" : "text-amber-600"}`}
+              >
+                {profile.is_email_verified ? "Verified" : "Not verified"}
+              </span>
+            </div>
+            <div className="border-t border-slate-100 pt-4">
+              <p className="text-slate-400">Administrator since</p>
+              <p className="mt-1 font-bold text-slate-700">
+                {new Date(profile.created_at).toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+          </div>
+        </section>
+      </aside>
 
-    <div className="space-y-6">
-      {!editing ? <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7">
-        <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Personal information</p><h2 className="mt-2 text-xl font-extrabold">Admin details</h2><p className="mt-1 text-sm text-slate-500">Your contact and public account information.</p></div><button type="button" onClick={() => { setProfileMessage(""); setEditing(true); }} className="inline-flex items-center gap-2 rounded-xl bg-[#F0ECFF] px-4 py-2.5 text-sm font-bold text-[#6549C9] hover:bg-[#E5DDFF]"><UserRound size={17} /> Edit profile</button></div>
-        <div className="mt-7 grid gap-4 md:grid-cols-2">{profileFields.map(([label, name, , Icon]) => <div key={name} className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#6F52D9] shadow-sm"><Icon size={17} /></span><div className="min-w-0"><p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</p><p className="mt-1 break-words text-sm font-bold text-slate-700">{profile[name] || "Not provided"}</p></div></div>)}</div>
-        <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-4"><p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">About you</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">{profile.bio || "No administrator bio has been added yet."}</p></div>
-        {profileMessage && <p className={`mt-4 rounded-xl px-4 py-3 text-sm font-bold ${profileMessageSuccess ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{profileMessage}</p>}
-      </section> : <form onSubmit={saveProfile} className="rounded-3xl border border-[#D8CCFF] bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7">
-        <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Editing profile</p><h2 className="mt-2 text-xl font-extrabold">Update admin details</h2><p className="mt-1 text-sm text-slate-500">Change the fields below, then save your updates.</p></div><span className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]"><UserRound size={20} /></span></div>
-        <div className="mt-7 grid gap-5 md:grid-cols-2">{profileFields.map(([label, name, type, Icon, placeholder]) => <label key={name} className="text-sm font-bold text-slate-700">{label}<div className="mt-2 flex items-center gap-3 rounded-xl border border-slate-200 px-3.5 focus-within:border-[#7A5BE6] focus-within:ring-2 focus-within:ring-violet-100"><Icon size={17} className="shrink-0 text-slate-400" /><input required={["username", "email"].includes(name)} type={type} value={form[name]} onChange={(event) => setForm((current) => ({ ...current, [name]: event.target.value }))} placeholder={placeholder} className="min-w-0 flex-1 bg-transparent py-3 text-sm font-normal text-slate-800 outline-none" /></div></label>)}</div>
-        <label className="mt-5 block text-sm font-bold text-slate-700">About you<textarea value={form.bio} onChange={(event) => setForm((current) => ({ ...current, bio: event.target.value }))} rows={4} maxLength={1000} placeholder="A short administrator bio" className="mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-normal text-slate-800 outline-none focus:border-[#7A5BE6] focus:ring-2 focus:ring-violet-100" /></label>
-        {profileMessage && <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{profileMessage}</p>}
-        <div className="mt-6 flex justify-end gap-3"><button type="button" disabled={saving} onClick={() => { fillProfile(profile); setProfileMessage(""); setEditing(false); }} className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 disabled:opacity-50">Cancel</button><button disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-[#6F52D9] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-300/30 disabled:opacity-50"><Save size={17} /> {saving ? "Saving…" : "Save changes"}</button></div>
-      </form>}
+      <div className="space-y-6">
+        {!editing ? (
+          <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+                  Personal information
+                </p>
+                <h2 className="mt-2 text-xl font-extrabold">Admin details</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Your contact and public account information.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileMessage("");
+                  setEditing(true);
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#F0ECFF] px-4 py-2.5 text-sm font-bold text-[#6549C9] hover:bg-[#E5DDFF]"
+              >
+                <UserRound size={17} /> Edit profile
+              </button>
+            </div>
+            <div className="mt-7 grid gap-4 md:grid-cols-2">
+              {profileFields.map(([label, name, , Icon]) => (
+                <div
+                  key={name}
+                  className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4"
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#6F52D9] shadow-sm">
+                    <Icon size={17} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                      {label}
+                    </p>
+                    <p className="mt-1 break-words text-sm font-bold text-slate-700">
+                      {profile[name] || "Not provided"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                About you
+              </p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+                {profile.bio || "No administrator bio has been added yet."}
+              </p>
+            </div>
+            {profileMessage && (
+              <p
+                className={`mt-4 rounded-xl px-4 py-3 text-sm font-bold ${profileMessageSuccess ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}
+              >
+                {profileMessage}
+              </p>
+            )}
+          </section>
+        ) : (
+          <form
+            onSubmit={saveProfile}
+            className="rounded-3xl border border-[#D8CCFF] bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+                  Editing profile
+                </p>
+                <h2 className="mt-2 text-xl font-extrabold">
+                  Update admin details
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Change the fields below, then save your updates.
+                </p>
+              </div>
+              <span className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]">
+                <UserRound size={20} />
+              </span>
+            </div>
+            <div className="mt-7 grid gap-5 md:grid-cols-2">
+              {profileFields.map(([label, name, type, Icon, placeholder]) => (
+                <label key={name} className="text-sm font-bold text-slate-700">
+                  {label}
+                  <div className="mt-2 flex items-center gap-3 rounded-xl border border-slate-200 px-3.5 focus-within:border-[#7A5BE6] focus-within:ring-2 focus-within:ring-violet-100">
+                    <Icon size={17} className="shrink-0 text-slate-400" />
+                    <input
+                      required={["username", "email"].includes(name)}
+                      type={type}
+                      value={form[name]}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          [name]: event.target.value,
+                        }))
+                      }
+                      placeholder={placeholder}
+                      className="min-w-0 flex-1 bg-transparent py-3 text-sm font-normal text-slate-800 outline-none"
+                    />
+                  </div>
+                </label>
+              ))}
+            </div>
+            <label className="mt-5 block text-sm font-bold text-slate-700">
+              About you
+              <textarea
+                value={form.bio}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    bio: event.target.value,
+                  }))
+                }
+                rows={4}
+                maxLength={1000}
+                placeholder="A short administrator bio"
+                className="mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-normal text-slate-800 outline-none focus:border-[#7A5BE6] focus:ring-2 focus:ring-violet-100"
+              />
+            </label>
+            {profileMessage && (
+              <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+                {profileMessage}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  fillProfile(profile);
+                  setProfileMessage("");
+                  setEditing(false);
+                }}
+                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#6F52D9] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-300/30 disabled:opacity-50"
+              >
+                <Save size={17} /> {saving ? "Saving…" : "Save changes"}
+              </button>
+            </div>
+          </form>
+        )}
 
-      <form onSubmit={changePassword} className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Security</p><h2 className="mt-2 text-xl font-extrabold">Change password</h2><p className="mt-1 text-sm text-slate-500">Use a strong password that you do not use elsewhere.</p></div><span className="rounded-xl bg-amber-50 p-2.5 text-amber-700"><LockKeyhole size={20} /></span></div>{profile.auth_provider === "google" && <p className="mt-6 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">This account uses Google Sign-In. Password changes are available only when the account has a password.</p>}<div className="mt-7 grid gap-5 md:grid-cols-3">{[["Current password", "old_password"], ["New password", "new_password"], ["Confirm new password", "confirm_password"]].map(([label, name]) => <label key={name} className="text-sm font-bold text-slate-700">{label}<input required type="password" minLength={8} autoComplete={name === "old_password" ? "current-password" : "new-password"} value={passwords[name]} onChange={(event) => setPasswords((current) => ({ ...current, [name]: event.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-normal outline-none focus:border-[#7A5BE6] focus:ring-2 focus:ring-violet-100" /></label>)}</div>{passwordMessage && <p className={`mt-4 rounded-xl px-4 py-3 text-sm font-bold ${passwordMessageSuccess ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{passwordMessage}</p>}<div className="mt-6 flex justify-end"><button disabled={changingPassword} className="inline-flex items-center gap-2 rounded-xl border border-[#6F52D9] px-5 py-3 text-sm font-bold text-[#6549C9] disabled:opacity-50"><LockKeyhole size={17} /> {changingPassword ? "Updating…" : "Update password"}</button></div></form>
+        <form
+          onSubmit={changePassword}
+          className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+                Security
+              </p>
+              <h2 className="mt-2 text-xl font-extrabold">Change password</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Use a strong password that you do not use elsewhere.
+              </p>
+            </div>
+            <span className="rounded-xl bg-amber-50 p-2.5 text-amber-700">
+              <LockKeyhole size={20} />
+            </span>
+          </div>
+          {profile.auth_provider === "google" && (
+            <p className="mt-6 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+              This account uses Google Sign-In. Password changes are available
+              only when the account has a password.
+            </p>
+          )}
+          <div className="mt-7 grid gap-5 md:grid-cols-3">
+            {[
+              ["Current password", "old_password"],
+              ["New password", "new_password"],
+              ["Confirm new password", "confirm_password"],
+            ].map(([label, name]) => (
+              <label key={name} className="text-sm font-bold text-slate-700">
+                {label}
+                <input
+                  required
+                  type="password"
+                  minLength={8}
+                  autoComplete={
+                    name === "old_password"
+                      ? "current-password"
+                      : "new-password"
+                  }
+                  value={passwords[name]}
+                  onChange={(event) =>
+                    setPasswords((current) => ({
+                      ...current,
+                      [name]: event.target.value,
+                    }))
+                  }
+                  className="mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-normal outline-none focus:border-[#7A5BE6] focus:ring-2 focus:ring-violet-100"
+                />
+              </label>
+            ))}
+          </div>
+          {passwordMessage && (
+            <p
+              className={`mt-4 rounded-xl px-4 py-3 text-sm font-bold ${passwordMessageSuccess ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}
+            >
+              {passwordMessage}
+            </p>
+          )}
+          <div className="mt-6 flex justify-end">
+            <button
+              disabled={changingPassword}
+              className="inline-flex items-center gap-2 rounded-xl border border-[#6F52D9] px-5 py-3 text-sm font-bold text-[#6549C9] disabled:opacity-50"
+            >
+              <LockKeyhole size={17} />{" "}
+              {changingPassword ? "Updating…" : "Update password"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>;
+  );
 }
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user") || "null"));
+  const [user, setUser] = useState(() =>
+    JSON.parse(localStorage.getItem("user") || "null"),
+  );
   const [section, setSection] = useState("overview");
   const [report, setReport] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
@@ -297,26 +1886,296 @@ export default function AdminDashboard() {
   const [donations, setDonations] = useState([]);
   const [donationPage, setDonationPage] = useState(1);
   const [donationSearch, setDonationSearch] = useState("");
-  const [donationMeta, setDonationMeta] = useState({ count: 0, next: null, previous: null });
+  const [donationMeta, setDonationMeta] = useState({
+    count: 0,
+    next: null,
+    previous: null,
+  });
   const [users, setUsers] = useState([]);
   const [userPage, setUserPage] = useState(1);
   const [userSearch, setUserSearch] = useState("");
   const [userRole, setUserRole] = useState("");
   const [userStatus, setUserStatus] = useState("");
-  const [userMeta, setUserMeta] = useState({ count: 0, next: null, previous: null });
+  const [userMeta, setUserMeta] = useState({
+    count: 0,
+    next: null,
+    previous: null,
+  });
   const [selectedUser, setSelectedUser] = useState(null);
   const [notice, setNotice] = useState("");
   const [selectedCampaign, setSelectedCampaign] = useState(null);
 
-  useEffect(() => { Promise.all([api.get("/reports/dashboard/"), api.get("/campaigns/admin/all/")]).then(([reportResponse, campaignResponse]) => { setReport(reportResponse.data); setCampaigns(campaignResponse.data); }).catch(() => setNotice("Dashboard data could not be loaded.")); }, []);
-  useEffect(() => { const params = new URLSearchParams({ page: String(donationPage), page_size: "10" }); if (donationSearch.trim()) params.set("q", donationSearch.trim()); api.get(`/donations/admin/all/?${params}`).then(({ data }) => { setDonations(data.results || []); setDonationMeta({ count: data.count || 0, next: data.next, previous: data.previous }); }).catch(() => setNotice("Donation transactions could not be loaded.")); }, [donationPage, donationSearch]);
-  useEffect(() => { const params = new URLSearchParams({ page: String(userPage), page_size: "10" }); if (userSearch.trim()) params.set("q", userSearch.trim()); if (userRole) params.set("role", userRole); if (userStatus) params.set("status", userStatus); api.get(`/auth/admin/users/?${params}`).then(({ data }) => { setUsers(data.results || []); setUserMeta({ count: data.count || 0, next: data.next, previous: data.previous }); }).catch(() => setNotice("User directory could not be loaded.")); }, [userPage, userSearch, userRole, userStatus]);
+  useEffect(() => {
+    Promise.all([
+      api.get("/reports/dashboard/"),
+      api.get("/campaigns/admin/all/"),
+    ])
+      .then(([reportResponse, campaignResponse]) => {
+        setReport(reportResponse.data);
+        setCampaigns(campaignResponse.data);
+      })
+      .catch(() => setNotice("Dashboard data could not be loaded."));
+  }, []);
+  useEffect(() => {
+    const params = new URLSearchParams({
+      page: String(donationPage),
+      page_size: "10",
+    });
+    if (donationSearch.trim()) params.set("q", donationSearch.trim());
+    api
+      .get(`/donations/admin/all/?${params}`)
+      .then(({ data }) => {
+        setDonations(data.results || []);
+        setDonationMeta({
+          count: data.count || 0,
+          next: data.next,
+          previous: data.previous,
+        });
+      })
+      .catch(() => setNotice("Donation transactions could not be loaded."));
+  }, [donationPage, donationSearch]);
+  useEffect(() => {
+    const params = new URLSearchParams({
+      page: String(userPage),
+      page_size: "10",
+    });
+    if (userSearch.trim()) params.set("q", userSearch.trim());
+    if (userRole) params.set("role", userRole);
+    if (userStatus) params.set("status", userStatus);
+    api
+      .get(`/auth/admin/users/?${params}`)
+      .then(({ data }) => {
+        setUsers(data.results || []);
+        setUserMeta({
+          count: data.count || 0,
+          next: data.next,
+          previous: data.previous,
+        });
+      })
+      .catch(() => setNotice("User directory could not be loaded."));
+  }, [userPage, userSearch, userRole, userStatus]);
   const pending = campaigns.filter((campaign) => campaign.status === "pending");
-  const title = { overview: "Good morning", campaigns: "Campaign review", donations: "Donation transactions", users: "User management", reports: "Platform insights", settings: "Profile & settings" }[section];
-  const subtitle = { overview: "Here is the latest activity across Givera.", campaigns: "Review applications and protect the quality of every fundraiser.", donations: "Search, audit, and reconcile every recorded donation.", users: "Review user activity and manage access safely.", reports: "Understand campaign status and fundraising performance.", settings: "Manage your administrator details and account security." }[section];
-  const review = async (campaign, status, rejection_reason = "") => { try { await api.patch(`/campaigns/${campaign.id}/review/`, { status, rejection_reason }); setCampaigns((items) => items.map((item) => item.id === campaign.id ? { ...item, status, status_label: status === "approved" ? "Approved" : "Rejected" } : item)); setReport((current) => current && ({ ...current, pending_requests: Math.max(current.pending_requests - 1, 0), active_campaigns: status === "approved" ? current.active_campaigns + 1 : current.active_campaigns })); setSelectedCampaign(null); setNotice(`“${campaign.title}” was ${status}.`); } catch { setNotice("The campaign review could not be saved."); } };
-  const viewUser = async (item) => { try { const { data } = await api.get(`/auth/admin/users/${item.id}/`); setSelectedUser(data); } catch { setNotice("User details could not be loaded."); } };
-  const changeUser = async (item, changes) => { const action = "role" in changes ? (changes.role === "admin" ? "promote this user to administrator" : "change this administrator to donor") : (changes.is_active ? "activate this account" : "suspend this account"); if (!window.confirm(`Are you sure you want to ${action}?`)) return; try { const { data } = await api.patch(`/auth/admin/users/${item.id}/`, changes); setUsers((items) => items.map((entry) => entry.id === data.id ? { ...entry, ...data } : entry)); if (selectedUser?.id === data.id) setSelectedUser(data); setNotice(`User account updated successfully.`); } catch (error) { setNotice(error.response?.data?.detail || "User account could not be updated."); } };
-  const content = useMemo(() => ({ overview: <Overview report={report} campaigns={campaigns} onReview={setSelectedCampaign} onSection={setSection} />, campaigns: <Campaigns campaigns={campaigns} page={campaignPage} onPageChange={setCampaignPage} onReview={setSelectedCampaign} onView={(campaign) => navigate(`/campaigns/${campaign.id}`)} />, donations: <Transactions donations={donations} meta={donationMeta} page={donationPage} search={donationSearch} onSearch={(value) => { setDonationSearch(value); setDonationPage(1); }} onPageChange={setDonationPage} />, users: <UserManagement users={users} meta={userMeta} page={userPage} search={userSearch} role={userRole} accountStatus={userStatus} currentUser={user} onSearch={(value) => { setUserSearch(value); setUserPage(1); }} onRole={(value) => { setUserRole(value); setUserPage(1); }} onStatus={(value) => { setUserStatus(value); setUserPage(1); }} onPageChange={setUserPage} onView={viewUser} onChange={changeUser} />, reports: <Insights report={report} />, settings: <AdminSettings user={user} onUserChange={setUser} /> }), [report, campaigns, campaignPage, donations, donationMeta, donationPage, donationSearch, users, userMeta, userPage, userSearch, userRole, userStatus, navigate, user, selectedUser]);
-  return <div className="min-h-screen bg-[#F6F6FB] text-slate-900"><div className="mx-auto max-w-[1500px] p-4 lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-6"><Sidebar section={section} onSection={setSection} user={user} pending={pending.length} onLogout={() => { logout(); navigate("/login"); }} /><main className="min-w-0 py-6 lg:py-4"><header className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#7A5BE6]">Administration</p><h1 className="mt-2 text-3xl font-extrabold tracking-tight text-[#201A36] md:text-4xl">{title}</h1><p className="mt-2 text-sm text-slate-500">{subtitle}</p></div><div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm"><span className="h-2 w-2 rounded-full bg-emerald-500" /><span className="text-sm font-bold text-slate-600">System operational</span></div></header>{notice && <div className="mb-6 flex items-center justify-between rounded-2xl bg-[#EEE9FF] px-4 py-3 text-sm font-bold text-[#563DAF]"><span>{notice}</span><button type="button" onClick={() => setNotice("")}><X size={16} /></button></div>}{content[section]}</main></div>{selectedCampaign && <ReviewModal campaign={selectedCampaign} onClose={() => setSelectedCampaign(null)} onReview={review} />}{selectedUser && <UserDetailModal user={selectedUser} currentUser={user} onClose={() => setSelectedUser(null)} onChange={changeUser} />}</div>;
+  const title = {
+    overview: "Good morning",
+    campaigns: "Campaign review",
+    donations: "Donation transactions",
+    users: "User management",
+    reports: "Platform insights",
+    settings: "Profile & settings",
+  }[section];
+  const subtitle = {
+    overview: "Here is the latest activity across Givera.",
+    campaigns:
+      "Review applications and protect the quality of every fundraiser.",
+    donations: "Search, audit, and reconcile every recorded donation.",
+    users: "Review user activity and manage access safely.",
+    reports: "Understand campaign status and fundraising performance.",
+    settings: "Manage your administrator details and account security.",
+  }[section];
+  const review = async (campaign, status, rejection_reason = "") => {
+    try {
+      await api.patch(`/campaigns/${campaign.id}/review/`, {
+        status,
+        rejection_reason,
+      });
+      setCampaigns((items) =>
+        items.map((item) =>
+          item.id === campaign.id
+            ? {
+                ...item,
+                status,
+                status_label: status === "approved" ? "Approved" : "Rejected",
+              }
+            : item,
+        ),
+      );
+      setReport(
+        (current) =>
+          current && {
+            ...current,
+            pending_requests: Math.max(current.pending_requests - 1, 0),
+            active_campaigns:
+              status === "approved"
+                ? current.active_campaigns + 1
+                : current.active_campaigns,
+          },
+      );
+      setSelectedCampaign(null);
+      setNotice(`“${campaign.title}” was ${status}.`);
+    } catch {
+      setNotice("The campaign review could not be saved.");
+    }
+  };
+  const viewUser = async (item) => {
+    try {
+      const { data } = await api.get(`/auth/admin/users/${item.id}/`);
+      setSelectedUser(data);
+    } catch {
+      setNotice("User details could not be loaded.");
+    }
+  };
+  const changeUser = async (item, changes) => {
+    const action =
+      "role" in changes
+        ? changes.role === "admin"
+          ? "promote this user to administrator"
+          : "change this administrator to donor"
+        : changes.is_active
+          ? "activate this account"
+          : "suspend this account";
+    if (!window.confirm(`Are you sure you want to ${action}?`)) return;
+    try {
+      const { data } = await api.patch(
+        `/auth/admin/users/${item.id}/`,
+        changes,
+      );
+      setUsers((items) =>
+        items.map((entry) =>
+          entry.id === data.id ? { ...entry, ...data } : entry,
+        ),
+      );
+      if (selectedUser?.id === data.id) setSelectedUser(data);
+      setNotice(`User account updated successfully.`);
+    } catch (error) {
+      setNotice(
+        error.response?.data?.detail || "User account could not be updated.",
+      );
+    }
+  };
+  const content = useMemo(
+    () => ({
+      overview: (
+        <Overview
+          report={report}
+          campaigns={campaigns}
+          onReview={setSelectedCampaign}
+          onSection={setSection}
+        />
+      ),
+      campaigns: (
+        <Campaigns
+          campaigns={campaigns}
+          page={campaignPage}
+          onPageChange={setCampaignPage}
+          onReview={setSelectedCampaign}
+          onView={(campaign) => navigate(`/campaigns/${campaign.id}`)}
+        />
+      ),
+      donations: (
+        <Transactions
+          donations={donations}
+          meta={donationMeta}
+          page={donationPage}
+          search={donationSearch}
+          onSearch={(value) => {
+            setDonationSearch(value);
+            setDonationPage(1);
+          }}
+          onPageChange={setDonationPage}
+        />
+      ),
+      users: (
+        <UserManagement
+          users={users}
+          meta={userMeta}
+          page={userPage}
+          search={userSearch}
+          role={userRole}
+          accountStatus={userStatus}
+          currentUser={user}
+          onSearch={(value) => {
+            setUserSearch(value);
+            setUserPage(1);
+          }}
+          onRole={(value) => {
+            setUserRole(value);
+            setUserPage(1);
+          }}
+          onStatus={(value) => {
+            setUserStatus(value);
+            setUserPage(1);
+          }}
+          onPageChange={setUserPage}
+          onView={viewUser}
+          onChange={changeUser}
+        />
+      ),
+      reports: <Insights report={report} />,
+      settings: <AdminSettings user={user} onUserChange={setUser} />,
+    }),
+    [
+      report,
+      campaigns,
+      campaignPage,
+      donations,
+      donationMeta,
+      donationPage,
+      donationSearch,
+      users,
+      userMeta,
+      userPage,
+      userSearch,
+      userRole,
+      userStatus,
+      navigate,
+      user,
+      selectedUser,
+    ],
+  );
+  return (
+    <div className="min-h-screen bg-[#F6F6FB] text-slate-900">
+      <div className="mx-auto max-w-[1500px] p-4 lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-6">
+        <Sidebar
+          section={section}
+          onSection={setSection}
+          user={user}
+          pending={pending.length}
+          onLogout={() => {
+            logout();
+            navigate("/login");
+          }}
+        />
+        <main className="min-w-0 py-6 lg:py-4">
+          <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-[#7A5BE6] md:text-4xl">
+                {title}
+              </h1>
+              <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
+            </div>
+            {/* <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="text-sm font-bold text-slate-600">
+                System operational
+              </span> 
+            </div> */}
+          </header>
+          {notice && (
+            <div className="mb-6 flex items-center justify-between rounded-2xl bg-[#EEE9FF] px-4 py-3 text-sm font-bold text-[#563DAF]">
+              <span>{notice}</span>
+              <button type="button" onClick={() => setNotice("")}>
+                <X size={16} />
+              </button>
+            </div>
+          )}
+          {content[section]}
+        </main>
+      </div>
+      {selectedCampaign && (
+        <ReviewModal
+          campaign={selectedCampaign}
+          onClose={() => setSelectedCampaign(null)}
+          onReview={review}
+        />
+      )}
+      {selectedUser && (
+        <UserDetailModal
+          user={selectedUser}
+          currentUser={user}
+          onClose={() => setSelectedUser(null)}
+          onChange={changeUser}
+        />
+      )}
+    </div>
+  );
 }
