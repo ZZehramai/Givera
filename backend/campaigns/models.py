@@ -102,6 +102,44 @@ class CampaignUpdate(models.Model):
         return f"{self.campaign.title}: {self.title}"
 
 
+class CampaignMedia(models.Model):
+    """An organizer-uploaded gallery item or campaign-update attachment."""
+
+    class MediaType(models.TextChoices):
+        IMAGE = "image", "Image"
+        VIDEO = "video", "Video"
+
+    class Purpose(models.TextChoices):
+        GALLERY = "gallery", "Campaign gallery"
+        COVER = "cover", "Additional cover"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="media_items")
+    update = models.ForeignKey(
+        CampaignUpdate,
+        on_delete=models.CASCADE,
+        related_name="media",
+        null=True,
+        blank=True,
+    )
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="campaign_media",
+    )
+    file = models.FileField(upload_to="campaign-media/")
+    media_type = models.CharField(max_length=10, choices=MediaType.choices)
+    purpose = models.CharField(max_length=10, choices=Purpose.choices, default=Purpose.GALLERY)
+    caption = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.campaign.title}: {self.file.name}"
+
+
 class FundUtilization(models.Model):
     """An administrator-published, evidence-backed record of campaign spending."""
 

@@ -1,5 +1,8 @@
 from django.db.models import Avg, Count, Q, Sum
 from django.db.models.functions import TruncMonth
+from django.http import Http404
+from django.utils import timezone
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -7,6 +10,7 @@ from accounts.permissions import IsAdmin
 from campaigns.models import Campaign
 from donations.models import DemoPayment, Donation
 from campaigns.services import complete_due_campaigns
+from .exports import build_dataset, csv_response, pdf_response
 
 
 class AdminDashboardReportView(APIView):
@@ -86,3 +90,24 @@ class AdminDashboardReportView(APIView):
             "payment_methods": payment_methods,
             "top_campaigns": top_campaigns,
         })
+
+
+class AdminDataExportView(APIView):
+    permission_classes = [IsAdmin]
+
+    def get(self, request, resource):
+        dataset = build_dataset(resource, request.query_params)
+        if dataset is None:
+            raise Http404("Unknown export dataset.")
+
+        export_format = request.query_params.get("file_format", "csv").lower()
+        if export_format not in {"csv", "pdf"}:
+            return Response(
+                {"detail": "Choose csv or pdf as the export format."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        filename = f"givera-{resource}-{timezone.localdate():%Y-%m-%d}"
+        if export_format == "pdf":
+            return pdf_response(dataset, filename)
+        return csv_response(dataset, filename)

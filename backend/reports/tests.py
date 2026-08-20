@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from campaigns.models import Campaign
+from campaigns.models import Campaign, FundUtilization
 from donations.models import DemoPayment, Donation
 
 
@@ -82,3 +82,67 @@ class AdminDashboardReportTests(APITestCase):
         response = self.client.get(reverse("admin-dashboard-report"))
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_admin_can_export_every_dataset_as_csv(self):
+        self.make_donation("10000.00", "DEMO-EXPORT-001")
+        FundUtilization.objects.create(
+            campaign=self.campaign,
+            submitted_by=self.admin,
+            title="Books and shelves",
+            description="Purchased learning materials.",
+            amount_spent=Decimal("5000.00"),
+            spent_on=timezone.localdate(),
+            status=FundUtilization.Status.APPROVED,
+        )
+        self.client.force_authenticate(self.admin)
+
+        expected_text = {
+            "transactions": "DEMO-EXPORT-001",
+            "campaigns": "Community library",
+            "users": "admin@example.com",
+            "utilization": "Books and shelves",
+        }
+        for resource, text in expected_text.items():
+            with self.subTest(resource=resource):
+                response = self.client.get(
+                    reverse("admin-data-export", kwargs={"resource": resource}),
+                    {"file_format": "csv"},
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                self.assertEqual(response["Content-Type"], "text/csv; charset=utf-8")
+                self.assertIn(f"givera-{resource}-", response["Content-Disposition"])
+                self.assertIn(text, response.content.decode("utf-8-sig"))
+
+    def test_admin_can_export_pdf(self):
+        self.make_donation("10000.00", "DEMO-PDF-001")
+        self.client.force_authenticate(self.admin)
+
+        response = self.client.get(
+            reverse("admin-data-export", kwargs={"resource": "transactions"}),
+            {"file_format": "pdf"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertTrue(response.content.startswith(b"%PDF"))
+        self.assertGreater(len(response.content), 1000)
+
+    def test_regular_user_cannot_export_admin_data(self):
+        self.client.force_authenticate(self.donor)
+
+        response = self.client.get(
+            reverse("admin-data-export", kwargs={"resource": "users"}),
+            {"file_format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_export_rejects_unknown_format(self):
+        self.client.force_authenticate(self.admin)
+
+        response = self.client.get(
+            reverse("admin-data-export", kwargs={"resource": "campaigns"}),
+            {"file_format": "xlsx"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

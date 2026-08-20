@@ -1,14 +1,17 @@
+import shutil
+import tempfile
 from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Campaign, FundUtilization
+from .models import Campaign, CampaignMedia, FundUtilization
 from accounts.models import Notification
 from donations.models import Donation
 
@@ -17,6 +20,11 @@ User = get_user_model()
 
 class CampaignApiTests(APITestCase):
     def setUp(self):
+        self.media_root = tempfile.mkdtemp()
+        self.media_override = override_settings(MEDIA_ROOT=self.media_root)
+        self.media_override.enable()
+        self.addCleanup(self.media_override.disable)
+        self.addCleanup(shutil.rmtree, self.media_root, True)
         self.owner = User.objects.create_user(
             email="owner@example.com",
             username="owner",
@@ -47,6 +55,49 @@ class CampaignApiTests(APITestCase):
         campaign = Campaign.objects.get()
         self.assertEqual(campaign.owner, self.owner)
         self.assertEqual(campaign.status, Campaign.Status.PENDING)
+
+    def test_campaign_request_accepts_multiple_cover_images(self):
+        self.client.force_authenticate(self.owner)
+        payload = {
+            **self.payload,
+            "cover_images": [
+                SimpleUploadedFile("need.jpg", b"image-data", content_type="image/jpeg"),
+                SimpleUploadedFile("community.png", b"image-data", content_type="image/png"),
+            ],
+        }
+
+        response = self.client.post(reverse("campaign-list"), payload, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        campaign = Campaign.objects.get()
+        self.assertEqual(campaign.status, Campaign.Status.PENDING)
+        self.assertEqual(len(response.data["cover_media"]), 2)
+        self.assertEqual(response.data["gallery_media"], [])
+        self.assertEqual(CampaignMedia.objects.filter(campaign=campaign, purpose=CampaignMedia.Purpose.COVER).count(), 2)
+
+    def test_rejected_campaign_can_add_more_cover_images_when_resubmitted(self):
+        campaign = Campaign.objects.create(
+            owner=self.owner,
+            status=Campaign.Status.REJECTED,
+            rejection_reason="Add clearer supporting evidence.",
+            **self.payload,
+        )
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.patch(
+            reverse("campaign-detail", kwargs={"pk": campaign.pk}),
+            {
+                "story": "Updated story with clearer supporting evidence.",
+                "cover_images": [SimpleUploadedFile("evidence.webp", b"image-data", content_type="image/webp")],
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        campaign.refresh_from_db()
+        self.assertEqual(campaign.status, Campaign.Status.PENDING)
+        self.assertEqual(len(response.data["cover_media"]), 1)
+        self.assertEqual(response.data["gallery_media"], [])
 
     def test_public_list_only_shows_approved_campaigns(self):
         Campaign.objects.create(owner=self.owner, status=Campaign.Status.PENDING, **self.payload)
@@ -177,6 +228,76 @@ class CampaignApiTests(APITestCase):
         notification = Notification.objects.get(recipient=donor)
         self.assertEqual(notification.type, Notification.Type.CAMPAIGN_UPDATE)
         self.assertEqual(notification.link, f"/campaigns/{campaign.pk}")
+
+    def test_organizer_can_upload_multiple_gallery_items(self):
+        campaign = Campaign.objects.create(owner=self.owner, status=Campaign.Status.APPROVED, **self.payload)
+        self.client.force_authenticate(self.owner)
+        photo = SimpleUploadedFile("progress.jpg", b"image-data", content_type="image/jpeg")
+        video = SimpleUploadedFile("walkthrough.mp4", b"video-data", content_type="video/mp4")
+
+        response = self.client.post(
+            reverse("campaign-media", kwargs={"pk": campaign.pk}),
+            {"files": [photo, video], "caption": "Library construction progress"},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(CampaignMedia.objects.filter(campaign=campaign, update__isnull=True).count(), 2)
+        self.assertCountEqual(
+            [item["media_type"] for item in response.data],
+            [CampaignMedia.MediaType.IMAGE, CampaignMedia.MediaType.VIDEO],
+        )
+        detail = self.client.get(reverse("campaign-detail", kwargs={"pk": campaign.pk}))
+        self.assertEqual(len(detail.data["gallery_media"]), 2)
+
+    def test_non_organizer_cannot_upload_gallery_media(self):
+        campaign = Campaign.objects.create(owner=self.owner, status=Campaign.Status.APPROVED, **self.payload)
+        donor = User.objects.create_user(email="viewer@example.com", username="viewer", password="StrongPassword123!")
+        self.client.force_authenticate(donor)
+
+        response = self.client.post(
+            reverse("campaign-media", kwargs={"pk": campaign.pk}),
+            {"files": [SimpleUploadedFile("photo.png", b"image-data", content_type="image/png")]},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(CampaignMedia.objects.exists())
+
+    def test_organizer_update_accepts_multiple_media_attachments(self):
+        campaign = Campaign.objects.create(owner=self.owner, status=Campaign.Status.APPROVED, **self.payload)
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.post(
+            reverse("campaign-updates", kwargs={"pk": campaign.pk}),
+            {
+                "title": "Construction started",
+                "body": "The shelves and reading area are taking shape.",
+                "media": [
+                    SimpleUploadedFile("shelves.webp", b"image-data", content_type="image/webp"),
+                    SimpleUploadedFile("tour.webm", b"video-data", content_type="video/webm"),
+                ],
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data["media"]), 2)
+        self.assertEqual(CampaignMedia.objects.filter(update_id=response.data["id"]).count(), 2)
+
+    def test_campaign_media_rejects_unsupported_files(self):
+        campaign = Campaign.objects.create(owner=self.owner, status=Campaign.Status.APPROVED, **self.payload)
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.post(
+            reverse("campaign-media", kwargs={"pk": campaign.pk}),
+            {"files": [SimpleUploadedFile("notes.pdf", b"pdf-data", content_type="application/pdf")]},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(CampaignMedia.objects.exists())
 
     def test_public_donor_list_hides_anonymous_donor_identity(self):
         donor = User.objects.create_user(email="donor@example.com", username="donor", password="StrongPassword123!")

@@ -1,7 +1,47 @@
+from pathlib import Path
+
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import Campaign, CampaignUpdate, FundUtilization
+from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization
+
+
+MAX_CAMPAIGN_MEDIA_SIZE = 25 * 1024 * 1024
+MAX_CAMPAIGN_MEDIA_FILES = 6
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov", ".m4v"}
+
+
+def validate_campaign_media_upload(upload):
+    if upload.size > MAX_CAMPAIGN_MEDIA_SIZE:
+        raise serializers.ValidationError(f"{upload.name} must be 25 MB or smaller.")
+
+    extension = Path(upload.name).suffix.lower()
+    content_type = (getattr(upload, "content_type", "") or "").lower()
+    if extension in IMAGE_EXTENSIONS and content_type.startswith("image/"):
+        return CampaignMedia.MediaType.IMAGE
+    if extension in VIDEO_EXTENSIONS and content_type.startswith("video/"):
+        return CampaignMedia.MediaType.VIDEO
+    raise serializers.ValidationError(
+        f"{upload.name} is not supported. Upload JPG, PNG, GIF, WebP, MP4, WebM, MOV, or M4V files."
+    )
+
+
+def validate_campaign_cover_upload(upload):
+    if upload.size > 5 * 1024 * 1024:
+        raise serializers.ValidationError(f"{upload.name} must be 5 MB or smaller.")
+    extension = Path(upload.name).suffix.lower()
+    content_type = (getattr(upload, "content_type", "") or "").lower()
+    if extension in IMAGE_EXTENSIONS and content_type.startswith("image/"):
+        return CampaignMedia.MediaType.IMAGE
+    raise serializers.ValidationError(f"{upload.name} is not a supported cover image.")
+
+
+class CampaignMediaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CampaignMedia
+        fields = ["id", "campaign", "update", "file", "media_type", "purpose", "caption", "created_at"]
+        read_only_fields = ["id", "campaign", "update", "file", "media_type", "purpose", "created_at"]
 
 
 class CampaignSerializer(serializers.ModelSerializer):
@@ -10,6 +50,8 @@ class CampaignSerializer(serializers.ModelSerializer):
     progress_percentage = serializers.FloatField(read_only=True)
     category_label = serializers.CharField(source="get_category_display", read_only=True)
     status_label = serializers.CharField(source="get_status_display", read_only=True)
+    gallery_media = serializers.SerializerMethodField()
+    cover_media = serializers.SerializerMethodField()
 
     class Meta:
         model = Campaign
@@ -29,6 +71,8 @@ class CampaignSerializer(serializers.ModelSerializer):
             "amount_raised",
             "progress_percentage",
             "cover_image",
+            "gallery_media",
+            "cover_media",
             "deadline",
             "status",
             "status_label",
@@ -50,6 +94,14 @@ class CampaignSerializer(serializers.ModelSerializer):
 
     def get_owner_name(self, obj):
         return obj.owner.get_full_name() or obj.owner.username
+
+    def get_gallery_media(self, obj):
+        items = obj.media_items.filter(update__isnull=True, purpose=CampaignMedia.Purpose.GALLERY)
+        return CampaignMediaSerializer(items, many=True, context=self.context).data
+
+    def get_cover_media(self, obj):
+        items = obj.media_items.filter(update__isnull=True, purpose=CampaignMedia.Purpose.COVER)
+        return CampaignMediaSerializer(items, many=True, context=self.context).data
 
     def validate_cover_image(self, value):
         if value and value.size > 5 * 1024 * 1024:
@@ -96,10 +148,11 @@ class AdminCampaignSerializer(CampaignSerializer):
 
 class CampaignUpdateSerializer(serializers.ModelSerializer):
     author_name = serializers.SerializerMethodField()
+    media = CampaignMediaSerializer(many=True, read_only=True)
 
     class Meta:
         model = CampaignUpdate
-        fields = ["id", "campaign", "author", "author_name", "title", "body", "created_at", "updated_at"]
+        fields = ["id", "campaign", "author", "author_name", "title", "body", "media", "created_at", "updated_at"]
         read_only_fields = ["id", "campaign", "author", "author_name", "created_at", "updated_at"]
 
     def get_author_name(self, obj):
