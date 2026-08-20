@@ -61,13 +61,13 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) 
       <div className="flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_18px_45px_rgba(41,35,80,.09)] lg:h-[calc(100vh-2rem)]">
         {/* LOGO */}
         <div className="border-b border-slate-100 px-6 py-6">
-          <div className="flex items-center gap-3">
+          <Link to="/" aria-label="Go to Givera home" className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F52D9]/30">
             <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">G</div>
             <div>
               <p className="text-xl font-extrabold tracking-tight text-[#24184a]">Givera</p>
               <p className="text-xs font-medium text-slate-400">User workspace</p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* NAVIGATION */}

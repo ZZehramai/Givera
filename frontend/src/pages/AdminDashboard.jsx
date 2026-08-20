@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   BarChart3,
@@ -60,13 +60,12 @@ function Sidebar({ section, onSection, user, onLogout, pending }) {
     ["campaigns", "Campaign review", Megaphone],
     ["donations", "Transactions", Heart],
     ["users", "User management", UserCog],
-    ["reports", "Insights", FileBarChart],
     ["settings", "Profile & settings", Settings],
   ];
   return (
     <aside className="flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_18px_45px_rgba(41,35,80,.09)] lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:self-start">
       <div className="border-b border-slate-100 px-6 py-6">
-        <div className="flex items-center gap-3">
+        <Link to="/" aria-label="Go to Givera home" className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F52D9]/30">
           <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">
             G
           </div>
@@ -78,7 +77,7 @@ function Sidebar({ section, onSection, user, onLogout, pending }) {
               Admin workspace
             </p>
           </div>
-        </div>
+        </Link>
       </div>
       <nav className="space-y-1 px-3 py-4">
         {items.map(([key, label, Icon]) => (
@@ -859,7 +858,7 @@ function Overview({ report, campaigns, onReview, onSection }) {
   const pending = campaigns.filter((campaign) => campaign.status === "pending");
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-9">
+      {/* <section className="overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-9">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="text-xs font-bold uppercase tracking-[.2em] text-[#D7C8FF]">
@@ -881,7 +880,7 @@ function Overview({ report, campaigns, onReview, onSection }) {
             Review {pending.length} pending requests
           </button>
         </div>
-      </section>
+      </section> */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           icon={CircleDollarSign}
@@ -1031,22 +1030,22 @@ function Overview({ report, campaigns, onReview, onSection }) {
           </p>
         )}
       </section>
+      <section className="pt-3">
+        {/* <div className="mb-5">
+          <p className="text-xs font-bold uppercase tracking-[.18em] text-[#6F52D9]">
+            Analytics and reporting
+          </p>
+          <h2 className="mt-2 text-3xl font-extrabold text-slate-900">
+            Platform insights
+          </h2>
+          <p className="mt-2 text-sm text-slate-500">
+            Review fundraising performance, donor behaviour, campaign health,
+            and downloadable records without leaving Overview.
+          </p>
+        </div> */}
+        <Insights report={report} />
+      </section>
     </div>
-  );
-}
-
-function InsightStat({ icon: Icon, label, value, note, tone }) {
-  return (
-    <article className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-      <span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}>
-        <Icon size={20} />
-      </span>
-      <p className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">
-        {value}
-      </p>
-      <p className="mt-1 text-sm font-bold text-slate-700">{label}</p>
-      <p className="mt-1 text-xs leading-5 text-slate-400">{note}</p>
-    </article>
   );
 }
 
@@ -1117,9 +1116,9 @@ function ExportCenter() {
     <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
       <div className="flex flex-wrap items-start justify-between gap-4 px-6 py-6 md:px-7">
         <div>
-          <h2 className="mt-2 text-3xl font-bold text-slate-900">
+          <h3 className="mt-2 text-2xl font-extrabold">
             Download complete data exports
-          </h2>
+          </h3>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
             Choose CSV for spreadsheets or PDF for a presentation-ready table.
             Exports include every record, not only the current page.
@@ -1198,7 +1197,6 @@ function Insights({ report }) {
   const anonymousRate = report?.total_donations
     ? Math.round((report.anonymous_donations / report.total_donations) * 100)
     : 0;
-  const growth = report?.monthly_growth;
   const palette = [
     "bg-[#6F52D9]",
     "bg-[#FFD66B]",
@@ -1211,51 +1209,16 @@ function Insights({ report }) {
   return (
     <div className="space-y-6">
       <ExportCenter />
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <InsightStat
-          icon={Heart}
-          label="Completed donations"
-          value={report?.total_donations ?? "—"}
-          note="Successful contributions recorded"
-          tone="bg-rose-50 text-rose-600"
-        />
-        <InsightStat
-          icon={CircleDollarSign}
-          label="Average donation"
-          value={kyat(report?.average_donation)}
-          note="Average value per contribution"
-          tone="bg-violet-100 text-[#6549C9]"
-        />
-        <InsightStat
-          icon={Users}
-          label="Returning donors"
-          value={report?.repeat_donors ?? "—"}
-          note="Supporters who donated more than once"
-          tone="bg-sky-100 text-sky-700"
-        />
-        <InsightStat
-          icon={TrendingUp}
-          label="Monthly change"
-          value={
-            growth == null
-              ? "Not enough data"
-              : `${growth > 0 ? "+" : ""}${growth}%`
-          }
-          note="Compared with the previous recorded month"
-          tone="bg-emerald-100 text-emerald-700"
-        />
-      </section>
-
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <article className="rounded-3xl border border-slate-200/80 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+              {/* <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
                 Campaign health
-              </p>
-              <h2 className="mt-2 text-xl font-extrabold">
+              </p> */}
+              <h3 className="text-2xl font-extrabold">
                 Campaign status mix
-              </h2>
+              </h3>
             </div>
             <BarChart3 size={21} className="text-[#6F52D9]" />
           </div>
@@ -1291,12 +1254,12 @@ function Insights({ report }) {
         <article className="rounded-3xl border border-slate-200/80 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+              {/* <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
                 Cause distribution
-              </p>
-              <h2 className="mt-2 text-xl font-extrabold">
+              </p> */}
+              <h3 className="text-2xl font-extrabold">
                 Donations by category
-              </h2>
+              </h3>
             </div>
             <Heart size={21} className="text-[#6F52D9]" />
           </div>
@@ -1342,12 +1305,12 @@ function Insights({ report }) {
       <section className="grid gap-6 xl:grid-cols-[1.35fr_.65fr]">
         <article className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <div className="px-7 py-6">
-            <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+            {/* <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
               Fundraising leaders
-            </p>
-            <h2 className="mt-2 text-xl font-extrabold">
+            </p> */}
+            <h3 className="text-2xl font-extrabold">
               Top-performing campaigns
-            </h2>
+            </h3>
             <p className="mt-1 text-sm text-slate-500">
               Ranked by total donations received.
             </p>
@@ -1420,12 +1383,12 @@ function Insights({ report }) {
             </p>
           </article>
           <article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-            <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+            {/* <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
               Demo checkout
-            </p>
-            <h2 className="mt-2 text-lg font-extrabold">
+            </p> */}
+            <h3 className="text-2xl font-extrabold">
               Payment method usage
-            </h2>
+            </h3>
             <div className="mt-5 space-y-3">
               {paymentMethods.length ? (
                 paymentMethods.map((method, index) => (
@@ -1960,7 +1923,6 @@ export default function AdminDashboard() {
     campaigns: "Campaign review",
     donations: "Donation transactions",
     users: "User management",
-    reports: "Platform insights",
     settings: "Profile & settings",
   }[section];
   const subtitle = {
@@ -1969,7 +1931,6 @@ export default function AdminDashboard() {
       "Review applications and protect the quality of every fundraiser.",
     donations: "Search, audit, and reconcile every recorded donation.",
     users: "Review user activity and manage access safely.",
-    reports: "Understand campaign status and fundraising performance.",
     settings: "Manage your administrator details and account security.",
   }[section];
   const review = async (campaign, status, rejection_reason = "") => {
@@ -2100,7 +2061,6 @@ export default function AdminDashboard() {
           onChange={changeUser}
         />
       ),
-      reports: <Insights report={report} />,
       settings: <AdminSettings user={user} onUserChange={setUser} />,
     }),
     [
@@ -2138,9 +2098,9 @@ export default function AdminDashboard() {
         <main className="min-w-0 py-6 lg:py-4">
           <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-[#7A5BE6] md:text-4xl">
+              <h3 className="mt-2 text-3xl font-extrabold text-[#7A5BE6] md:text-4xl">
                 {title}
-              </h1>
+              </h3>
               <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
             </div>
             {/* <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
