@@ -19,6 +19,9 @@ import {
 
 import api from "../api/axios";
 import communityHeroImage from "../assets/community-hero.jpg";
+import image from "../assets/image.jpg";
+import image1 from "../assets/image1.jpg";
+import image2 from "../assets/image2.avif";
 import AppHeader from "../components/AppHeader";
 import CampaignCard from "../components/CampaignCard";
 
@@ -129,16 +132,15 @@ export function LandingPage() {
             >
               <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 border-purple-100 bg-purple-100 text-purple-700 px-5 py-2 text-xs font-bold uppercase tracking-[0.16em] text-primary shadow-md">
                 <Heart size={16} strokeWidth={2.5} aria-hidden="true" />
-                A kinder way to fund change
+                Where Kindness Drives Action
               </div>
 
-              <h1 className="mt-7 text-4xl font-black uppercase tracking-tight text-slate-900 sm:text-6xl md:text-7xl xl:text-6xl leading-[0.95]">
-                Good things happen when <span className="text-primary">people show up.</span>
+               <h1 className="mt-7 text-4xl font-black uppercase tracking-tight text-slate-900 sm:text-6xl md:text-7xl xl:text-6xl leading-[0.95]">
+                No one has become poor <br />
+                <span className="text-primary">BY GIVING</span>
               </h1>
-
               <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-on-surface-variant md:text-xl">
-                Discover thoughtful campaigns, support the stories that move you, and see
-                the difference your community makes.
+                Discover meaningful causes, lend a hand, and see the tangible impact you create.
               </p>
 
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -148,89 +150,78 @@ export function LandingPage() {
                   </Link>
                 </motion.div>
               </div>
-              {/* <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-slate-600">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-primary" />
-                  <span>Verified Campaigns</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Gift className="h-5 w-5 text-yellow-500" />
-                  <span>100% Community Driven</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-rose-500 fill-rose-200" />
-                  <span>Thousands of Donors</span>
-                </div>
-              </div> */}
+              
             </motion.div>
           </div>
           
 
           {/* POLAROID GALLERY */}
-          <motion.div
-            className="relative mt-16 w-full max-w-none pb-6 pt-4"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, delay: 0.15, ease: "easeOut" }}
-          >
-            <svg
-              className="pointer-events-none absolute left-0 top-8 -z-0 hidden h-28 w-full stroke-slate-300/80 lg:block"
-              viewBox="0 0 1400 120"
-              fill="none"
-              preserveAspectRatio="none"
-            >
-              <path d="M 0,20 Q 700,110 1400,20" strokeWidth="2.5" strokeDasharray="6 6" />
-            </svg>
+<motion.div
+  className="relative mt-16 w-full max-w-none pb-6 pt-4"
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.75, delay: 0.15, ease: "easeOut" }}
+>
+  <svg
+    className="pointer-events-none absolute left-0 top-8 -z-0 hidden h-28 w-full stroke-slate-300/80 lg:block"
+    viewBox="0 0 1400 120"
+    fill="none"
+    preserveAspectRatio="none"
+  >
+    <path d="M 0,20 Q 700,110 1400,20" strokeWidth="2.5" strokeDasharray="6 6" />
+  </svg>
 
-            <div className="relative z-10 flex w-full flex-wrap items-center justify-center gap-y-10 gap-x-4 pb-6 pt-10 sm:gap-x-6 lg:gap-x-8 px-6">
-              <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform -rotate-12 lg:translate-y-8 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
-                <div className="overflow-hidden rounded-xl bg-slate-100">
-                  <img src={communityHeroImage} alt="Volunteers working together" className="aspect-[4/3] w-full object-cover" />
-                </div>
-                <div className="mt-3 text-left">
-                  <p className="font-bold text-slate-900 text-sm md:text-base">Reviewed with care</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Trust starts before giving.</p>
-                </div>
-              </div>
+  <div className="relative z-10 flex w-full flex-wrap items-center justify-center gap-y-10 gap-x-4 pb-6 pt-10 sm:gap-x-6 lg:gap-x-8 px-6">
+    {/* Card 1 */}
+    <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform -rotate-12 lg:translate-y-8 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
+      <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
+      <div className="overflow-hidden rounded-xl bg-slate-100">
+        <img src={image} alt="Donation impact one" className="aspect-[4/3] w-full object-cover" />
+      </div>
+      <div className="mt-3 text-left">
+        <p className="font-bold text-slate-900 text-sm md:text-base">Reviewed with care</p>
+        <p className="text-xs text-slate-500 mt-0.5">Trust starts before giving.</p>
+      </div>
+    </div>
 
-              <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform -rotate-6 lg:translate-y-3 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
-                <div className="overflow-hidden rounded-xl bg-slate-100">
-                  <img src={communityHeroImage} alt="Volunteers working together" className="aspect-[4/3] w-full object-cover filter brightness-95" />
-                </div>
-                <div className="mt-3 text-left">
-                  <p className="font-bold text-slate-900 text-sm md:text-base">Community powered</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Every gift moves the story.</p>
-                </div>
-              </div>
+    {/* Card 2 */}
+    <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform -rotate-6 lg:translate-y-3 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
+      <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
+      <div className="overflow-hidden rounded-xl bg-slate-100">
+        <img src={communityHeroImage} alt="Donation impact two" className="aspect-[4/3] w-full object-cover filter brightness-95" />
+      </div>
+      <div className="mt-3 text-left">
+        <p className="font-bold text-slate-900 text-sm md:text-base">Community powered</p>
+        <p className="text-xs text-slate-500 mt-0.5">Every gift moves the story.</p>
+      </div>
+    </div>
 
-              <div className="relative shrink-0 w-56 sm:w-64 md:w-72 rounded-2xl bg-white p-4 shadow-2xl border border-slate-100 transform rotate-0 lg:-translate-y-4 lg:scale-105 z-20 transition duration-300 hover:scale-110">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4.5 w-4.5 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
-                <div className="overflow-hidden rounded-xl bg-slate-100">
-                  <img src={communityHeroImage} alt="Volunteers working together" className="aspect-[16/11] w-full object-cover" />
-                </div>
-                <div className="mt-3.5 text-left">
-                  <p className="font-bold text-slate-900 text-base md:text-lg">Reviewed with care</p>
-                  <p className="text-xs md:text-sm text-slate-500 mt-0.5">Trust starts before giving.</p>
-                </div>
-              </div>
+    {/* Card 3 (Center Highlight) */}
+    <div className="relative shrink-0 w-56 sm:w-64 md:w-72 rounded-2xl bg-white p-4 shadow-2xl border border-slate-100 transform rotate-0 lg:-translate-y-4 lg:scale-105 z-20 transition duration-300 hover:scale-110">
+      <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4.5 w-4.5 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
+      <div className="overflow-hidden rounded-xl bg-slate-100">
+        <img src={image1} alt="Donation impact three" className="aspect-[16/11] w-full object-cover" />
+      </div>
+      <div className="mt-3.5 text-left">
+        <p className="font-bold text-slate-900 text-base md:text-lg">Reviewed with care</p>
+        <p className="text-xs md:text-sm text-slate-500 mt-0.5">Trust starts before giving.</p>
+      </div>
+    </div>
 
-              <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform rotate-6 lg:translate-y-3 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
-                <div className="overflow-hidden rounded-xl bg-slate-100">
-                  <img src={communityHeroImage} alt="Volunteers working together" className="aspect-[4/3] w-full object-cover filter contrast-105" />
-                </div>
-                <div className="mt-3 text-left">
-                  <p className="font-bold text-slate-900 text-sm md:text-base">Community powered</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Every gift moves the story.</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </section>
+    {/* Card 4 */}
+    <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform rotate-6 lg:translate-y-3 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
+      <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
+      <div className="overflow-hidden rounded-xl bg-slate-100">
+        <img src={image2} alt="Donation impact four" className="aspect-[4/3] w-full object-cover filter contrast-105" />
+      </div>
+      <div className="mt-3 text-left">
+        <p className="font-bold text-slate-900 text-sm md:text-base">Community powered</p>
+        <p className="text-xs text-slate-500 mt-0.5">Every gift moves the story.</p>
+      </div>
+    </div>
+  </div>
+</motion.div>
+</section>
 
         {/* STATS SECTION */}
         {/* <section className="bg-white px-6 pb-20 pt-16">
@@ -275,7 +266,7 @@ export function LandingPage() {
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">See where every gift makes an impact.</h2>
               <p className="mt-4 text-base leading-7 text-slate-700">
-                Givera is built to make fundraising easier to follow—from campaign review to donation records and fund utilization updates.
+                Givera makes giving fully transparent—from vetted causes to real-time spending updates.
               </p>
             </div>
 
