@@ -1,11 +1,37 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays, MapPin, Bookmark } from "lucide-react";
 import { mediaUrl } from "../utils/mediaUrl";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80";
 
 export default function CampaignCard({ campaign }) {
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    const savedCampaigns = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
+    setIsSaved(savedCampaigns.some((item) => item.id === campaign.id));
+  }, [campaign.id]);
+
+  const toggleSave = (e) => {
+    e.preventDefault(); // Link နှိပ်သလို ဖြစ်သွားတာကို တားဆီးရန်
+    const savedCampaigns = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
+    
+    let updated;
+    if (isSaved) {
+      updated = savedCampaigns.filter((item) => item.id !== campaign.id);
+    } else {
+      updated = [...savedCampaigns, campaign];
+    }
+
+    localStorage.setItem("saved_campaigns", JSON.stringify(updated));
+    setIsSaved(!isSaved);
+    
+    // Dashboard သို့မဟုတ် အခြားနေရာများတွင် သိမ်းဆည်းထားသည်ကို သိရှိစေရန် Event ပို့ပေးခြင်း
+    window.dispatchEvent(new Event("savedCampaignsUpdated"));
+  };
+
   const amountRaised = Number(campaign.amount_raised || 0);
   const goalAmount = Number(campaign.goal_amount || 1);
   const progress = Math.min(Math.round((amountRaised / goalAmount) * 100), 100);
@@ -29,15 +55,35 @@ export default function CampaignCard({ campaign }) {
             event.currentTarget.src = fallbackImage;
           }}
         />
+
+        {/* Location (bottom-left) */}
         {campaign.location && (
           <span className="absolute bottom-3 left-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-md">
             <MapPin className="mr-1 inline-block" size={13} />
             {campaign.location}
           </span>
         )}
-        <span className="absolute right-3 top-3 rounded-full bg-[#FFE27A] px-2.5 py-1 text-[11px] font-bold text-[#765E00] shadow-sm">
-          {campaign.category_label || "Community"}
-        </span>
+
+        {/* Top Header Row: Left မှာ Category၊ Right မှာ Save Icon */}
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+          {/* ဘယ်ဘက်အပေါ်ထောင့် (Top-Left) - Category */}
+          <span className="rounded-full bg-[#FFE27A] px-2.5 py-1 text-[11px] font-bold text-[#765E00] shadow-sm">
+            {campaign.category_label || "Community"}
+          </span>
+
+          {/* ညာဘက်အပေါ်ထောင့် (Top-Right) - Save / Bookmark Icon */}
+          <button 
+            type="button" 
+            onClick={toggleSave}
+            className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-slate-700 shadow-md backdrop-blur-md transition hover:bg-white"
+          >
+            <Bookmark 
+              size={18} 
+              className={isSaved ? "text-[#6F52D9]" : "text-slate-700"} 
+              fill={isSaved ? "#6F52D9" : "none"} 
+            />
+          </button>
+        </div>
       </div>
 
       <div className="mt-3 flex flex-1 flex-col justify-between">

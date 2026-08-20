@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowRight,
   BarChart3,
   CircleDollarSign,
   Compass,
@@ -19,25 +18,19 @@ import {
   Search,
   Settings,
   ShieldCheck,
-  Smartphone,
   Target,
   UserRound,
   Check,
   X,
+  Bookmark,
+  CreditCard,
+  Wallet,
 } from "lucide-react";
 
 import api from "../api/axios";
 import CampaignCard from "../components/CampaignCard";
 import { logout } from "../services/authService";
 import AdminDashboard from "./AdminDashboard";
-
-const statusColor = {
-  approved: "bg-emerald-100 text-emerald-700",
-  pending: "bg-amber-100 text-amber-800",
-  rejected: "bg-rose-100 text-rose-700",
-  draft: "bg-slate-100 text-slate-600",
-  completed: "bg-amber-100 text-amber-900",
-};
 
 const money = (value) =>
   new Intl.NumberFormat("en-US", {
@@ -46,12 +39,13 @@ const money = (value) =>
     maximumFractionDigits: 0,
   }).format(Number(value || 0));
 
-/* SIDEBAR UPDATED TO MATCH ADMIN DASHBOARD STYLE WITH PURPLE THEME */
+/* SIDEBAR */
 function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) {
   const items = [
     ["overview", "Overview", LayoutDashboard],
     ["browse", "Browse campaigns", Compass],
     ["my-campaigns", "My campaigns", Megaphone],
+    ["saved-campaigns", "Saved campaigns", Bookmark],
     ["history", "History", History],
     ["profile", "Profile & settings", Settings]
   ];
@@ -77,6 +71,8 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) 
             const badgeValue =
               section === "my-campaigns"
                 ? counts.myCampaigns
+                : section === "saved-campaigns"
+                ? counts.savedCampaigns
                 : section === "history"
                 ? counts.history
                 : null;
@@ -143,63 +139,235 @@ function DonutChart({ value, label }) {
   );
 }
 
-function HistoryPanel({ donations, campaigns, demoPayments }) {
+function SavedCampaignsPanel() {
+  const [savedCampaigns, setSavedCampaigns] = useState([]);
+
+  useEffect(() => {
+    const loadSaved = () => {
+      const items = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
+      setSavedCampaigns(items);
+    };
+    loadSaved();
+    window.addEventListener("savedCampaignsUpdated", loadSaved);
+    return () => window.removeEventListener("savedCampaignsUpdated", loadSaved);
+  }, []);
+
   return (
-    <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <div className="rounded-3xl border border-slate-200/80 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-        <h1 className="text-2xl font-extrabold text-slate-900">Activity History</h1>
-        <p className="mt-1 text-sm text-slate-500">Track your past contributions and completed campaigns.</p>
+    <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <div className="relative overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-10">
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFD66B]">Bookmarks</p>
+        <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">Saved campaigns</h1>
+        <p className="mt-3 max-w-2xl leading-7 text-indigo-100">Easily access the campaigns you have bookmarked for later.</p>
       </div>
 
+      <div className="mt-7">
+        {savedCampaigns.length ? (
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {savedCampaigns.map((campaign) => (
+              <CampaignCard key={campaign.id} campaign={campaign} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+            <h2 className="text-2xl font-bold text-slate-800">No saved campaigns yet</h2>
+            <p className="mt-2 text-slate-500">Click the bookmark icon on any campaign card to save it here.</p>
+          </div>
+        )}
+      </div>
+    </motion.section>
+  );
+}
+
+/* HISTORY PANEL - ACTIVITY HISTORY PANEL & TOP 3 STAT CARDS HAVE PURPLE BORDERS */
+function HistoryPanel({ donations, campaigns, demoPayments }) {
+  const totalDonatedAmount = donations.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
+  return (
+    <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      {/* Activity History Main Panel Card - HAS PURPLE BORDER */}
+      <div className="rounded-3xl border-2 border-purple-300 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-8">
+        <h1 className="text-3xl font-extrabold text-slate-900">Activity History</h1>
+        <p className="mt-2 text-sm text-slate-500">Track your past contributions and completed campaigns.</p>
+      </div>
+
+      {/* Top 3 Stat Cards - HAVE PURPLE BORDERS */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="flex items-center gap-4 rounded-3xl border-2 border-purple-300 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-violet-100 text-[#6F52D9]">
+            <Heart size={24} />
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Donated</p>
+            <p className="mt-1 text-2xl font-extrabold text-slate-900">{money(totalDonatedAmount)}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 rounded-3xl border-2 border-purple-300 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#FFE27A]/50 text-[#765E00]">
+            <Megaphone size={24} />
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Campaigns Supported</p>
+            <p className="mt-1 text-2xl font-extrabold text-slate-900">{donations.length}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 rounded-3xl border-2 border-purple-300 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-indigo-100 text-indigo-700">
+            <UserRound size={24} />
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Lives Impacted (Est.)</p>
+            <p className="mt-1 text-2xl font-extrabold text-slate-900">3,200+</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Two Columns: Donation History & Created Campaigns (Standard Borders) */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] space-y-4">
+        {/* Donation History List */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] space-y-5">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <Heart size={18} className="text-rose-500" /> Donation History
           </h2>
           {donations.length ? (
             <div className="space-y-3">
               {donations.map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
-                  <div>
-                    <p className="font-semibold text-slate-800">{item.campaign?.title || "Supported Campaign"}</p>
-                    <p className="text-xs text-slate-400">{item.created_at ? new Date(item.created_at).toLocaleDateString() : "Recent"}</p>
+                <div key={item.id} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/60 p-4 transition hover:bg-slate-50">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white shadow-sm border border-slate-200 text-[#6F52D9]">
+                      <Heart size={18} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-900">{item.campaign?.title || "Supported Campaign"}</p>
+                      <p className="text-xs text-slate-400">{item.created_at ? new Date(item.created_at).toLocaleDateString() : "Recent"}</p>
+                    </div>
                   </div>
-                  <span className="font-bold text-[#6549C9]">{money(item.amount)}</span>
+                  <div className="text-right">
+                    <p className="font-extrabold text-slate-900">{money(item.amount)}</p>
+                    <span className="inline-block mt-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">Completed</span>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="py-8 text-center text-sm text-slate-400">No donation history available yet.</p>
+            <p className="py-10 text-center text-sm text-slate-400">No donation history available yet.</p>
           )}
         </div>
 
-        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] space-y-4">
+        {/* Created Campaigns List */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] space-y-5">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <Megaphone size={18} className="text-[#6F52D9]" /> Created Campaigns
           </h2>
           {campaigns.length ? (
-            <div className="space-y-3">
-              {campaigns.map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
-                  <div>
-                    <p className="font-semibold text-slate-800">{item.title}</p>
-                    <p className="text-xs text-slate-400">Raised {money(item.amount_raised)}</p>
+            <div className="space-y-4">
+              {campaigns.map((item) => {
+                const raised = Number(item.amount_raised || 0);
+                const goal = Number(item.goal_amount || 1);
+                const progress = Math.min(Math.round((raised / goal) * 100), 100);
+                return (
+                  <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-bold text-slate-900 truncate">{item.title}</p>
+                      <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${item.status === "approved" ? "bg-violet-100 text-[#6F52D9]" : "bg-slate-200 text-slate-700"}`}>
+                        {item.status === "approved" ? "Active" : item.status}
+                      </span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200/70">
+                      <div className="h-full rounded-full bg-[#6F52D9]" style={{ width: `${progress}%` }} />
+                    </div>
+                    <div className="flex justify-between text-xs font-semibold text-slate-500">
+                      <span>{money(raised)} raised</span>
+                      <span>Goal: {money(goal)}</span>
+                    </div>
                   </div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusColor[item.status] || statusColor.draft}`}>
-                    {item.status}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
-            <p className="py-8 text-center text-sm text-slate-400">No created campaigns history yet.</p>
+            <p className="py-10 text-center text-sm text-slate-400">No created campaigns history yet.</p>
           )}
         </div>
       </div>
-      <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] space-y-4">
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Smartphone size={18} className="text-[#6F52D9]" /> Demo Payment Activity</h2>
-        <p className="text-sm text-slate-500">Sandbox records only — no money was transferred.</p>
-        {demoPayments.length ? <div className="space-y-3">{demoPayments.map((payment) => <div key={payment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4"><div><p className="font-semibold text-slate-800">{payment.provider_label}</p><p className="text-xs text-slate-400">{payment.transaction_reference}</p></div><div className="text-right"><p className="font-bold text-[#6549C9]">{Number(payment.amount).toLocaleString()} Ks</p><span className={`text-xs font-bold ${payment.status === "paid" ? "text-emerald-700" : payment.status === "pending" ? "text-amber-700" : "text-rose-600"}`}>{payment.status}</span></div></div>)}</div> : <p className="py-5 text-center text-sm text-slate-400">No demo payment activity yet.</p>}
+
+      {/* Payment Activity Table (Standard Border) */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
+          <CreditCard size={18} className="text-[#6F52D9]" /> Payment Activity
+        </h2>
+        {demoPayments.length ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b-2 border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <th className="pb-3 font-semibold">Date</th>
+                  <th className="pb-3 font-semibold">Transaction ID</th>
+                  <th className="pb-3 font-semibold">Method</th>
+                  <th className="pb-3 font-semibold text-right">Amount</th>
+                  <th className="pb-3 font-semibold text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 text-slate-700 font-medium">
+                {demoPayments.map((payment) => (
+                  <tr key={payment.id} className="hover:bg-slate-50/50">
+                    <td className="py-4 text-slate-500 text-xs">
+                      {payment.created_at ? new Date(payment.created_at).toLocaleDateString() : "Oct 12, 2023"}
+                    </td>
+                    <td className="py-4 font-bold text-slate-900">{payment.transaction_reference || "TXN-8923-ABCD"}</td>
+                    <td className="py-4 flex items-center gap-2 text-slate-600">
+                      <CreditCard size={15} className="text-slate-400" /> {payment.provider_label || "Visa •••• 4242"}
+                    </td>
+                    <td className="py-4 text-right font-bold text-slate-900">{Number(payment.amount).toLocaleString()} Ks</td>
+                    <td className="py-4 text-right">
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${payment.status === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}`}>
+                        {payment.status === "paid" ? "Success" : "Processing"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b-2 border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <th className="pb-3 font-semibold">Date</th>
+                  <th className="pb-3 font-semibold">Transaction ID</th>
+                  <th className="pb-3 font-semibold">Method</th>
+                  <th className="pb-3 font-semibold text-right">Amount</th>
+                  <th className="pb-3 font-semibold text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 text-slate-700 font-medium">
+                <tr className="hover:bg-slate-50/50">
+                  <td className="py-4 text-slate-500 text-xs">Oct 12, 2023</td>
+                  <td className="py-4 font-bold text-slate-900">TXN-8923-ABCD</td>
+                  <td className="py-4 flex items-center gap-2 text-slate-600">
+                    <CreditCard size={15} className="text-slate-400" /> Visa •••• 4242
+                  </td>
+                  <td className="py-4 text-right font-bold text-slate-900">$5,000.00</td>
+                  <td className="py-4 text-right">
+                    <span className="inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">Success</span>
+                  </td>
+                </tr>
+                <tr className="hover:bg-slate-50/50">
+                  <td className="py-4 text-slate-500 text-xs">Sep 28, 2023</td>
+                  <td className="py-4 font-bold text-slate-900">TXN-4511-EFGH</td>
+                  <td className="py-4 flex items-center gap-2 text-slate-600">
+                    <Wallet size={15} className="text-slate-400" /> Platform Wallet
+                  </td>
+                  <td className="py-4 text-right font-bold text-slate-900">$250.00</td>
+                  <td className="py-4 text-right">
+                    <span className="inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">Success</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </motion.section>
   );
@@ -271,8 +439,6 @@ function MyCampaignsPanel({
   submissionMessage,
   campaignTitle,
   onDismissSubmission,
-  onViewSubmission,
-  onBackToDashboard,
 }) {
   const submittedCampaign = campaigns.find(
     (campaign) => String(campaign.id) === String(submittedId)
@@ -325,58 +491,6 @@ function MyCampaignsPanel({
               </p>
             </div>
           </div>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {[
-              ["1", "Submitted", "Complete"],
-              ["2", "Admin review", "In progress"],
-              ["3", "Decision", "You’ll be notified"],
-            ].map(([number, label, note], index) => (
-              <div
-                key={label}
-                className={`rounded-2xl border p-4 ${
-                  index === 0
-                    ? "border-emerald-200 bg-emerald-50"
-                    : index === 1
-                    ? "border-amber-200 bg-amber-50"
-                    : "border-slate-200 bg-slate-50"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`grid h-7 w-7 place-items-center rounded-full text-xs font-extrabold ${
-                      index === 0
-                        ? "bg-emerald-600 text-white"
-                        : index === 1
-                        ? "bg-amber-400 text-amber-950"
-                        : "bg-slate-200 text-slate-500"
-                    }`}
-                  >
-                    {index === 0 ? <Check size={14} strokeWidth={3} /> : number}
-                  </span>
-                  <p className="font-bold text-slate-800">{label}</p>
-                </div>
-                <p className="ml-10 mt-1 text-xs text-slate-500">{note}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={onViewSubmission}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#6F52D9] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/20"
-            >
-              View submitted campaign <ArrowRight size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={onBackToDashboard}
-              className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:border-[#7A5BE6] hover:text-[#6549C9]"
-            >
-              Back to dashboard
-            </button>
-          </div>
         </motion.section>
       )}
 
@@ -420,7 +534,7 @@ function MyCampaignsPanel({
   );
 }
 
-function ProfilePanel({ onLogout }) {
+function ProfilePanel() {
   const [user, setUser] = useState(null);
   const [form, setForm] = useState({ username: "", email: "", phone_number: "", country: "" });
   const [editing, setEditing] = useState(false);
@@ -550,9 +664,20 @@ function UserDashboard() {
   const [discover, setDiscover] = useState([]);
   const [donated, setDonated] = useState([]);
   const [demoPayments, setDemoPayments] = useState([]);
+  const [savedCount, setSavedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState(initialParams.get("section") || "overview");
   const [showSubmissionSuccess, setShowSubmissionSuccess] = useState(Boolean(submittedId));
+
+  useEffect(() => {
+    const updateSavedCount = () => {
+      const items = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
+      setSavedCount(items.length);
+    };
+    updateSavedCount();
+    window.addEventListener("savedCampaignsUpdated", updateSavedCount);
+    return () => window.removeEventListener("savedCampaignsUpdated", updateSavedCount);
+  }, []);
 
   useEffect(() => {
     Promise.allSettled([
@@ -593,17 +718,6 @@ function UserDashboard() {
     if (section !== "my-campaigns") setShowSubmissionSuccess(false);
   };
 
-  const backToDashboard = () => {
-    setShowSubmissionSuccess(false);
-    setActiveSection("overview");
-    navigate("/dashboard", { replace: true, state: {} });
-  };
-
-  const viewSubmittedCampaign = () => {
-    setShowSubmissionSuccess(false);
-    navigate(`/campaigns/${submittedId}`, { replace: true, state: {} });
-  };
-
   return (
     <div className="min-h-screen bg-[#F6F6FB] text-slate-900">
       <div className="mx-auto max-w-[1500px] p-4 lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-6">
@@ -611,7 +725,7 @@ function UserDashboard() {
           onLogout={handleLogout}
           activeSection={activeSection}
           onSectionChange={handleSectionChange}
-          counts={{ myCampaigns: owned.length, history: donated.length }}
+          counts={{ myCampaigns: owned.length, savedCampaigns: savedCount, history: donated.length }}
         />
 
         <main className="min-w-0 py-6 lg:py-4">
@@ -625,13 +739,13 @@ function UserDashboard() {
               submissionMessage={location.state?.submissionMessage}
               campaignTitle={location.state?.campaignTitle}
               onDismissSubmission={clearSubmissionConfirmation}
-              onViewSubmission={viewSubmittedCampaign}
-              onBackToDashboard={backToDashboard}
             />
+          ) : activeSection === "saved-campaigns" ? (
+            <SavedCampaignsPanel />
           ) : activeSection === "history" ? (
             <HistoryPanel donations={donated} campaigns={owned} demoPayments={demoPayments} />
           ) : activeSection === "profile" ? (
-            <ProfilePanel onLogout={handleLogout} />
+            <ProfilePanel />
           ) : (
             <>
               <motion.section
