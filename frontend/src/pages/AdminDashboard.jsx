@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowUpRight, BarChart3, CheckCircle2, ChevronLeft, ChevronRight, CircleDollarSign,
-  ClipboardCheck, FileBarChart, Heart, LayoutDashboard, LockKeyhole, LogOut, Mail,
+  ClipboardCheck, Download, FileBarChart, FileSpreadsheet, FileText, Heart, LayoutDashboard, LockKeyhole, LogOut, Mail,
   MapPin, Megaphone, Phone, Save, Search, Settings, ShieldCheck, TrendingUp, UserRound,
   UserCog, Users, X,
 } from "lucide-react";
@@ -85,6 +85,47 @@ function InsightStat({ icon: Icon, label, value, note, tone }) {
   return <article className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_rgba(43,37,80,.06)]"><span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}><Icon size={20} /></span><p className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">{value}</p><p className="mt-1 text-sm font-bold text-slate-700">{label}</p><p className="mt-1 text-xs leading-5 text-slate-400">{note}</p></article>;
 }
 
+const exportDatasets = [
+  ["transactions", "Transactions", "Donors, amounts, payment methods, references, and dates.", Heart, "bg-rose-50 text-rose-600"],
+  ["campaigns", "Campaigns", "Organizer, goal, progress, category, status, and deadline.", Megaphone, "bg-violet-100 text-[#6549C9]"],
+  ["users", "Users", "Account access, activity totals, donation totals, and join dates.", Users, "bg-sky-100 text-sky-700"],
+  ["utilization", "Utilization reports", "Campaign expenses, evidence filenames, status, and descriptions.", FileBarChart, "bg-amber-100 text-amber-700"],
+];
+
+function ExportCenter() {
+  const [downloading, setDownloading] = useState("");
+  const [error, setError] = useState("");
+
+  const download = async (resource, fileFormat) => {
+    const key = `${resource}-${fileFormat}`;
+    setDownloading(key);
+    setError("");
+    try {
+      const response = await api.get(`/reports/export/${resource}/`, {
+        params: { file_format: fileFormat },
+        responseType: "blob",
+      });
+      const disposition = response.headers["content-disposition"] || "";
+      const filename = disposition.match(/filename="?([^";]+)"?/)?.[1]
+        || `givera-${resource}.${fileFormat}`;
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("The export could not be generated. Please try again.");
+    } finally {
+      setDownloading("");
+    }
+  };
+
+  return <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]"><div className="flex flex-wrap items-start justify-between gap-4 px-6 py-6 md:px-7"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">Administrative records</p><h2 className="mt-2 text-xl font-extrabold text-slate-900">Download complete data exports</h2><p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">Choose CSV for spreadsheets or PDF for a presentation-ready table. Exports include every record, not only the current page.</p></div><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#FFF4C7] text-[#7A5B00]"><Download size={21} /></span></div><div className="grid border-t border-slate-100 sm:grid-cols-2 xl:grid-cols-4">{exportDatasets.map(([resource, label, description, Icon, tone], index) => <article key={resource} className={`p-5 ${index ? "border-t border-slate-100 sm:border-l sm:border-t-0" : ""} ${index === 2 ? "sm:border-l-0 xl:border-l" : ""} ${index > 1 ? "sm:border-t xl:border-t-0" : ""}`}><span className={`grid h-10 w-10 place-items-center rounded-xl ${tone}`}><Icon size={19} /></span><h3 className="mt-4 font-extrabold text-slate-800">{label}</h3><p className="mt-1 min-h-10 text-xs leading-5 text-slate-400">{description}</p><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" disabled={Boolean(downloading)} onClick={() => download(resource, "csv")} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-extrabold text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-45"><FileSpreadsheet size={15} /> {downloading === `${resource}-csv` ? "Preparing…" : "CSV"}</button><button type="button" disabled={Boolean(downloading)} onClick={() => download(resource, "pdf")} className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#6F52D9] px-3 py-2.5 text-xs font-extrabold text-white transition hover:bg-[#6044C7] disabled:opacity-45"><FileText size={15} /> {downloading === `${resource}-pdf` ? "Preparing…" : "PDF"}</button></div></article>)}</div>{error && <p className="border-t border-rose-100 bg-rose-50 px-6 py-3 text-sm font-bold text-rose-700">{error}</p>}</section>;
+}
+
 function Insights({ report }) {
   const statuses = report?.campaigns_by_status || [];
   const categories = report?.donations_by_category || [];
@@ -98,6 +139,7 @@ function Insights({ report }) {
   const palette = ["bg-[#6F52D9]", "bg-[#FFD66B]", "bg-emerald-500", "bg-sky-500", "bg-rose-400", "bg-orange-400"];
 
   return <div className="space-y-6">
+    <ExportCenter />
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <InsightStat icon={Heart} label="Completed donations" value={report?.total_donations ?? "—"} note="Successful contributions recorded" tone="bg-rose-50 text-rose-600" />
       <InsightStat icon={CircleDollarSign} label="Average donation" value={kyat(report?.average_donation)} note="Average value per contribution" tone="bg-violet-100 text-[#6549C9]" />
