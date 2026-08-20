@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Campaign, CampaignUpdate, FundUtilization
+from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization
 
 
 @admin.register(Campaign)
@@ -23,6 +23,13 @@ class CampaignAdmin(admin.ModelAdmin):
 class CampaignUpdateAdmin(admin.ModelAdmin):
     list_display = ("title", "campaign", "author", "created_at")
     search_fields = ("title", "body", "campaign__title", "author__email")
+
+
+@admin.register(CampaignMedia)
+class CampaignMediaAdmin(admin.ModelAdmin):
+    list_display = ("campaign", "media_type", "purpose", "update", "uploaded_by", "created_at")
+    list_filter = ("media_type", "purpose", "created_at")
+    search_fields = ("campaign__title", "caption", "uploaded_by__email")
 
 
 @admin.register(FundUtilization)

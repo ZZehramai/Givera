@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -9,8 +10,8 @@ from rest_framework.views import APIView
 from accounts.models import Notification
 from accounts.permissions import IsAdmin
 
-from .models import Campaign, CampaignUpdate, FundUtilization
-from .serializers import AdminCampaignSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer
+from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization
+from .serializers import AdminCampaignSerializer, CampaignMediaSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer, MAX_CAMPAIGN_MEDIA_FILES, validate_campaign_cover_upload, validate_campaign_media_upload
 from .services import complete_campaign_if_due, complete_due_campaigns
 
 
@@ -24,7 +25,7 @@ class CampaignListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         complete_due_campaigns()
-        queryset = Campaign.objects.filter(status__in=[Campaign.Status.APPROVED, Campaign.Status.COMPLETED]).select_related("owner")
+        queryset = Campaign.objects.filter(status__in=[Campaign.Status.APPROVED, Campaign.Status.COMPLETED]).select_related("owner").prefetch_related("media_items")
         query = self.request.query_params.get("q", "").strip()
         category = self.request.query_params.get("category", "").strip()
         if query:
@@ -41,6 +42,28 @@ class CampaignListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user, status=Campaign.Status.PENDING)
 
+    def create(self, request, *args, **kwargs):
+        files = request.FILES.getlist("cover_images")
+        if len(files) > MAX_CAMPAIGN_MEDIA_FILES:
+            raise ValidationError({"media": f"Upload no more than {MAX_CAMPAIGN_MEDIA_FILES} supporting files."})
+        media_types = [validate_campaign_cover_upload(upload) for upload in files]
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        with transaction.atomic():
+            self.perform_create(serializer)
+            campaign = serializer.instance
+            CampaignMedia.objects.bulk_create([
+                CampaignMedia(
+                    campaign=campaign,
+                    uploaded_by=request.user,
+                    file=upload,
+                    media_type=media_type,
+                    purpose=CampaignMedia.Purpose.COVER,
+                )
+                for upload, media_type in zip(files, media_types)
+            ])
+        return Response(self.get_serializer(campaign).data, status=status.HTTP_201_CREATED)
+
 
 class CampaignDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CampaignSerializer
@@ -52,7 +75,7 @@ class CampaignDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         complete_due_campaigns()
-        queryset = Campaign.objects.select_related("owner")
+        queryset = Campaign.objects.select_related("owner").prefetch_related("media_items")
         user = self.request.user
         if user.is_authenticated:
             if user.is_admin_role or user.is_staff:
@@ -69,6 +92,29 @@ class CampaignDetailView(generics.RetrieveUpdateDestroyAPIView):
         if campaign.status not in {Campaign.Status.DRAFT, Campaign.Status.PENDING, Campaign.Status.REJECTED}:
             raise ValidationError("Approved or completed campaigns cannot be edited.")
         serializer.save(status=Campaign.Status.PENDING, rejection_reason="")
+
+    def update(self, request, *args, **kwargs):
+        files = request.FILES.getlist("cover_images")
+        if len(files) > MAX_CAMPAIGN_MEDIA_FILES:
+            raise ValidationError({"media": f"Upload no more than {MAX_CAMPAIGN_MEDIA_FILES} supporting files."})
+        media_types = [validate_campaign_cover_upload(upload) for upload in files]
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        with transaction.atomic():
+            self.perform_update(serializer)
+            CampaignMedia.objects.bulk_create([
+                CampaignMedia(
+                    campaign=instance,
+                    uploaded_by=request.user,
+                    file=upload,
+                    media_type=media_type,
+                    purpose=CampaignMedia.Purpose.COVER,
+                )
+                for upload, media_type in zip(files, media_types)
+            ])
+        return Response(self.get_serializer(instance).data)
 
     def perform_destroy(self, instance):
         if (
@@ -201,6 +247,97 @@ class CampaignUpdateListCreateView(generics.ListCreateAPIView):
             if recipient_id != campaign.owner_id
         ]
         Notification.objects.bulk_create(notifications)
+
+    def create(self, request, *args, **kwargs):
+        files = request.FILES.getlist("media")
+        if len(files) > MAX_CAMPAIGN_MEDIA_FILES:
+            raise ValidationError({"media": f"Upload no more than {MAX_CAMPAIGN_MEDIA_FILES} files per update."})
+        media_types = [validate_campaign_media_upload(upload) for upload in files]
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        with transaction.atomic():
+            self.perform_create(serializer)
+            update = serializer.instance
+            CampaignMedia.objects.bulk_create([
+                CampaignMedia(
+                    campaign=update.campaign,
+                    update=update,
+                    uploaded_by=request.user,
+                    file=upload,
+                    media_type=media_type,
+                )
+                for upload, media_type in zip(files, media_types)
+            ])
+        return Response(self.get_serializer(update).data, status=status.HTTP_201_CREATED)
+
+
+class CampaignMediaListCreateView(generics.ListCreateAPIView):
+    serializer_class = CampaignMediaSerializer
+
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
+
+    def get_campaign(self):
+        complete_due_campaigns(Campaign.objects.filter(pk=self.kwargs["pk"]))
+        campaign = get_object_or_404(Campaign.objects.select_related("owner"), pk=self.kwargs["pk"])
+        user = self.request.user
+        can_view = campaign.status in {Campaign.Status.APPROVED, Campaign.Status.COMPLETED} or (
+            user.is_authenticated and (campaign.owner == user or user.is_admin_role or user.is_staff)
+        )
+        if not can_view:
+            raise PermissionDenied("This campaign is not available.")
+        return campaign
+
+    def get_queryset(self):
+        return CampaignMedia.objects.filter(
+            campaign=self.get_campaign(),
+            update__isnull=True,
+            purpose=CampaignMedia.Purpose.GALLERY,
+        )
+
+    def create(self, request, *args, **kwargs):
+        campaign = self.get_campaign()
+        if campaign.owner != request.user:
+            raise PermissionDenied("Only the campaign organizer can manage gallery media.")
+        files = request.FILES.getlist("files")
+        if not files:
+            raise ValidationError({"files": "Choose at least one image or video."})
+        if len(files) > MAX_CAMPAIGN_MEDIA_FILES:
+            raise ValidationError({"files": f"Upload no more than {MAX_CAMPAIGN_MEDIA_FILES} files at once."})
+        media_types = [validate_campaign_media_upload(upload) for upload in files]
+        caption = request.data.get("caption", "").strip()[:200]
+        with transaction.atomic():
+            items = CampaignMedia.objects.bulk_create([
+                CampaignMedia(
+                    campaign=campaign,
+                    uploaded_by=request.user,
+                    file=upload,
+                    media_type=media_type,
+                    purpose=CampaignMedia.Purpose.GALLERY,
+                    caption=caption,
+                )
+                for upload, media_type in zip(files, media_types)
+            ])
+        return Response(self.get_serializer(items, many=True).data, status=status.HTTP_201_CREATED)
+
+
+class CampaignMediaDetailView(generics.DestroyAPIView):
+    serializer_class = CampaignMediaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = "media_pk"
+
+    def get_queryset(self):
+        return CampaignMedia.objects.filter(campaign_id=self.kwargs["pk"], update__isnull=True)
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        if instance.campaign.owner != user and not user.is_admin_role and not user.is_staff:
+            raise PermissionDenied("Only the campaign organizer or an administrator can remove this media.")
+        stored_file = instance.file
+        instance.delete()
+        stored_file.delete(save=False)
 
 
 class CampaignDonorListView(generics.ListAPIView):

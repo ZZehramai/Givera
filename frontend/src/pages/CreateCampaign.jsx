@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Trash2 } from "lucide-react";
 
 import api from "../api/axios";
 import AppHeader from "../components/AppHeader";
@@ -28,6 +28,9 @@ export default function CreateCampaign() {
   const isEditing = Boolean(id);
   const [form, setForm] = useState(initialForm);
   const [imagePreview, setImagePreview] = useState("");
+  const [supportingMedia, setSupportingMedia] = useState([]);
+  const [supportingPreviews, setSupportingPreviews] = useState([]);
+  const [existingMedia, setExistingMedia] = useState([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEditing);
   const [error, setError] = useState("");
@@ -54,6 +57,7 @@ export default function CreateCampaign() {
           deadline: data.deadline || "",
         });
         setImagePreview(mediaUrl(data.cover_image, ""));
+        setExistingMedia(data.cover_media || []);
         setRejectionReason(data.rejection_reason || "Review the campaign details before resubmitting.");
       })
       .catch((requestError) => setError(requestError.response?.data?.detail || "This campaign could not be loaded."))
@@ -62,20 +66,46 @@ export default function CreateCampaign() {
 
   const update = (event) => {
     if (event.target.name === "cover_image") {
-      const file = event.target.files?.[0] || null;
-      if (file && file.size > 5 * 1024 * 1024) {
-        setError("Cover image must be 5 MB or smaller.");
+      const files = Array.from(event.target.files || []);
+      if (files.length > 6) {
+        setError("Choose no more than 6 cover images.");
         event.target.value = "";
         return;
       }
-      setForm((current) => ({ ...current, cover_image: file }));
-      setImagePreview(file ? URL.createObjectURL(file) : "");
+      const invalidFile = files.find((file) => !file.type.startsWith("image/") || file.size > 5 * 1024 * 1024);
+      if (invalidFile) {
+        setError(`${invalidFile.name} must be a supported image no larger than 5 MB.`);
+        event.target.value = "";
+        return;
+      }
+      supportingPreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
+      const [primaryCover = null, ...additionalCovers] = files;
+      setForm((current) => ({ ...current, cover_image: primaryCover }));
+      setImagePreview(primaryCover ? URL.createObjectURL(primaryCover) : "");
+      setSupportingMedia(additionalCovers);
+      setSupportingPreviews(additionalCovers.map((file) => ({ file, url: URL.createObjectURL(file) })));
+      setError("");
       return;
     }
     setForm((current) => ({
       ...current,
       [event.target.name]: event.target.value,
     }));
+  };
+
+  const removeSelectedMedia = (index) => {
+    URL.revokeObjectURL(supportingPreviews[index].url);
+    setSupportingMedia((files) => files.filter((_, itemIndex) => itemIndex !== index));
+    setSupportingPreviews((previews) => previews.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  const removeExistingMedia = async (mediaId) => {
+    try {
+      await api.delete(`/campaigns/${id}/media/${mediaId}/`);
+      setExistingMedia((items) => items.filter((item) => item.id !== mediaId));
+    } catch (requestError) {
+      setError(requestError.response?.data?.detail || "This media item could not be removed.");
+    }
   };
 
   const submit = async (event) => {
@@ -89,6 +119,7 @@ export default function CreateCampaign() {
           payload.append(key, value);
         }
       });
+      supportingMedia.forEach((file) => payload.append("cover_images", file));
       const { data } = isEditing
         ? await api.patch(`/campaigns/${id}/`, payload)
         : await api.post("/campaigns/", payload);
@@ -259,25 +290,25 @@ export default function CreateCampaign() {
               />
             </label>
             <label>
-              <span className="mb-2 block text-sm font-bold">Cover image</span>
+              <span className="mb-2 block text-sm font-bold">Campaign cover images</span>
               <input
                 required={!isEditing}
                 accept="image/jpeg,image/png,image/webp"
                 type="file"
+                multiple
                 name="cover_image"
                 onChange={update}
                 className="w-full rounded-xl border border-dashed border-outline-variant bg-surface px-4 py-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:font-bold file:text-white"
               />
               <span className="mt-1 block text-xs text-on-surface-variant">
-                JPG, PNG, or WebP · maximum 5 MB
+                Choose up to 6 JPG, PNG, or WebP images · maximum 5 MB each
               </span>
-              {imagePreview && (
-                <img
-                  src={imagePreview}
-                  alt="Selected campaign cover preview"
-                  className="mt-4 h-36 w-full rounded-xl object-cover"
-                />
-              )}
+              {(imagePreview || existingMedia.length > 0 || supportingPreviews.length > 0) && <div className="mt-4 grid grid-cols-2 gap-2">
+                {imagePreview && <MediaPreview type="image" src={imagePreview} label="Primary cover" />}
+                {existingMedia.map((item) => <MediaPreview key={item.id} type="image" src={mediaUrl(item.file)} label="Existing cover" onRemove={() => removeExistingMedia(item.id)} />)}
+                {supportingPreviews.map((preview, index) => <MediaPreview key={`${preview.file.name}-${preview.file.lastModified}`} type="image" src={preview.url} label={preview.file.name} onRemove={() => removeSelectedMedia(index)} />)}
+              </div>}
+              <span className="mt-2 block text-xs font-semibold text-primary">{(imagePreview ? 1 : 0) + existingMedia.length + supportingMedia.length} cover image{(imagePreview ? 1 : 0) + existingMedia.length + supportingMedia.length === 1 ? "" : "s"} ready</span>
             </label>
           </div>
 
@@ -290,5 +321,23 @@ export default function CreateCampaign() {
         </form>
       </main>
     </div>
+  );
+}
+
+function MediaPreview({ type, src, label, onRemove }) {
+  return (
+    <article className="group relative overflow-hidden rounded-xl bg-slate-900">
+      {type === "video" ? (
+        <video src={src} muted preload="metadata" className="aspect-video w-full object-cover" />
+      ) : (
+        <img src={src} alt={label} className="aspect-video w-full object-cover" />
+      )}
+      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-slate-950/90 to-transparent px-3 pb-2 pt-8 text-white">
+        <p className="min-w-0 truncate text-[11px] font-bold">{label}</p>
+        {onRemove && <button type="button" onClick={onRemove} aria-label={`Remove ${label}`} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 hover:bg-rose-500">
+          <Trash2 size={13} />
+        </button>}
+      </div>
+    </article>
   );
 }
