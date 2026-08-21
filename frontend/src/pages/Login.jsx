@@ -5,11 +5,13 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import AuthShell from "../components/AuthShell";
 import { login, loginWithGoogle } from "../services/authService";
+import { useLanguage } from "../i18n/LanguageContext";
 
 const inputClass =
   "w-full rounded-2xl border border-outline-variant bg-white py-3.5 pl-12 pr-4 text-on-surface outline-none transition placeholder:text-on-surface-variant/55 focus:border-primary focus:ring-4 focus:ring-primary/10";
 
 export function Login() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
@@ -59,10 +61,10 @@ export function Login() {
   return (
     <AuthShell mode="login">
       <div>
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Welcome back</p>
-        <h2 className="mt-2 text-4xl font-extrabold">Sign in to Givera</h2>
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">{t("welcomeBack")}</p>
+        <h2 className="mt-2 text-4xl font-extrabold">{t("signInGivera")}</h2>
         <p className="mt-3 leading-7 text-on-surface-variant">
-          Pick up where you left off and keep making a difference.
+          {t("signInDescription")}
         </p>
       </div>
 
@@ -74,7 +76,7 @@ export function Login() {
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         <label className="block">
-          <span className="mb-2 block text-sm font-bold">Email address</span>
+          <span className="mb-2 block text-sm font-bold">{t("email")}</span>
           <span className="relative block">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" size={19} aria-hidden="true" />
             <input
@@ -90,14 +92,14 @@ export function Login() {
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm font-bold">Password</span>
+          <span className="mb-2 block text-sm font-bold">{t("password")}</span>
           <span className="relative block">
             <LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" size={19} aria-hidden="true" />
             <input
               required
               autoComplete="current-password"
               type="password"
-              placeholder="Enter your password"
+              placeholder={t("enterPassword")}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className={inputClass}
@@ -116,13 +118,13 @@ export function Login() {
           disabled={loading}
           className="w-full rounded-2xl bg-primary px-6 py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-55"
         >
-          {loading ? "Signing in…" : "Sign in"}
+          {loading ? t("signingIn") : t("signInLower")}
         </button>
       </form>
 
       <div className="my-6 flex items-center gap-4">
         <div className="h-px flex-1 bg-outline-variant" />
-        <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">or continue with</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t("continueWith")}</span>
         <div className="h-px flex-1 bg-outline-variant" />
       </div>
 
@@ -138,9 +140,9 @@ export function Login() {
       </div>
 
       <p className="mt-8 text-center text-sm text-on-surface-variant">
-        New to Givera?{" "}
+        {t("newToGivera")}{" "}
         <Link to="/register" className="font-bold text-primary hover:underline">
-          Create an account
+          {t("createAccount")}
         </Link>
       </p>
     </AuthShell>

@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   BarChart3,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
@@ -33,9 +32,12 @@ import {
 
 import api from "../api/axios";
 import { logout } from "../services/authService";
+import LanguageSwitch from "../components/LanguageSwitch";
+import { useLanguage } from "../i18n/LanguageContext";
 
-const kyat = (value) => `${Number(value || 0).toLocaleString()} Ks`;
-const dateTime = (value) => (value ? new Date(value).toLocaleString() : "—");
+const activeLocale = () => localStorage.getItem("givera-language") === "my" ? "my-MM" : "en-US";
+const kyat = (value) => `${Number(value || 0).toLocaleString(activeLocale())} ${activeLocale() === "my-MM" ? "ကျပ်" : "Ks"}`;
+const dateTime = (value) => (value ? new Date(value).toLocaleString(activeLocale()) : "—");
 const campaignTone = {
   approved: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   pending: "bg-amber-50 text-amber-700 ring-amber-200",
@@ -45,22 +47,24 @@ const campaignTone = {
 };
 
 function StatusBadge({ status, label }) {
+  const { language, t } = useLanguage();
   return (
     <span
       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${campaignTone[status] || campaignTone.draft}`}
     >
-      {label || status}
+      {language === "my" ? t(status) : label || t(status)}
     </span>
   );
 }
 
 function Sidebar({ section, onSection, user, onLogout, pending }) {
+  const { t } = useLanguage();
   const items = [
-    ["overview", "Overview", LayoutDashboard],
-    ["campaigns", "Campaign review", Megaphone],
-    ["donations", "Transactions", Heart],
-    ["users", "User management", UserCog],
-    ["settings", "Profile & settings", Settings],
+    ["overview", t("overview"), LayoutDashboard],
+    ["campaigns", t("campaignReview"), Megaphone],
+    ["donations", t("transactions"), Heart],
+    ["users", t("userManagement"), UserCog],
+    ["settings", t("profileSettings"), Settings],
   ];
   return (
     <aside className="flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_18px_45px_rgba(41,35,80,.09)] lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:self-start">
@@ -74,10 +78,11 @@ function Sidebar({ section, onSection, user, onLogout, pending }) {
               Givera
             </p>
             <p className="text-xs font-medium text-slate-400">
-              Admin workspace
+              {t("adminWorkspace")}
             </p>
           </div>
         </Link>
+        <div className="mt-4"><LanguageSwitch /></div>
       </div>
       <nav className="space-y-1 px-3 py-4">
         {items.map(([key, label, Icon]) => (
@@ -106,9 +111,9 @@ function Sidebar({ section, onSection, user, onLogout, pending }) {
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-slate-800">
-              {user?.username || "Administrator"}
+              {user?.username || t("administrator")}
             </p>
-            <p className="text-xs text-slate-400">Platform admin</p>
+            <p className="text-xs text-slate-400">{t("platformAdmin")}</p>
           </div>
         </div>
         <button
@@ -116,7 +121,7 @@ function Sidebar({ section, onSection, user, onLogout, pending }) {
           onClick={onLogout}
           className="mt-3 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
         >
-          <LogOut size={17} /> Sign out
+          <LogOut size={17} /> {t("signOut")}
         </button>
       </div>
     </aside>
@@ -144,6 +149,7 @@ function MetricCard({ icon: Icon, label, value, note, tone }) {
 }
 
 function ReviewModal({ campaign, onClose, onReview }) {
+  const { t, formatDate, formatKyat } = useLanguage();
   const [reason, setReason] = useState("");
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[#17112e]/55 p-4 backdrop-blur-sm">
@@ -151,7 +157,7 @@ function ReviewModal({ campaign, onClose, onReview }) {
         <div className="flex items-start justify-between bg-[#25194B] px-7 py-6 text-white">
           <div>
             <p className="text-xs font-bold uppercase tracking-[.18em] text-[#D9CBFF]">
-              Campaign verification
+              {t("campaignVerification")}
             </p>
             <h2 className="mt-2 text-2xl font-extrabold">{campaign.title}</h2>
           </div>
@@ -166,24 +172,24 @@ function ReviewModal({ campaign, onClose, onReview }) {
         <div className="grid gap-7 p-7 md:grid-cols-[1.35fr_.65fr]">
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-              Campaign story
+              {t("campaignStory")}
             </p>
             <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">
               {campaign.story}
             </p>
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <Info label="Goal" value={kyat(campaign.goal_amount)} />
-              <Info label="Beneficiary" value={campaign.beneficiary} />
-              <Info label="Location" value={campaign.location} />
+              <Info label={t("goal")} value={formatKyat(campaign.goal_amount)} />
+              <Info label={t("beneficiary")} value={campaign.beneficiary} />
+              <Info label={t("location")} value={campaign.location} />
               <Info
-                label="Deadline"
-                value={new Date(campaign.deadline).toLocaleDateString()}
+                label={t("deadline")}
+                value={formatDate(campaign.deadline)}
               />
             </div>
           </div>
           <div className="rounded-2xl bg-slate-50 p-5">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-              Organizer
+              {t("organizer")}
             </p>
             <p className="mt-3 font-extrabold text-slate-900">
               {campaign.owner_name}
@@ -193,25 +199,25 @@ function ReviewModal({ campaign, onClose, onReview }) {
             </p>
             <div className="mt-5 border-t border-slate-200 pt-4 text-sm">
               <p className="font-bold text-slate-700">
-                {campaign.owner_phone_number || "No phone number"}
+                {campaign.owner_phone_number || t("noPhone")}
               </p>
               <p className="mt-1 text-slate-500">
-                {campaign.owner_country || "No location supplied"}
+                {campaign.owner_country || t("noLocation")}
               </p>
             </div>
           </div>
         </div>
         <div className="border-t border-slate-100 bg-slate-50/70 px-7 py-5">
           <label className="text-sm font-bold text-slate-700">
-            Rejection feedback{" "}
+            {t("rejectionFeedback")}{" "}
             <span className="font-normal text-slate-400">
-              (required when rejecting)
+              ({t("requiredRejecting")})
             </span>
             <textarea
               rows={2}
               value={reason}
               onChange={(event) => setReason(event.target.value)}
-              placeholder="Tell the organizer what to update"
+              placeholder={t("feedbackPlaceholder")}
               className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#7A5BE6]"
             />
           </label>
@@ -221,7 +227,7 @@ function ReviewModal({ campaign, onClose, onReview }) {
               onClick={onClose}
               className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500"
             >
-              Cancel
+              {t("cancel")}
             </button>
             <button
               type="button"
@@ -229,14 +235,14 @@ function ReviewModal({ campaign, onClose, onReview }) {
               onClick={() => onReview(campaign, "rejected", reason)}
               className="rounded-xl bg-rose-100 px-4 py-2.5 text-sm font-bold text-rose-700 disabled:opacity-40"
             >
-              Request changes
+              {t("requestChanges")}
             </button>
             <button
               type="button"
               onClick={() => onReview(campaign, "approved")}
               className="rounded-xl bg-[#6F52D9] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/20"
             >
-              Approve campaign
+              {t("approveCampaign")}
             </button>
           </div>
         </div>
@@ -257,6 +263,7 @@ function Info({ label, value }) {
 }
 
 function Campaigns({ campaigns, page, onPageChange, onReview, onView }) {
+  const { t } = useLanguage();
   const pageSize = 10;
   const pages = Math.max(1, Math.ceil(campaigns.length / pageSize));
   const pageCampaigns = campaigns.slice((page - 1) * pageSize, page * pageSize);
@@ -278,11 +285,11 @@ function Campaigns({ campaigns, page, onPageChange, onReview, onView }) {
         <table className="w-full min-w-[820px] text-left text-sm">
           <thead className="border-y border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400">
             <tr>
-              <th className="px-6 py-3">Campaign</th>
-              <th className="px-6 py-3">Organizer</th>
-              <th className="px-6 py-3">Goal</th>
-              <th className="px-6 py-3">Status</th>
-              <th className="px-6 py-3 text-right">Action</th>
+              <th className="px-6 py-3">{t("campaignWord")}</th>
+              <th className="px-6 py-3">{t("organizer")}</th>
+              <th className="px-6 py-3">{t("goal")}</th>
+              <th className="px-6 py-3">{t("status")}</th>
+              <th className="px-6 py-3 text-right">{t("action")}</th>
             </tr>
           </thead>
           <tbody>
@@ -321,7 +328,7 @@ function Campaigns({ campaigns, page, onPageChange, onReview, onView }) {
                       onClick={() => onView(campaign)}
                       className="rounded-xl border border-[#ffe96e] bg-[#ffe96e] px-3 py-2 text-xs font-bold text-[#4C3910] shadow-sm transition hover:bg-[#fce249]"
                     >
-                      View details
+                      {t("viewDetails")}
                     </button>
                     {campaign.status === "pending" && (
                       <button
@@ -329,7 +336,7 @@ function Campaigns({ campaigns, page, onPageChange, onReview, onView }) {
                         onClick={() => onReview(campaign)}
                         className="rounded-xl bg-[#F0ECFF] px-3 py-2 text-xs font-bold text-[#6549C9] hover:bg-[#E3DBFF]"
                       >
-                        Review
+                        {t("review")}
                       </button>
                     )}
                   </div>
@@ -359,6 +366,7 @@ function Transactions({
   onSearch,
   onPageChange,
 }) {
+  const { t } = useLanguage();
   const pages = Math.max(1, Math.ceil(meta.count / 10));
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
@@ -374,7 +382,7 @@ function Transactions({
           <input
             value={search}
             onChange={(event) => onSearch(event.target.value)}
-            placeholder="Search donor, campaign, reference…"
+            placeholder={t("searchTransaction")}
             className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none"
           />
         </label>
@@ -383,13 +391,13 @@ function Transactions({
         <table className="w-full min-w-[1130px] text-left text-sm">
           <thead className="border-y border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400">
             <tr>
-              <th className="px-5 py-3">Donor details</th>
-              <th className="px-5 py-3">Campaign</th>
-              <th className="px-5 py-3">Amount</th>
-              <th className="px-5 py-3">Method</th>
-              <th className="px-5 py-3">Reference ID</th>
-              <th className="px-5 py-3">Status</th>
-              <th className="px-5 py-3">Date & time</th>
+              <th className="px-5 py-3">{t("donorDetails")}</th>
+              <th className="px-5 py-3">{t("campaignWord")}</th>
+              <th className="px-5 py-3">{t("amount")}</th>
+              <th className="px-5 py-3">{t("method")}</th>
+              <th className="px-5 py-3">{t("referenceId")}</th>
+              <th className="px-5 py-3">{t("status")}</th>
+              <th className="px-5 py-3">{t("dateTime")}</th>
             </tr>
           </thead>
           <tbody>
@@ -451,7 +459,7 @@ function Transactions({
                   colSpan="7"
                   className="px-5 py-14 text-center text-sm text-slate-400"
                 >
-                  No transactions match this search.
+                  {t("noTransactionsMatch")}
                 </td>
               </tr>
             )}
@@ -478,6 +486,7 @@ function AdminPagination({
   hasNext,
   onPageChange,
 }) {
+  const { t, formatNumber } = useLanguage();
   const firstPage = Math.max(1, Math.min(page - 2, Math.max(pages - 4, 1)));
   const pageNumbers = Array.from(
     { length: Math.min(5, pages) },
@@ -489,18 +498,18 @@ function AdminPagination({
   return (
     <div className="flex flex-col gap-4 border-t border-slate-100 bg-slate-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-slate-500">
-        Showing{" "}
+        {t("showing")}{" "}
         <strong className="text-slate-700">
-          {firstItem}–{lastItem}
+          {formatNumber(firstItem)}–{formatNumber(lastItem)}
         </strong>{" "}
-        of <strong className="text-slate-700">{count}</strong>
+        {t("of")} <strong className="text-slate-700">{formatNumber(count)}</strong>
       </p>
       <nav className="flex items-center gap-1.5" aria-label="Pagination">
         <button
           type="button"
           disabled={!hasPrevious}
           onClick={() => onPageChange(page - 1)}
-          aria-label="Previous page"
+          aria-label={t("previousPage")}
           className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-[#B7A6F2] hover:text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-35"
         >
           <ChevronLeft size={17} />
@@ -513,14 +522,14 @@ function AdminPagination({
             aria-current={pageNumber === page ? "page" : undefined}
             className={`grid h-9 min-w-9 place-items-center rounded-xl px-2 text-sm font-extrabold transition ${pageNumber === page ? "bg-[#6F52D9] text-white shadow-md shadow-violet-200" : "border border-transparent bg-white text-slate-600 hover:border-[#CFC3F7] hover:text-[#6549C9]"}`}
           >
-            {pageNumber}
+            {formatNumber(pageNumber)}
           </button>
         ))}
         <button
           type="button"
           disabled={!hasNext}
           onClick={() => onPageChange(page + 1)}
-          aria-label="Next page"
+          aria-label={t("nextPage")}
           className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-[#B7A6F2] hover:text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-35"
         >
           <ChevronRight size={17} />
@@ -531,6 +540,7 @@ function AdminPagination({
 }
 
 function UserDetailModal({ user, currentUser, onClose, onChange }) {
+  const { t, formatDate, formatKyat, formatNumber } = useLanguage();
   if (!user) return null;
   const isSelf = user.id === currentUser?.id;
   const name =
@@ -542,7 +552,7 @@ function UserDetailModal({ user, currentUser, onClose, onChange }) {
         <div className="flex items-start justify-between bg-[#25194B] px-7 py-6 text-white">
           <div>
             <p className="text-xs font-bold uppercase tracking-[.18em] text-[#D9CBFF]">
-              User account
+              {t("userManagement")}
             </p>
             <h2 className="mt-2 text-2xl font-extrabold">{name}</h2>
             <p className="mt-1 text-sm text-indigo-200">{user.email}</p>
@@ -558,49 +568,49 @@ function UserDetailModal({ user, currentUser, onClose, onChange }) {
         <div className="p-7">
           <div className="grid gap-3 sm:grid-cols-3">
             <Info
-              label="Role"
-              value={user.role === "admin" ? "Administrator" : "Donor"}
+              label={t("role")}
+              value={user.role === "admin" ? t("administrator") : t("donor")}
             />
             <Info
-              label="Status"
-              value={user.is_active ? "Active" : "Suspended"}
+              label={t("status")}
+              value={user.is_active ? t("active") : t("suspended")}
             />
             <Info
-              label="Joined"
-              value={new Date(user.created_at).toLocaleDateString()}
+              label={t("joined")}
+              value={formatDate(user.created_at)}
             />
-            <Info label="Campaigns" value={user.campaign_count} />
-            <Info label="Donations" value={user.donation_count} />
-            <Info label="Total donated" value={kyat(user.total_donated)} />
+            <Info label={t("campaigns")} value={formatNumber(user.campaign_count)} />
+            <Info label={t("donations")} value={formatNumber(user.donation_count)} />
+            <Info label={t("totalDonated")} value={formatKyat(user.total_donated)} />
           </div>
           <div className="mt-6 rounded-2xl bg-slate-50 p-5">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-              Contact and account
+              {t("contactAccount")}
             </p>
             <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
               <p>
-                <span className="text-slate-400">Phone:</span>{" "}
-                <strong>{user.phone_number || "Not provided"}</strong>
+                <span className="text-slate-400">{t("phone")}:</span>{" "}
+                <strong>{user.phone_number || t("notProvided")}</strong>
               </p>
               <p>
-                <span className="text-slate-400">Country:</span>{" "}
-                <strong>{user.country || "Not provided"}</strong>
+                <span className="text-slate-400">{t("country")}:</span>{" "}
+                <strong>{user.country || t("notProvided")}</strong>
               </p>
               <p>
-                <span className="text-slate-400">Sign-in:</span>{" "}
+                <span className="text-slate-400">{t("signInMethod")}:</span>{" "}
                 <strong className="capitalize">{user.auth_provider}</strong>
               </p>
               <p>
-                <span className="text-slate-400">Email:</span>{" "}
+                <span className="text-slate-400">{t("email")}:</span>{" "}
                 <strong>
-                  {user.is_email_verified ? "Verified" : "Not verified"}
+                  {user.is_email_verified ? t("verified") : t("notVerified")}
                 </strong>
               </p>
             </div>
           </div>
           <div className="mt-6">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-              Recent admin changes
+              {t("recentAdminChanges")}
             </p>
             <div className="mt-3 divide-y divide-slate-100 rounded-2xl border border-slate-100">
               {user.recent_admin_actions?.length ? (
@@ -624,7 +634,7 @@ function UserDetailModal({ user, currentUser, onClose, onChange }) {
                 ))
               ) : (
                 <p className="px-4 py-6 text-center text-sm text-slate-400">
-                  No administrative changes recorded.
+                  {t("noAdminChanges")}
                 </p>
               )}
             </div>
@@ -640,7 +650,7 @@ function UserDetailModal({ user, currentUser, onClose, onChange }) {
               }
               className="rounded-xl bg-[#F0ECFF] px-4 py-2.5 text-sm font-bold text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {user.role === "admin" ? "Change to donor" : "Promote to admin"}
+              {user.role === "admin" ? t("changeDonor") : t("promoteAdmin")}
             </button>
             <button
               type="button"
@@ -648,12 +658,12 @@ function UserDetailModal({ user, currentUser, onClose, onChange }) {
               onClick={() => onChange(user, { is_active: !user.is_active })}
               className={`rounded-xl px-4 py-2.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40 ${user.is_active ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}`}
             >
-              {user.is_active ? "Suspend account" : "Activate account"}
+              {user.is_active ? t("suspendAccount") : t("activateAccount")}
             </button>
           </div>
           {isSelf && (
             <p className="mt-3 text-right text-xs text-slate-400">
-              You cannot change your own access from this screen.
+              {t("selfAccessWarning")}
             </p>
           )}
         </div>
@@ -677,6 +687,7 @@ function UserManagement({
   onView,
   onChange,
 }) {
+  const { t, formatDate, formatNumber } = useLanguage();
   const pages = Math.max(1, Math.ceil(meta.count / 10));
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
@@ -698,7 +709,7 @@ function UserManagement({
             <input
               value={search}
               onChange={(event) => onSearch(event.target.value)}
-              placeholder="Search name or email…"
+              placeholder={t("searchNameEmail")}
               className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none"
             />
           </label>
@@ -707,18 +718,18 @@ function UserManagement({
             onChange={(event) => onRole(event.target.value)}
             className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-600 outline-none focus:border-[#7A5BE6]"
           >
-            <option value="">All roles</option>
-            <option value="donor">Donors</option>
-            <option value="admin">Administrators</option>
+            <option value="">{t("allRoles")}</option>
+            <option value="donor">{t("donors")}</option>
+            <option value="admin">{t("administrators")}</option>
           </select>
           <select
             value={accountStatus}
             onChange={(event) => onStatus(event.target.value)}
             className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-600 outline-none focus:border-[#7A5BE6]"
           >
-            <option value="">All statuses</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
+            <option value="">{t("allStatuses")}</option>
+            <option value="active">{t("active")}</option>
+            <option value="suspended">{t("suspended")}</option>
           </select>
         </div>
       </div>
@@ -726,12 +737,12 @@ function UserManagement({
         <table className="w-full min-w-[980px] text-left text-sm">
           <thead className="border-y border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400">
             <tr>
-              <th className="px-5 py-3">User</th>
-              <th className="px-5 py-3">Role</th>
-              <th className="px-5 py-3">Activity</th>
-              <th className="px-5 py-3">Total donated</th>
-              <th className="px-5 py-3">Status</th>
-              <th className="px-5 py-3">Joined</th>
+              <th className="px-5 py-3">{t("user")}</th>
+              <th className="px-5 py-3">{t("role")}</th>
+              <th className="px-5 py-3">{t("activity")}</th>
+              <th className="px-5 py-3">{t("totalDonated")}</th>
+              <th className="px-5 py-3">{t("status")}</th>
+              <th className="px-5 py-3">{t("joined")}</th>
               <th className="px-5 py-3" />
             </tr>
           </thead>
@@ -756,7 +767,7 @@ function UserManagement({
                               .join(" ") || item.username}
                             {isSelf && (
                               <span className="ml-2 text-xs text-slate-400">
-                                You
+                                {t("you")}
                               </span>
                             )}
                           </p>
@@ -770,21 +781,21 @@ function UserManagement({
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-bold ${item.role === "admin" ? "bg-violet-50 text-[#6549C9]" : "bg-sky-50 text-sky-700"}`}
                       >
-                        {item.role === "admin" ? "Admin" : "Donor"}
+                        {item.role === "admin" ? t("administrator") : t("donor")}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-xs text-slate-500">
                       <p>
                         <strong className="text-slate-700">
-                          {item.campaign_count}
+                          {formatNumber(item.campaign_count)}
                         </strong>{" "}
-                        campaigns
+                        {t("campaigns")}
                       </p>
                       <p className="mt-1">
                         <strong className="text-slate-700">
-                          {item.donation_count}
+                          {formatNumber(item.donation_count)}
                         </strong>{" "}
-                        donations
+                        {t("donations")}
                       </p>
                     </td>
                     <td className="px-5 py-4 font-extrabold text-[#6549C9]">
@@ -797,11 +808,11 @@ function UserManagement({
                         <span
                           className={`h-1.5 w-1.5 rounded-full ${item.is_active ? "bg-emerald-500" : "bg-rose-500"}`}
                         />
-                        {item.is_active ? "Active" : "Suspended"}
+                        {item.is_active ? t("active") : t("suspended")}
                       </span>
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap text-xs text-slate-500">
-                      {new Date(item.created_at).toLocaleDateString()}
+                      {formatDate(item.created_at)}
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-2">
@@ -810,7 +821,7 @@ function UserManagement({
                           onClick={() => onView(item)}
                           className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:text-[#6549C9]"
                         >
-                          View
+                          {t("view")}
                         </button>
                         <button
                           type="button"
@@ -820,7 +831,7 @@ function UserManagement({
                           }
                           className={`rounded-xl px-3 py-2 text-xs font-bold disabled:opacity-40 ${item.is_active ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}
                         >
-                          {item.is_active ? "Suspend" : "Activate"}
+                          {item.is_active ? t("suspend") : t("activate")}
                         </button>
                       </div>
                     </td>
@@ -833,7 +844,7 @@ function UserManagement({
                   colSpan="7"
                   className="px-5 py-16 text-center text-sm text-slate-400"
                 >
-                  No users match these filters.
+                  {t("noUsersMatch")}
                 </td>
               </tr>
             )}
@@ -853,6 +864,7 @@ function UserManagement({
 }
 
 function Overview({ report, campaigns, onReview, onSection }) {
+  const { t, formatDate, formatKyat, formatNumber } = useLanguage();
   const monthData = report?.donations_by_month || [];
   const peak = Math.max(...monthData.map((item) => Number(item.total)), 1);
   const pending = campaigns.filter((campaign) => campaign.status === "pending");
@@ -884,30 +896,30 @@ function Overview({ report, campaigns, onReview, onSection }) {
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           icon={CircleDollarSign}
-          label="Total raised"
-          value={kyat(report?.total_raised)}
-          note="Across all recorded donations"
+          label={t("totalRaised")}
+          value={formatKyat(report?.total_raised)}
+          note={t("allDonationsNote")}
           tone="bg-violet-100 text-[#6549C9]"
         />
         <MetricCard
           icon={Megaphone}
-          label="Active campaigns"
-          value={report?.active_campaigns ?? "—"}
-          note="Currently accepting support"
+          label={t("activeCampaigns")}
+          value={report ? formatNumber(report.active_campaigns) : "—"}
+          note={t("acceptingSupport")}
           tone="bg-emerald-100 text-emerald-700"
         />
         <MetricCard
           icon={ClipboardCheck}
-          label="Pending review"
-          value={report?.pending_requests ?? "—"}
-          note="Campaigns awaiting a decision"
+          label={t("pendingReview")}
+          value={report ? formatNumber(report.pending_requests) : "—"}
+          note={t("awaitingDecision")}
           tone="bg-amber-100 text-amber-700"
         />
         <MetricCard
           icon={Users}
-          label="Unique donors"
-          value={report?.total_donors ?? "—"}
-          note="People who have contributed"
+          label={t("uniqueDonors")}
+          value={report ? formatNumber(report.total_donors) : "—"}
+          note={t("contributorsNote")}
           tone="bg-sky-100 text-sky-700"
         />
       </section>
@@ -919,7 +931,7 @@ function Overview({ report, campaigns, onReview, onSection }) {
                 Fundraising momentum
               </p> */}
               <h3 className="mt-2 text-2xl font-extrabold text-slate-900">
-                Monthly donation volume
+                {t("monthlyVolume")}
               </h3>
             </div>
             <span className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]">
@@ -939,7 +951,7 @@ function Overview({ report, campaigns, onReview, onSection }) {
                     className="flex h-full min-w-0 flex-1 flex-col items-center gap-2"
                   >
                     <span className="whitespace-nowrap text-[11px] font-extrabold text-[#6549C9]">
-                      {kyat(item.total)}
+                      {formatKyat(item.total)}
                     </span>
                     <div className="flex min-h-0 w-full flex-1 items-end justify-center">
                       <div
@@ -948,17 +960,14 @@ function Overview({ report, campaigns, onReview, onSection }) {
                       />
                     </div>
                     <span className="text-xs font-bold text-slate-400">
-                      {new Date(item.month).toLocaleDateString(undefined, {
-                        month: "short",
-                      })}
+                      {formatDate(item.month, { month: "short" })}
                     </span>
                   </div>
                 );
               })
             ) : (
               <p className="m-auto text-sm text-slate-400">
-                Donation trends will appear here after the first recorded
-                donation.
+                {t("trendsEmpty")}
               </p>
             )}
           </div>
@@ -968,20 +977,20 @@ function Overview({ report, campaigns, onReview, onSection }) {
             <ShieldCheck size={21} />
           </span>
           <p className="mt-6 text-4xl font-extrabold text-[#33260C]">
-            {pending.length}
+            {formatNumber(pending.length)}
           </p>
           <h3 className="mt-2 text-lg font-extrabold text-[#33260C]">
-            Campaigns need review
+            {t("campaignsNeedReview")}
           </h3>
           <p className="mt-2 text-sm leading-6 text-[#746037]">
-            Check organizer details and campaign information before publishing.
+            {t("reviewBeforePublish")}
           </p>
           <button
             type="button"
             onClick={() => onSection("campaigns")}
             className="mt-6 text-sm font-extrabold text-[#6B4B00] bg-[#FFF1B8] rounded-xl px-4 py-2.5 hover:bg-[#FFE58F]"
           >
-            Open review queue
+            {t("openReviewQueue")}
           </button>
         </article>
       </section>
@@ -989,10 +998,10 @@ function Overview({ report, campaigns, onReview, onSection }) {
         <div className="flex items-center justify-between px-6 py-5">
           <div>
             <h3 className="text-2xl font-extrabold">
-              Priority campaign reviews
+              {t("priorityReviews")}
             </h3>
             <p className="mt-1 text-sm text-slate-500">
-              The latest requests waiting for your decision.
+              {t("latestRequests")}
             </p>
           </div>
           <button
@@ -1000,7 +1009,7 @@ function Overview({ report, campaigns, onReview, onSection }) {
             onClick={() => onSection("campaigns")}
             className="text-sm font-bold text-[#6F52D9]"
           >
-            View all
+            {t("seeAll")}
           </button>
         </div>
         {pending.slice(0, 4).length ? (
@@ -1012,7 +1021,7 @@ function Overview({ report, campaigns, onReview, onSection }) {
               <div>
                 <p className="font-bold text-slate-800">{campaign.title}</p>
                 <p className="mt-1 text-xs text-slate-400">
-                  {campaign.owner_name} · Goal {kyat(campaign.goal_amount)}
+                  {campaign.owner_name} · {t("goal")} {formatKyat(campaign.goal_amount)}
                 </p>
               </div>
               <button
@@ -1020,13 +1029,13 @@ function Overview({ report, campaigns, onReview, onSection }) {
                 onClick={() => onReview(campaign)}
                 className="rounded-xl bg-[#F0ECFF] px-3.5 py-2 text-xs font-bold text-[#6549C9]"
               >
-                Review request
+                {t("reviewRequest")}
               </button>
             </div>
           ))
         ) : (
           <p className="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
-            The review queue is clear.
+            {t("reviewClear")}
           </p>
         )}
       </section>
@@ -1052,35 +1061,32 @@ function Overview({ report, campaigns, onReview, onSection }) {
 const exportDatasets = [
   [
     "transactions",
-    "Transactions",
-    "Donors, amounts, payment methods, references, and dates.",
+    "transactions",
     Heart,
     "bg-rose-50 text-rose-600",
   ],
   [
     "campaigns",
-    "Campaigns",
-    "Organizer, goal, progress, category, status, and deadline.",
+    "campaigns",
     Megaphone,
     "bg-violet-100 text-[#6549C9]",
   ],
   [
     "users",
-    "Users",
-    "Account access, activity totals, donation totals, and join dates.",
+    "users",
     Users,
     "bg-sky-100 text-sky-700",
   ],
   [
     "utilization",
-    "Utilization reports",
-    "Campaign expenses, evidence filenames, status, and descriptions.",
+    "utilizationReports",
     FileBarChart,
     "bg-amber-100 text-amber-700",
   ],
 ];
 
 function ExportCenter() {
+  const { t } = useLanguage();
   const [downloading, setDownloading] = useState("");
   const [error, setError] = useState("");
 
@@ -1117,11 +1123,10 @@ function ExportCenter() {
       <div className="flex flex-wrap items-start justify-between gap-4 px-6 py-6 md:px-7">
         <div>
           <h3 className="mt-2 text-2xl font-extrabold">
-            Download complete data exports
+            {t("downloadExports")}
           </h3>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-            Choose CSV for spreadsheets or PDF for a presentation-ready table.
-            Exports include every record, not only the current page.
+            {t("downloadExportsText")}
           </p>
         </div>
         <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#FFF4C7] text-[#7A5B00]">
@@ -1130,7 +1135,7 @@ function ExportCenter() {
       </div>
       <div className="grid border-t border-slate-100 sm:grid-cols-2 xl:grid-cols-4">
         {exportDatasets.map(
-          ([resource, label, description, Icon, tone], index) => (
+          ([resource, labelKey, Icon, tone], index) => (
             <article
               key={resource}
               className={`p-5 ${index ? "border-t border-slate-100 sm:border-l sm:border-t-0" : ""} ${index === 2 ? "sm:border-l-0 xl:border-l" : ""} ${index > 1 ? "sm:border-t xl:border-t-0" : ""}`}
@@ -1140,10 +1145,7 @@ function ExportCenter() {
               >
                 <Icon size={19} />
               </span>
-              <h3 className="mt-4 font-extrabold text-slate-800">{label}</h3>
-              <p className="mt-1 min-h-10 text-xs leading-5 text-slate-400">
-                {description}
-              </p>
+              <h3 className="mt-4 font-extrabold text-slate-800">{t(labelKey)}</h3>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -1152,7 +1154,7 @@ function ExportCenter() {
                   className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-extrabold text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-45"
                 >
                   <FileSpreadsheet size={15} />{" "}
-                  {downloading === `${resource}-csv` ? "Preparing…" : "CSV"}
+                  {downloading === `${resource}-csv` ? t("preparing") : "CSV"}
                 </button>
                 <button
                   type="button"
@@ -1161,7 +1163,7 @@ function ExportCenter() {
                   className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#6F52D9] px-3 py-2.5 text-xs font-extrabold text-white transition hover:bg-[#6044C7] disabled:opacity-45"
                 >
                   <FileText size={15} />{" "}
-                  {downloading === `${resource}-pdf` ? "Preparing…" : "PDF"}
+                  {downloading === `${resource}-pdf` ? t("preparing") : "PDF"}
                 </button>
               </div>
             </article>
@@ -1178,6 +1180,7 @@ function ExportCenter() {
 }
 
 function Insights({ report }) {
+  const { t, formatKyat, formatNumber } = useLanguage();
   const statuses = report?.campaigns_by_status || [];
   const categories = report?.donations_by_category || [];
   const paymentMethods = report?.payment_methods || [];
@@ -1217,7 +1220,7 @@ function Insights({ report }) {
                 Campaign health
               </p> */}
               <h3 className="text-2xl font-extrabold">
-                Campaign status mix
+                {t("campaignStatusMix")}
               </h3>
             </div>
             <BarChart3 size={21} className="text-[#6F52D9]" />
@@ -1228,10 +1231,10 @@ function Insights({ report }) {
                 <div key={item.status}>
                   <div className="mb-2 flex justify-between text-sm">
                     <span className="font-bold capitalize text-slate-700">
-                      {item.status}
+                      {t(item.status)}
                     </span>
                     <span className="font-bold text-slate-400">
-                      {item.count} ·{" "}
+                      {formatNumber(item.count)} ·{" "}
                       {Math.round((item.count / statusTotal) * 100)}%
                     </span>
                   </div>
@@ -1258,7 +1261,7 @@ function Insights({ report }) {
                 Cause distribution
               </p> */}
               <h3 className="text-2xl font-extrabold">
-                Donations by category
+                {t("donationsCategory")}
               </h3>
             </div>
             <Heart size={21} className="text-[#6F52D9]" />
@@ -1273,11 +1276,11 @@ function Insights({ report }) {
                         className={`h-2.5 w-2.5 rounded-full ${palette[index % palette.length]}`}
                       />
                       <span className="font-bold text-slate-700">
-                        {item.label}
+                        {t(item.category)}
                       </span>
                     </div>
                     <span className="font-bold text-slate-500">
-                      {kyat(item.total)}
+                      {formatKyat(item.total)}
                     </span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
@@ -1289,7 +1292,7 @@ function Insights({ report }) {
                     />
                   </div>
                   <p className="mt-1.5 text-right text-[11px] font-bold text-slate-400">
-                    {item.donations} donation{item.donations === 1 ? "" : "s"}
+                    {formatNumber(item.donations)} {t("donations")}
                   </p>
                 </div>
               ))
@@ -1309,7 +1312,7 @@ function Insights({ report }) {
               Fundraising leaders
             </p> */}
             <h3 className="text-2xl font-extrabold">
-              Top-performing campaigns
+              {t("topCampaigns")}
             </h3>
             <p className="mt-1 text-sm text-slate-500">
               Ranked by total donations received.
@@ -1352,12 +1355,11 @@ function Insights({ report }) {
                         />
                       </div>
                       <p className="mt-1.5 text-xs text-slate-400">
-                        {campaign.donation_count} donations from{" "}
-                        {campaign.donor_count} donors
+                        {formatNumber(campaign.donation_count)} {t("donations")} · {formatNumber(campaign.donor_count)} {t("donors")}
                       </p>
                     </div>
                     <p className="whitespace-nowrap text-sm font-extrabold text-slate-700">
-                      {kyat(campaign.donated_total)}
+                      {formatKyat(campaign.donated_total)}
                     </p>
                   </div>
                 );
@@ -1374,7 +1376,7 @@ function Insights({ report }) {
           <article className="rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15">
             <ShieldCheck size={25} className="text-[#FFD66B]" />
             <p className="mt-7 text-xs font-bold uppercase tracking-[.18em] text-indigo-200">
-              Donor privacy
+              {t("donorPrivacy")}
             </p>
             <p className="mt-2 text-4xl font-extrabold">{anonymousRate}%</p>
             <p className="mt-2 text-sm leading-6 text-indigo-100">
@@ -1387,7 +1389,7 @@ function Insights({ report }) {
               Demo checkout
             </p> */}
             <h3 className="text-2xl font-extrabold">
-              Payment method usage
+              {t("paymentUsage")}
             </h3>
             <div className="mt-5 space-y-3">
               {paymentMethods.length ? (
@@ -1398,7 +1400,7 @@ function Insights({ report }) {
                         {method.label}
                       </span>
                       <span className="font-extrabold text-[#6549C9]">
-                        {method.donations}
+                        {formatNumber(method.donations)}
                       </span>
                     </div>
                     <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
@@ -1425,12 +1427,12 @@ function Insights({ report }) {
 }
 
 const profileFields = [
-  ["First name", "first_name", "text", UserRound, "Your first name"],
-  ["Last name", "last_name", "text", UserRound, "Your last name"],
-  ["Username", "username", "text", UserRound, "Admin username"],
-  ["Email address", "email", "email", Mail, "admin@example.com"],
-  ["Phone number", "phone_number", "tel", Phone, "+95 9 000 000 000"],
-  ["Country / location", "country", "text", MapPin, "Myanmar"],
+  ["firstName", "first_name", "text", UserRound, "firstName"],
+  ["lastName", "last_name", "text", UserRound, "lastName"],
+  ["username", "username", "text", UserRound, "username"],
+  ["emailAddress", "email", "email", Mail, "emailAddress"],
+  ["phone", "phone_number", "tel", Phone, "phone"],
+  ["location", "country", "text", MapPin, "location"],
 ];
 
 const apiError = (error, fallback) => {
@@ -1442,6 +1444,7 @@ const apiError = (error, fallback) => {
 };
 
 function AdminSettings({ user: sessionUser, onUserChange }) {
+  const { t, formatDate } = useLanguage();
   const [profile, setProfile] = useState(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -1481,9 +1484,9 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
       .get("/auth/profile/")
       .then(({ data }) => fillProfile(data))
       .catch(() =>
-        setProfileMessage("Your admin profile could not be loaded."),
+        setProfileMessage(t("adminProfileLoadError")),
       );
-  }, []);
+  }, [t]);
 
   const saveProfile = async (event) => {
     event.preventDefault();
@@ -1496,9 +1499,9 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
       window.dispatchEvent(new Event("userUpdated"));
       onUserChange(data);
       setEditing(false);
-      setProfileMessage("Profile details saved successfully.");
+      setProfileMessage(t("profileSaved"));
     } catch (error) {
-      setProfileMessage(apiError(error, "Profile details could not be saved."));
+      setProfileMessage(apiError(error, t("profileSaveError")));
     } finally {
       setSaving(false);
     }
@@ -1508,7 +1511,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
     event.preventDefault();
     setPasswordMessage("");
     if (passwords.new_password !== passwords.confirm_password) {
-      setPasswordMessage("The new passwords do not match.");
+      setPasswordMessage(t("passwordMismatch"));
       return;
     }
     setChangingPassword(true);
@@ -1522,10 +1525,10 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
         new_password: "",
         confirm_password: "",
       });
-      setPasswordMessage(data.detail || "Password updated successfully.");
+      setPasswordMessage(data.detail || t("passwordUpdated"));
     } catch (error) {
       setPasswordMessage(
-        apiError(error, "Your password could not be changed."),
+        apiError(error, t("passwordUpdateError")),
       );
     } finally {
       setChangingPassword(false);
@@ -1535,7 +1538,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
   if (!profile)
     return (
       <div className="rounded-3xl border border-slate-200 bg-white px-6 py-20 text-center text-sm text-slate-400">
-        {profileMessage || "Loading admin profile…"}
+        {profileMessage || t("loadingAdminProfile")}
       </div>
     );
   const displayName =
@@ -1546,8 +1549,8 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
     sessionUser?.username?.[0]?.toUpperCase() ||
     "A";
   const effectiveRole = profile.is_staff ? "admin" : profile.role;
-  const profileMessageSuccess = profileMessage.includes("successfully");
-  const passwordMessageSuccess = passwordMessage.includes("successfully");
+  const profileMessageSuccess = profileMessage === t("profileSaved");
+  const passwordMessageSuccess = passwordMessage === t("passwordUpdated");
 
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
@@ -1571,43 +1574,39 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
               {profile.email}
             </p>
             <span className="mt-4 inline-flex rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold text-[#FFD66B]">
-              Platform administrator
+              {t("platformAdministrator")}
             </span>
           </div>
         </section>
         <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
-            Account details
+            {t("accountDetails")}
           </p>
           <div className="mt-5 space-y-4 text-sm">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-slate-400">Access level</span>
+              <span className="text-slate-400">{t("accessLevel")}</span>
               <span className="font-bold capitalize text-slate-700">
-                {effectiveRole}
+                {effectiveRole === "admin" ? t("administrator") : t("donor")}
               </span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="text-slate-400">Sign-in method</span>
+              <span className="text-slate-400">{t("signInMethod")}</span>
               <span className="font-bold capitalize text-slate-700">
                 {profile.auth_provider}
               </span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="text-slate-400">Email status</span>
+              <span className="text-slate-400">{t("emailStatus")}</span>
               <span
                 className={`font-bold ${profile.is_email_verified ? "text-emerald-600" : "text-amber-600"}`}
               >
-                {profile.is_email_verified ? "Verified" : "Not verified"}
+                {profile.is_email_verified ? t("verified") : t("notVerified")}
               </span>
             </div>
             <div className="border-t border-slate-100 pt-4">
-              <p className="text-slate-400">Administrator since</p>
+              <p className="text-slate-400">{t("adminSince")}</p>
               <p className="mt-1 font-bold text-slate-700">
-                {new Date(profile.created_at).toLocaleDateString(undefined, {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {formatDate(profile.created_at, { year: "numeric", month: "long", day: "numeric" })}
               </p>
             </div>
           </div>
@@ -1620,9 +1619,9 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
-                  Personal information
+                  {t("personalInformation")}
                 </p>
-                <h2 className="mt-2 text-xl font-extrabold">Admin details</h2>
+                <h2 className="mt-2 text-xl font-extrabold">{t("adminDetails")}</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Your contact and public account information.
                 </p>
@@ -1635,7 +1634,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
                 }}
                 className="inline-flex items-center gap-2 rounded-xl bg-[#F0ECFF] px-4 py-2.5 text-sm font-bold text-[#6549C9] hover:bg-[#E5DDFF]"
               >
-                <UserRound size={17} /> Edit profile
+                <UserRound size={17} /> {t("editProfile")}
               </button>
             </div>
             <div className="mt-7 grid gap-4 md:grid-cols-2">
@@ -1649,10 +1648,10 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
                   </span>
                   <div className="min-w-0">
                     <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                      {label}
+                      {t(label)}
                     </p>
                     <p className="mt-1 break-words text-sm font-bold text-slate-700">
-                      {profile[name] || "Not provided"}
+                      {profile[name] || t("notProvided")}
                     </p>
                   </div>
                 </div>
@@ -1660,10 +1659,10 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
             </div>
             <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
               <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                About you
+                {t("aboutYou")}
               </p>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
-                {profile.bio || "No administrator bio has been added yet."}
+                {profile.bio || t("noAdminBio")}
               </p>
             </div>
             {profileMessage && (
@@ -1682,10 +1681,10 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
-                  Editing profile
+                  {t("editingProfile")}
                 </p>
                 <h2 className="mt-2 text-xl font-extrabold">
-                  Update admin details
+                  {t("updateAdminDetails")}
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Change the fields below, then save your updates.
@@ -1698,7 +1697,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
             <div className="mt-7 grid gap-5 md:grid-cols-2">
               {profileFields.map(([label, name, type, Icon, placeholder]) => (
                 <label key={name} className="text-sm font-bold text-slate-700">
-                  {label}
+                  {t(label)}
                   <div className="mt-2 flex items-center gap-3 rounded-xl border border-slate-200 px-3.5 focus-within:border-[#7A5BE6] focus-within:ring-2 focus-within:ring-violet-100">
                     <Icon size={17} className="shrink-0 text-slate-400" />
                     <input
@@ -1711,7 +1710,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
                           [name]: event.target.value,
                         }))
                       }
-                      placeholder={placeholder}
+                      placeholder={t(placeholder)}
                       className="min-w-0 flex-1 bg-transparent py-3 text-sm font-normal text-slate-800 outline-none"
                     />
                   </div>
@@ -1719,7 +1718,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
               ))}
             </div>
             <label className="mt-5 block text-sm font-bold text-slate-700">
-              About you
+              {t("aboutYou")}
               <textarea
                 value={form.bio}
                 onChange={(event) =>
@@ -1730,7 +1729,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
                 }
                 rows={4}
                 maxLength={1000}
-                placeholder="A short administrator bio"
+                placeholder={t("shortAdminBio")}
                 className="mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-normal text-slate-800 outline-none focus:border-[#7A5BE6] focus:ring-2 focus:ring-violet-100"
               />
             </label>
@@ -1750,13 +1749,13 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
                 }}
                 className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 disabled:opacity-50"
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 disabled={saving}
                 className="inline-flex items-center gap-2 rounded-xl bg-[#6F52D9] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-300/30 disabled:opacity-50"
               >
-                <Save size={17} /> {saving ? "Saving…" : "Save changes"}
+                <Save size={17} /> {saving ? t("saving") : t("saveChanges")}
               </button>
             </div>
           </form>
@@ -1769,11 +1768,11 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
-                Security
+                {t("security")}
               </p>
-              <h2 className="mt-2 text-xl font-extrabold">Change password</h2>
+              <h2 className="mt-2 text-xl font-extrabold">{t("changePassword")}</h2>
               <p className="mt-1 text-sm text-slate-500">
-                Use a strong password that you do not use elsewhere.
+                {t("strongPassword")}
               </p>
             </div>
             <span className="rounded-xl bg-amber-50 p-2.5 text-amber-700">
@@ -1788,9 +1787,9 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
           )}
           <div className="mt-7 grid gap-5 md:grid-cols-3">
             {[
-              ["Current password", "old_password"],
-              ["New password", "new_password"],
-              ["Confirm new password", "confirm_password"],
+              [t("currentPassword"), "old_password"],
+              [t("newPassword"), "new_password"],
+              [t("confirmNewPassword"), "confirm_password"],
             ].map(([label, name]) => (
               <label key={name} className="text-sm font-bold text-slate-700">
                 {label}
@@ -1828,7 +1827,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
               className="inline-flex items-center gap-2 rounded-xl border border-[#6F52D9] px-5 py-3 text-sm font-bold text-[#6549C9] disabled:opacity-50"
             >
               <LockKeyhole size={17} />{" "}
-              {changingPassword ? "Updating…" : "Update password"}
+              {changingPassword ? t("updating") : t("updatePassword")}
             </button>
           </div>
         </form>
@@ -1838,6 +1837,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
 }
 
 export default function AdminDashboard() {
+  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [user, setUser] = useState(() =>
     JSON.parse(localStorage.getItem("user") || "null"),
@@ -1877,8 +1877,8 @@ export default function AdminDashboard() {
         setReport(reportResponse.data);
         setCampaigns(campaignResponse.data);
       })
-      .catch(() => setNotice("Dashboard data could not be loaded."));
-  }, []);
+      .catch(() => setNotice(t("dashboardLoadError")));
+  }, [t]);
   useEffect(() => {
     const params = new URLSearchParams({
       page: String(donationPage),
@@ -1895,8 +1895,8 @@ export default function AdminDashboard() {
           previous: data.previous,
         });
       })
-      .catch(() => setNotice("Donation transactions could not be loaded."));
-  }, [donationPage, donationSearch]);
+      .catch(() => setNotice(t("transactionsLoadError")));
+  }, [donationPage, donationSearch, t]);
   useEffect(() => {
     const params = new URLSearchParams({
       page: String(userPage),
@@ -1915,23 +1915,22 @@ export default function AdminDashboard() {
           previous: data.previous,
         });
       })
-      .catch(() => setNotice("User directory could not be loaded."));
-  }, [userPage, userSearch, userRole, userStatus]);
+      .catch(() => setNotice(t("usersLoadError")));
+  }, [userPage, userSearch, userRole, userStatus, t]);
   const pending = campaigns.filter((campaign) => campaign.status === "pending");
   const title = {
-    overview: "Good morning",
-    campaigns: "Campaign review",
-    donations: "Donation transactions",
-    users: "User management",
-    settings: "Profile & settings",
+    overview: t("goodMorning"),
+    campaigns: t("campaignReview"),
+    donations: t("transactions"),
+    users: t("userManagement"),
+    settings: t("profileSettings"),
   }[section];
   const subtitle = {
-    overview: "Here is the latest activity across Givera.",
-    campaigns:
-      "Review applications and protect the quality of every fundraiser.",
-    donations: "Search, audit, and reconcile every recorded donation.",
-    users: "Review user activity and manage access safely.",
-    settings: "Manage your administrator details and account security.",
+    overview: t("latestActivity"),
+    campaigns: t("reviewSubtitle"),
+    donations: t("transactionSubtitle"),
+    users: t("usersSubtitle"),
+    settings: t("settingsSubtitle"),
   }[section];
   const review = async (campaign, status, rejection_reason = "") => {
     try {
@@ -1964,18 +1963,18 @@ export default function AdminDashboard() {
       setSelectedCampaign(null);
       setNotice(`“${campaign.title}” was ${status}.`);
     } catch {
-      setNotice("The campaign review could not be saved.");
+      setNotice(t("reviewSaveError"));
     }
   };
-  const viewUser = async (item) => {
+  const viewUser = useCallback(async (item) => {
     try {
       const { data } = await api.get(`/auth/admin/users/${item.id}/`);
       setSelectedUser(data);
     } catch {
-      setNotice("User details could not be loaded.");
+      setNotice(t("userDetailsLoadError"));
     }
-  };
-  const changeUser = async (item, changes) => {
+  }, [t]);
+  const changeUser = useCallback(async (item, changes) => {
     const action =
       "role" in changes
         ? changes.role === "admin"
@@ -1999,10 +1998,10 @@ export default function AdminDashboard() {
       setNotice(`User account updated successfully.`);
     } catch (error) {
       setNotice(
-        error.response?.data?.detail || "User account could not be updated.",
+        error.response?.data?.detail || t("userUpdateError"),
       );
     }
-  };
+  }, [selectedUser, t]);
   const content = useMemo(
     () => ({
       overview: (
@@ -2079,11 +2078,12 @@ export default function AdminDashboard() {
       userStatus,
       navigate,
       user,
-      selectedUser,
+      viewUser,
+      changeUser,
     ],
   );
   return (
-    <div className="min-h-screen bg-[#F6F6FB] text-slate-900">
+    <div data-language={language} className="min-h-screen bg-[#F6F6FB] text-slate-900">
       <div className="mx-auto max-w-[1500px] p-4 lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-6">
         <Sidebar
           section={section}

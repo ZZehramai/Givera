@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 
 import api from "../api/axios";
 import AppHeader from "../components/AppHeader";
+import { useLanguage } from "../i18n/LanguageContext";
 
 const statusStyles = {
   pending: "bg-amber-100 text-amber-800",
@@ -13,6 +14,7 @@ const statusStyles = {
 };
 
 export default function MyCampaigns() {
+  const { t } = useLanguage();
   const location = useLocation();
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,14 +32,14 @@ export default function MyCampaigns() {
       <main className="mx-auto max-w-5xl px-6 py-12">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-bold uppercase tracking-widest text-primary">Organizer area</p>
-            <h1 className="mt-2 text-4xl font-bold">My campaigns</h1>
+            <p className="text-sm font-bold uppercase tracking-widest text-primary">{t("organizerArea")}</p>
+            <h1 className="mt-2 text-4xl font-bold">{t("myCampaigns")}</h1>
           </div>
           <Link
             to="/campaigns/create"
             className="rounded-xl bg-primary px-5 py-3 font-bold text-white"
           >
-            Create campaign
+            {t("createCampaign")}
           </Link>
         </div>
 
@@ -48,7 +50,7 @@ export default function MyCampaigns() {
         )}
 
         {loading ? (
-          <p className="py-20 text-center">Loading…</p>
+          <p className="py-20 text-center">{t("loading")}</p>
         ) : campaigns.length ? (
           <div className="mt-8 space-y-4">
             {campaigns.map((campaign) => (
@@ -70,19 +72,19 @@ export default function MyCampaigns() {
                   <p className="mt-2 text-sm text-on-surface-variant">{campaign.summary}</p>
                   {campaign.rejection_reason && (
                     <div className="mt-3 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
-                      <p><strong>Why it was rejected:</strong> {campaign.rejection_reason}</p>
-                      <p className="mt-2 text-xs text-red-600">Open the revision form to update the fields mentioned in this feedback.</p>
+                      <p><strong>{t("whyRejected")}:</strong> {campaign.rejection_reason}</p>
+                      <p className="mt-2 text-xs text-red-600">{t("rejectionFixHint")}</p>
                     </div>
                   )}
                 </div>
                 <div className="flex flex-wrap gap-3 md:justify-end">
                   {campaign.status === "rejected" && (
                     <Link to={`/campaigns/${campaign.id}/edit`} className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white">
-                      Fix and resubmit
+                      {t("fixResubmitShort")}
                     </Link>
                   )}
                   <Link to={`/campaigns/${campaign.id}`} className="px-2 py-2.5 font-semibold text-primary hover:underline">
-                    View details →
+                    {t("viewDetails")} →
                   </Link>
                 </div>
               </div>
@@ -90,9 +92,9 @@ export default function MyCampaigns() {
           </div>
         ) : (
           <div className="mt-8 rounded-3xl bg-white px-6 py-20 text-center">
-            <h2 className="text-2xl font-bold">You have not submitted a campaign yet</h2>
+            <h2 className="text-2xl font-bold">{t("noSubmittedCampaign")}</h2>
             <p className="mt-2 text-on-surface-variant">
-              Tell your story and send it to the review team.
+              {t("tellStory")}
             </p>
           </div>
         )}

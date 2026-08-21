@@ -4,16 +4,17 @@ import { Search, X } from "lucide-react";
 import api from "../api/axios";
 import AppHeader from "../components/AppHeader";
 import CampaignCard from "../components/CampaignCard";
+import { useLanguage } from "../i18n/LanguageContext";
 
 const categories = [
-  ["all", "All Causes"],
-  ["education", "Education"],
-  ["medical", "Medical"],
-  ["emergency", "Emergency Relief"],
-  ["community", "Community"],
-  ["environment", "Environment"],
-  ["animals", "Animals"],
-  ["other", "Other Causes"],
+  ["all", "allCauses"],
+  ["education", "education"],
+  ["medical", "medical"],
+  ["emergency", "emergency"],
+  ["community", "community"],
+  ["environment", "environment"],
+  ["animals", "animals"],
+  ["other", "other"],
 ];
 
 function LoadingGrid() {
@@ -32,21 +33,23 @@ function LoadingGrid() {
 }
 
 function EmptyState({ searching }) {
+  const { t } = useLanguage();
   return (
     <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-20 text-center">
       <h2 className="text-xl font-extrabold text-slate-800">
-        {searching ? "No matching campaigns" : "No campaigns found"}
+        {searching ? t("noMatching") : t("noCampaigns")}
       </h2>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
         {searching
-          ? "Try a different keyword or filter category."
-          : "New verified campaigns will appear here once approved."}
+          ? t("differentSearch")
+          : t("campaignsLater")}
       </p>
     </div>
   );
 }
 
 export default function Campaigns() {
+  const { t } = useLanguage();
   const [campaigns, setCampaigns] = useState([]);
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -86,10 +89,10 @@ export default function Campaigns() {
         <section className="border-b border-slate-100 bg-purple-100 px-6 py-12 md:py-16">
           <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
             <span className="rounded-full bg-[#FFF1A8] px-3 py-1.5 text-xs font-extrabold text-[#655000]">
-              Givera verified campaigns
+              {t("verifiedCampaigns")}
             </span>
             <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-[#201A36] md:text-5xl">
-              Discover campaigns to support
+              {t("discoverCampaigns")}
             </h1>
 
             <div className="mt-6 flex w-full max-w-xl items-center gap-3 rounded-full border border-slate-300 bg-white px-5 py-3.5 shadow-sm transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
@@ -97,7 +100,7 @@ export default function Campaigns() {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by title, story, or location..."
+                placeholder={t("searchCampaigns")}
                 className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none"
               />
               {query && (
@@ -117,7 +120,7 @@ export default function Campaigns() {
         {/* Category Selector Pills */}
         <section className="border-b border-slate-100 px-6 py-6">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-2">
-            {categories.map(([value, label]) => {
+            {categories.map(([value, labelKey]) => {
               const isActive = selectedCategory === value;
               return (
                 <button
@@ -130,7 +133,7 @@ export default function Campaigns() {
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
-                  {label}
+                  {t(labelKey)}
                 </button>
               );
             })}

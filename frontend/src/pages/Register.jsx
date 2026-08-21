@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import api from "../api/axios";
 import AuthShell from "../components/AuthShell";
+import { useLanguage } from "../i18n/LanguageContext";
 
 const inputClass =
   "w-full rounded-2xl border border-outline-variant bg-white py-3.5 pl-12 pr-4 text-on-surface outline-none transition placeholder:text-on-surface-variant/55 focus:border-primary focus:ring-4 focus:ring-primary/10";
@@ -30,6 +31,7 @@ function Field({ label, icon: Icon, ...inputProps }) {
 }
 
 export function Register() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
@@ -69,10 +71,10 @@ export function Register() {
   return (
     <AuthShell mode="register">
       <div>
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">Get started</p>
-        <h2 className="mt-2 text-4xl font-extrabold">Create your account</h2>
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">{t("getStarted")}</p>
+        <h2 className="mt-2 text-4xl font-extrabold">{t("createYourAccount")}</h2>
         <p className="mt-3 leading-7 text-on-surface-variant">
-          Join a community turning everyday generosity into real progress.
+          {t("registerDescription")}
         </p>
       </div>
 
@@ -81,20 +83,20 @@ export function Register() {
           <Field
             required
             autoComplete="given-name"
-            label="First name"
+            label={t("firstName")}
             icon={UserRound}
             name="first_name"
-            placeholder="First name"
+            placeholder={t("firstName")}
             value={form.first_name}
             onChange={handleChange}
           />
           <Field
             required
             autoComplete="family-name"
-            label="Last name"
+            label={t("lastName")}
             icon={UserRound}
             name="last_name"
-            placeholder="Last name"
+            placeholder={t("lastName")}
             value={form.last_name}
             onChange={handleChange}
           />
@@ -103,7 +105,7 @@ export function Register() {
         <Field
           required
           autoComplete="username"
-          label="Username"
+          label={t("username")}
           icon={AtSign}
           name="username"
           placeholder="Choose a username"
@@ -114,7 +116,7 @@ export function Register() {
         <Field
           required
           autoComplete="email"
-          label="Email address"
+          label={t("email")}
           icon={Mail}
           name="email"
           type="email"
@@ -127,29 +129,29 @@ export function Register() {
           <Field
             required
             autoComplete="new-password"
-            label="Password"
+            label={t("password")}
             icon={LockKeyhole}
             name="password"
             type="password"
-            placeholder="Create password"
+            placeholder={t("createPassword")}
             value={form.password}
             onChange={handleChange}
           />
           <Field
             required
             autoComplete="new-password"
-            label="Confirm password"
+            label={t("confirmPassword")}
             icon={LockKeyhole}
             name="password2"
             type="password"
-            placeholder="Repeat password"
+            placeholder={t("repeatPassword")}
             value={form.password2}
             onChange={handleChange}
           />
         </div>
 
         <p className="text-xs leading-5 text-on-surface-variant">
-          Use at least 8 characters and avoid a commonly used password.
+          {t("passwordHelp")}
         </p>
 
         {error && (
@@ -163,14 +165,14 @@ export function Register() {
           disabled={loading}
           className="w-full rounded-2xl bg-primary px-6 py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-55"
         >
-          {loading ? "Creating your account…" : "Create account"}
+          {loading ? t("creatingAccount") : t("createAccount")}
         </button>
       </form>
 
       <p className="mt-7 text-center text-sm text-on-surface-variant">
-        Already have an account?{" "}
+        {t("alreadyAccount")}{" "}
         <Link to="/login" className="font-bold text-primary hover:underline">
-          Sign in
+          {t("signInLower")}
         </Link>
       </p>
     </AuthShell>

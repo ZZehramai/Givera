@@ -75,7 +75,9 @@ api.interceptors.response.use(
 
             } catch (refreshError) {
 
-                localStorage.clear();
+                localStorage.removeItem("access");
+                localStorage.removeItem("refresh");
+                localStorage.removeItem("user");
 
                 window.location.href = "/login";
 

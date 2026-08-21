@@ -24,30 +24,30 @@ import {
   X,
   Bookmark,
   CreditCard,
-  Wallet,
 } from "lucide-react";
 
 import api from "../api/axios";
 import CampaignCard from "../components/CampaignCard";
 import { logout } from "../services/authService";
 import AdminDashboard from "./AdminDashboard";
+import LanguageSwitch from "../components/LanguageSwitch";
+import { useLanguage } from "../i18n/LanguageContext";
 
-const money = (value) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
+const money = (value) => {
+  const myanmar = localStorage.getItem("givera-language") === "my";
+  return `${new Intl.NumberFormat(myanmar ? "my-MM" : "en-US", { maximumFractionDigits: 0 }).format(Number(value || 0))} ${myanmar ? "ကျပ်" : "Ks"}`;
+};
 
 /* SIDEBAR */
 function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) {
+  const { t } = useLanguage();
   const items = [
-    ["overview", "Overview", LayoutDashboard],
-    ["browse", "Browse campaigns", Compass],
-    ["my-campaigns", "My campaigns", Megaphone],
-    ["saved-campaigns", "Saved campaigns", Bookmark],
-    ["history", "History", History],
-    ["profile", "Profile & settings", Settings]
+    ["overview", t("overview"), LayoutDashboard],
+    ["browse", t("browseCampaigns"), Compass],
+    ["my-campaigns", t("myCampaigns"), Megaphone],
+    ["saved-campaigns", t("savedCampaigns"), Bookmark],
+    ["history", t("history"), History],
+    ["profile", t("profileSettings"), Settings]
   ];
 
   return (
@@ -59,9 +59,10 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) 
             <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">G</div>
             <div>
               <p className="text-xl font-extrabold tracking-tight text-[#24184a]">Givera</p>
-              <p className="text-xs font-medium text-slate-400">User workspace</p>
+              <p className="text-xs font-medium text-slate-400">{t("userWorkspace")}</p>
             </div>
           </Link>
+          <div className="mt-4"><LanguageSwitch /></div>
         </div>
 
         {/* NAVIGATION */}
@@ -114,7 +115,7 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) 
             onClick={onLogout}
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
           >
-            <LogOut size={17} /> Sign out
+            <LogOut size={17} /> {t("signOut")}
           </button>
         </div>
       </div>
@@ -140,6 +141,7 @@ function DonutChart({ value, label }) {
 }
 
 function SavedCampaignsPanel() {
+  const { t } = useLanguage();
   const [savedCampaigns, setSavedCampaigns] = useState([]);
 
   useEffect(() => {
@@ -155,9 +157,9 @@ function SavedCampaignsPanel() {
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <div className="relative overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-10">
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFD66B]">Bookmarks</p>
-        <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">Saved campaigns</h1>
-        <p className="mt-3 max-w-2xl leading-7 text-indigo-100">Easily access the campaigns you have bookmarked for later.</p>
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFD66B]">{t("bookmarks")}</p>
+        <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">{t("savedCampaigns")}</h1>
+        <p className="mt-3 max-w-2xl leading-7 text-indigo-100">{t("savedDescription")}</p>
       </div>
 
       <div className="mt-7">
@@ -169,8 +171,8 @@ function SavedCampaignsPanel() {
           </div>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-            <h2 className="text-2xl font-bold text-slate-800">No saved campaigns yet</h2>
-            <p className="mt-2 text-slate-500">Click the bookmark icon on any campaign card to save it here.</p>
+            <h2 className="text-2xl font-bold text-slate-800">{t("noSaved")}</h2>
+            <p className="mt-2 text-slate-500">{t("noSavedText")}</p>
           </div>
         )}
       </div>
@@ -180,14 +182,15 @@ function SavedCampaignsPanel() {
 
 /* HISTORY PANEL - ACTIVITY HISTORY PANEL & TOP 3 STAT CARDS HAVE PURPLE BORDERS */
 function HistoryPanel({ donations, campaigns, demoPayments }) {
+  const { t, formatDate, formatKyat, formatNumber } = useLanguage();
   const totalDonatedAmount = donations.reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       {/* Activity History Main Panel Card - HAS PURPLE BORDER */}
       <div className="rounded-3xl border-2 border-purple-300 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-8">
-        <h1 className="text-3xl font-extrabold text-slate-900">Activity History</h1>
-        <p className="mt-2 text-sm text-slate-500">Track your past contributions and completed campaigns.</p>
+        <h1 className="text-3xl font-extrabold text-slate-900">{t("activityHistory")}</h1>
+        <p className="mt-2 text-sm text-slate-500">{t("activityHistoryText")}</p>
       </div>
 
       {/* Top 3 Stat Cards - HAVE PURPLE BORDERS */}
@@ -197,7 +200,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
             <Heart size={24} />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Donated</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{t("totalDonated")}</p>
             <p className="mt-1 text-2xl font-extrabold text-slate-900">{money(totalDonatedAmount)}</p>
           </div>
         </div>
@@ -207,8 +210,8 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
             <Megaphone size={24} />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Campaigns Supported</p>
-            <p className="mt-1 text-2xl font-extrabold text-slate-900">{donations.length}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{t("campaignsSupported")}</p>
+            <p className="mt-1 text-2xl font-extrabold text-slate-900">{formatNumber(donations.length)}</p>
           </div>
         </div>
 
@@ -217,8 +220,8 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
             <UserRound size={24} />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Lives Impacted (Est.)</p>
-            <p className="mt-1 text-2xl font-extrabold text-slate-900">3,200+</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{t("livesImpacted")}</p>
+            <p className="mt-1 text-2xl font-extrabold text-slate-900">{formatNumber(3200)}+</p>
           </div>
         </div>
       </div>
@@ -228,7 +231,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
         {/* Donation History List */}
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] space-y-5">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Heart size={18} className="text-rose-500" /> Donation History
+            <Heart size={18} className="text-rose-500" /> {t("donationHistory")}
           </h2>
           {donations.length ? (
             <div className="space-y-3">
@@ -239,26 +242,26 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
                       <Heart size={18} />
                     </div>
                     <div>
-                      <p className="font-bold text-slate-900">{item.campaign?.title || "Supported Campaign"}</p>
-                      <p className="text-xs text-slate-400">{item.created_at ? new Date(item.created_at).toLocaleDateString() : "Recent"}</p>
+                      <p className="font-bold text-slate-900">{item.campaign?.title || t("supportedCampaign")}</p>
+                      <p className="text-xs text-slate-400">{item.created_at ? formatDate(item.created_at) : t("recent")}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="font-extrabold text-slate-900">{money(item.amount)}</p>
-                    <span className="inline-block mt-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">Completed</span>
+                    <span className="inline-block mt-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">{t("completed")}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="py-10 text-center text-sm text-slate-400">No donation history available yet.</p>
+            <p className="py-10 text-center text-sm text-slate-400">{t("noDonationHistory")}</p>
           )}
         </div>
 
         {/* Created Campaigns List */}
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] space-y-5">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Megaphone size={18} className="text-[#6F52D9]" /> Created Campaigns
+            <Megaphone size={18} className="text-[#6F52D9]" /> {t("createdCampaigns")}
           </h2>
           {campaigns.length ? (
             <div className="space-y-4">
@@ -271,22 +274,22 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-bold text-slate-900 truncate">{item.title}</p>
                       <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${item.status === "approved" ? "bg-violet-100 text-[#6F52D9]" : "bg-slate-200 text-slate-700"}`}>
-                        {item.status === "approved" ? "Active" : item.status}
+                        {item.status === "approved" ? t("active") : item.status_label || item.status}
                       </span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200/70">
                       <div className="h-full rounded-full bg-[#6F52D9]" style={{ width: `${progress}%` }} />
                     </div>
                     <div className="flex justify-between text-xs font-semibold text-slate-500">
-                      <span>{money(raised)} raised</span>
-                      <span>Goal: {money(goal)}</span>
+                      <span>{formatKyat(raised)} {t("raised")}</span>
+                      <span>{t("goal")}: {formatKyat(goal)}</span>
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <p className="py-10 text-center text-sm text-slate-400">No created campaigns history yet.</p>
+            <p className="py-10 text-center text-sm text-slate-400">{t("noCreatedHistory")}</p>
           )}
         </div>
       </div>
@@ -294,34 +297,34 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
       {/* Payment Activity Table (Standard Border) */}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
         <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
-          <CreditCard size={18} className="text-[#6F52D9]" /> Payment Activity
+          <CreditCard size={18} className="text-[#6F52D9]" /> {t("paymentActivity")}
         </h2>
         {demoPayments.length ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b-2 border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-400">
-                  <th className="pb-3 font-semibold">Date</th>
-                  <th className="pb-3 font-semibold">Transaction ID</th>
-                  <th className="pb-3 font-semibold">Method</th>
-                  <th className="pb-3 font-semibold text-right">Amount</th>
-                  <th className="pb-3 font-semibold text-right">Status</th>
+                  <th className="pb-3 font-semibold">{t("date")}</th>
+                  <th className="pb-3 font-semibold">{t("transactionId")}</th>
+                  <th className="pb-3 font-semibold">{t("method")}</th>
+                  <th className="pb-3 font-semibold text-right">{t("amount")}</th>
+                  <th className="pb-3 font-semibold text-right">{t("status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-700 font-medium">
                 {demoPayments.map((payment) => (
                   <tr key={payment.id} className="hover:bg-slate-50/50">
                     <td className="py-4 text-slate-500 text-xs">
-                      {payment.created_at ? new Date(payment.created_at).toLocaleDateString() : "Oct 12, 2023"}
+                      {payment.created_at ? formatDate(payment.created_at) : "—"}
                     </td>
                     <td className="py-4 font-bold text-slate-900">{payment.transaction_reference || "TXN-8923-ABCD"}</td>
                     <td className="py-4 flex items-center gap-2 text-slate-600">
                       <CreditCard size={15} className="text-slate-400" /> {payment.provider_label || "Visa •••• 4242"}
                     </td>
-                    <td className="py-4 text-right font-bold text-slate-900">{Number(payment.amount).toLocaleString()} Ks</td>
+                    <td className="py-4 text-right font-bold text-slate-900">{formatKyat(payment.amount)}</td>
                     <td className="py-4 text-right">
                       <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${payment.status === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}`}>
-                        {payment.status === "paid" ? "Success" : "Processing"}
+                        {payment.status === "paid" ? t("success") : t("processing")}
                       </span>
                     </td>
                   </tr>
@@ -329,51 +332,14 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
               </tbody>
             </table>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b-2 border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-400">
-                  <th className="pb-3 font-semibold">Date</th>
-                  <th className="pb-3 font-semibold">Transaction ID</th>
-                  <th className="pb-3 font-semibold">Method</th>
-                  <th className="pb-3 font-semibold text-right">Amount</th>
-                  <th className="pb-3 font-semibold text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 text-slate-700 font-medium">
-                <tr className="hover:bg-slate-50/50">
-                  <td className="py-4 text-slate-500 text-xs">Oct 12, 2023</td>
-                  <td className="py-4 font-bold text-slate-900">TXN-8923-ABCD</td>
-                  <td className="py-4 flex items-center gap-2 text-slate-600">
-                    <CreditCard size={15} className="text-slate-400" /> Visa •••• 4242
-                  </td>
-                  <td className="py-4 text-right font-bold text-slate-900">$5,000.00</td>
-                  <td className="py-4 text-right">
-                    <span className="inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">Success</span>
-                  </td>
-                </tr>
-                <tr className="hover:bg-slate-50/50">
-                  <td className="py-4 text-slate-500 text-xs">Sep 28, 2023</td>
-                  <td className="py-4 font-bold text-slate-900">TXN-4511-EFGH</td>
-                  <td className="py-4 flex items-center gap-2 text-slate-600">
-                    <Wallet size={15} className="text-slate-400" /> Platform Wallet
-                  </td>
-                  <td className="py-4 text-right font-bold text-slate-900">$250.00</td>
-                  <td className="py-4 text-right">
-                    <span className="inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">Success</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
+        ) : <p className="py-10 text-center text-sm text-slate-400">{t("noDonationHistory")}</p>}
       </div>
     </motion.section>
   );
 }
 
 function BrowseCampaigns({ campaigns, loading }) {
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
 
@@ -391,30 +357,30 @@ function BrowseCampaigns({ campaigns, loading }) {
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <div className="relative overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-10">
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFD66B]">Verified causes</p>
-        <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">Browse campaigns</h1>
-        <p className="mt-3 max-w-2xl leading-7 text-indigo-100">Find a cause that matters to you, without leaving your dashboard.</p>
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFD66B]">{t("verifiedCauses")}</p>
+        <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">{t("browseCampaigns")}</h1>
+        <p className="mt-3 max-w-2xl leading-7 text-indigo-100">{t("browseDashboardText")}</p>
         <div className="mt-7 grid gap-3 rounded-2xl bg-white p-3 text-slate-800 sm:grid-cols-[1fr_220px]">
           <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 focus-within:border-[#7A5BE6]">
             <Search size={18} className="text-slate-400" />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search campaigns" className="min-w-0 flex-1 outline-none" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("searchCampaignsShort")} className="min-w-0 flex-1 outline-none" />
           </label>
           <select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#7A5BE6]">
-            <option value="">All causes</option>
-            <option value="education">Education</option>
-            <option value="medical">Medical</option>
-            <option value="emergency">Emergency relief</option>
-            <option value="community">Community</option>
-            <option value="environment">Environment</option>
-            <option value="animals">Animals</option>
-            <option value="other">Other</option>
+            <option value="">{t("allCauses")}</option>
+            <option value="education">{t("education")}</option>
+            <option value="medical">{t("medical")}</option>
+            <option value="emergency">{t("emergency")}</option>
+            <option value="community">{t("community")}</option>
+            <option value="environment">{t("environment")}</option>
+            <option value="animals">{t("animals")}</option>
+            <option value="other">{t("other")}</option>
           </select>
         </div>
       </div>
 
       <div className="mt-7">
         {loading ? (
-          <p className="py-20 text-center text-slate-500">Loading campaigns…</p>
+          <p className="py-20 text-center text-slate-500">{t("loadingCampaigns")}</p>
         ) : filteredCampaigns.length ? (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {filteredCampaigns.map((campaign) => (
@@ -423,8 +389,8 @@ function BrowseCampaigns({ campaigns, loading }) {
           </div>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-            <h2 className="text-2xl font-bold text-slate-800">No campaigns found</h2>
-            <p className="mt-2 text-slate-500">Try another search or category.</p>
+            <h2 className="text-2xl font-bold text-slate-800">{t("noCampaigns")}</h2>
+            <p className="mt-2 text-slate-500">{t("tryAnother")}</p>
           </div>
         )}
       </div>
@@ -440,6 +406,7 @@ function MyCampaignsPanel({
   campaignTitle,
   onDismissSubmission,
 }) {
+  const { t } = useLanguage();
   const submittedCampaign = campaigns.find(
     (campaign) => String(campaign.id) === String(submittedId)
   );
@@ -449,15 +416,15 @@ function MyCampaignsPanel({
       <div className="relative overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFD66B]">
-            Organizer area
+            {t("organizerArea")}
           </p>
-          <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">My campaigns</h1>
+          <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">{t("myCampaigns")}</h1>
         </div>
         <Link
           to="/campaigns/create"
           className="rounded-2xl bg-[#FFD66B] px-5 py-3 font-extrabold text-[#2b1d52] shadow-lg shadow-black/10 transition"
         >
-          Request Campaign
+          {t("requestCampaignShort")}
         </Link>
       </div>
 
@@ -481,13 +448,13 @@ function MyCampaignsPanel({
             </span>
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-700">
-                Request received
+                {t("requestReceived")}
               </p>
               <h2 className="mt-1 text-2xl font-extrabold text-slate-900">
-                {submissionMessage || "Campaign submitted successfully"}
+                {submissionMessage || t("submittedSuccess")}
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                <strong>{submittedCampaign?.title || campaignTitle || "Your campaign"}</strong> is now pending administrator review. You’ll receive a notification when it is approved or needs changes.
+                <strong>{submittedCampaign?.title || campaignTitle || t("yourCampaign")}</strong> {t("pendingReviewMessage")}
               </p>
             </div>
           </div>
@@ -496,7 +463,7 @@ function MyCampaignsPanel({
 
       <div className="mt-7">
         {loading ? (
-          <p className="py-20 text-center text-slate-500">Loading campaigns…</p>
+          <p className="py-20 text-center text-slate-500">{t("loadingCampaigns")}</p>
         ) : campaigns.length ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {campaigns.map((campaign) => (
@@ -506,13 +473,13 @@ function MyCampaignsPanel({
                 {campaign.rejection_reason && (
                   <div className="mt-3 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
                     <p>
-                      <strong>Why it was rejected:</strong> {campaign.rejection_reason}
+                      <strong>{t("whyRejected")}:</strong> {campaign.rejection_reason}
                     </p>
                     <Link
                       to={`/campaigns/${campaign.id}/edit`}
                       className="mt-2 inline-block rounded-xl bg-[#6F52D9] px-4 py-2 text-xs font-bold text-white"
                     >
-                      Fix and resubmit
+                      {t("fixResubmitShort")}
                     </Link>
                   </div>
                 )}
@@ -522,10 +489,10 @@ function MyCampaignsPanel({
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
             <h2 className="text-2xl font-bold text-slate-800">
-              You have not submitted a campaign yet
+              {t("noSubmittedCampaign")}
             </h2>
             <p className="mt-2 text-slate-500">
-              Tell your story and send it to the review team.
+              {t("tellStory")}
             </p>
           </div>
         )}
@@ -535,6 +502,7 @@ function MyCampaignsPanel({
 }
 
 function ProfilePanel() {
+  const { t } = useLanguage();
   const [user, setUser] = useState(null);
   const [form, setForm] = useState({ username: "", email: "", phone_number: "", country: "" });
   const [editing, setEditing] = useState(false);
@@ -552,8 +520,8 @@ function ProfilePanel() {
           country: response.data.country || "",
         });
       })
-      .catch(() => setMessage("Your profile could not be loaded."));
-  }, []);
+      .catch(() => setMessage(t("profileLoadError")));
+  }, [t]);
 
   const save = async () => {
     setSaving(true);
@@ -564,20 +532,20 @@ function ProfilePanel() {
       localStorage.setItem("user", JSON.stringify(response.data));
       window.dispatchEvent(new Event("userUpdated"));
       setEditing(false);
-      setMessage("Profile updated successfully.");
+      setMessage(t("profileUpdated"));
     } catch {
-      setMessage("Profile could not be updated.");
+      setMessage(t("profileUpdateError"));
     } finally {
       setSaving(false);
     }
   };
 
-  if (!user) return <p className="py-20 text-center text-slate-500">{message || "Loading profile…"}</p>;
+  if (!user) return <p className="py-20 text-center text-slate-500">{message || t("loadingProfile")}</p>;
   const fields = [
-    ["Name", "username", "text", UserRound],
-    ["Email", "email", "email", Mail],
-    ["Phone", "phone_number", "tel", Phone],
-    ["Location", "country", "text", MapPin],
+    [t("name"), "username", "text", UserRound],
+    [t("email"), "email", "email", Mail],
+    [t("phone"), "phone_number", "tel", Phone],
+    [t("location"), "country", "text", MapPin],
   ];
   const initial = user.username?.trim().charAt(0).toUpperCase() || "G";
 
@@ -585,8 +553,8 @@ function ProfilePanel() {
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-5xl">
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#6F52D9]">Account centre</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl text-slate-900">Your profile</h1>
+          <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#6F52D9]">{t("accountCentre")}</p>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl text-slate-900">{t("yourProfile")}</h1>
         </div>
         {!editing && (
           <button
@@ -594,7 +562,7 @@ function ProfilePanel() {
             onClick={() => setEditing(true)}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#6F52D9] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/20"
           >
-            <Edit3 size={16} /> Edit details
+            <Edit3 size={16} /> {t("editDetails")}
           </button>
         )}
       </div>
@@ -613,10 +581,10 @@ function ProfilePanel() {
         <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <div className="flex flex-col gap-3 border-b border-slate-100 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-extrabold text-slate-800">Personal information</h2>
+              <h2 className="text-xl font-extrabold text-slate-800">{t("personalInformation")}</h2>
             </div>
             <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
-              <ShieldCheck size={15} /> Account verified
+              <ShieldCheck size={15} /> {t("accountVerified")}
             </div>
           </div>
           <div className="px-6 py-3">
@@ -633,7 +601,7 @@ function ProfilePanel() {
                     className="w-full rounded-xl border border-slate-200 p-3 text-sm font-semibold outline-none focus:border-[#7A5BE6]"
                   />
                 ) : (
-                  <p className="text-sm font-semibold text-slate-800">{user[name] || "Not provided"}</p>
+                  <p className="text-sm font-semibold text-slate-800">{user[name] || t("notProvided")}</p>
                 )}
               </div>
             ))}
@@ -641,10 +609,10 @@ function ProfilePanel() {
           {editing && (
             <div className="flex justify-end gap-3 border-t border-slate-100 bg-slate-50 p-4">
               <button onClick={() => setEditing(false)} className="px-4 py-2 text-sm font-bold text-slate-500">
-                Cancel
+                {t("cancel")}
               </button>
               <button onClick={save} disabled={saving} className="rounded-xl bg-[#6F52D9] px-6 py-2 text-sm font-bold text-white shadow-lg shadow-violet-500/20">
-                {saving ? "Saving…" : "Save changes"}
+                {saving ? t("saving") : t("saveChanges")}
               </button>
             </div>
           )}
@@ -655,6 +623,7 @@ function ProfilePanel() {
 }
 
 function UserDashboard() {
+  const { language, t, formatNumber } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const initialParams = new URLSearchParams(location.search);
@@ -719,7 +688,7 @@ function UserDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F6FB] text-slate-900">
+    <div data-language={language} className="min-h-screen bg-[#F6F6FB] text-slate-900">
       <div className="mx-auto max-w-[1500px] p-4 lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-6">
         <DashboardSidebar
           onLogout={handleLogout}
@@ -755,13 +724,13 @@ function UserDashboard() {
               >
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[.2em] text-[#D7C8FF]">
-                    Your Givera home
+                    {t("yourGiveraHome")}
                   </p>
                   <h1 className="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl">
-                    Welcome back, {firstName}.
+                    {t("welcomeUser")}, {firstName}.
                   </h1>
                   <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
-                    Discover causes, manage your campaigns, and follow the impact you help create.
+                    {t("dashboardIntro")}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-3">
@@ -770,23 +739,23 @@ function UserDashboard() {
                     onClick={() => setActiveSection("browse")}
                     className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-extrabold text-[#2b1d52] shadow-lg shadow-black/10 transition"
                   >
-                    <Compass size={18} /> Browse
+                    <Compass size={18} /> {t("browse")}
                   </button>
                   <Link
                     to="/campaigns/create"
                     className="inline-flex items-center gap-2 rounded-2xl bg-[#FFD66B] px-5 py-3 text-sm font-extrabold text-[#2b1d52] shadow-lg shadow-black/10 transition"
                   >
-                    <Plus size={18} /> Request Campaign
+                    <Plus size={18} /> {t("requestCampaignShort")}
                   </Link>
                 </div>
               </motion.section>
 
               <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  { Icon: CircleDollarSign, label: "Raised by your campaigns", value: money(metrics.raised), tone: "bg-violet-100 text-[#6549C9]" },
-                  { Icon: Target, label: "Combined campaign goals", value: money(metrics.goal), tone: "bg-emerald-100 text-emerald-700" },
-                  { Icon: BarChart3, label: "Active campaigns", value: metrics.active, tone: "bg-amber-100 text-amber-700" },
-                  { Icon: Heart, label: "Your total donations", value: money(metrics.donatedAmount), tone: "bg-sky-100 text-sky-700" },
+                  { Icon: CircleDollarSign, label: t("raisedByCampaigns"), value: money(metrics.raised), tone: "bg-violet-100 text-[#6549C9]" },
+                  { Icon: Target, label: t("combinedGoals"), value: money(metrics.goal), tone: "bg-emerald-100 text-emerald-700" },
+                  { Icon: BarChart3, label: t("activeCampaigns"), value: formatNumber(metrics.active), tone: "bg-amber-100 text-amber-700" },
+                  { Icon: Heart, label: t("yourDonations"), value: money(metrics.donatedAmount), tone: "bg-sky-100 text-sky-700" },
                 ].map(({ Icon, label, value, tone }, index) => (
                   <motion.article
                     key={label}
@@ -810,8 +779,8 @@ function UserDashboard() {
                 <article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">CAMPAIGN PERFORMANCE</p>
-                      <h2 className="mt-2 text-xl font-extrabold text-slate-900">Funds raised</h2>
+                      <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">{t("campaignPerformance")}</p>
+                      <h2 className="mt-2 text-xl font-extrabold text-slate-900">{t("fundsRaised")}</h2>
                     </div>
                     <div className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]">
                       <BarChart3 size={20} />
@@ -839,15 +808,15 @@ function UserDashboard() {
                         );
                       })
                     ) : (
-                      <p className="py-12 text-center text-slate-400">Create a campaign to see performance charts.</p>
+                      <p className="py-12 text-center text-slate-400">{t("createForCharts")}</p>
                     )}
                   </div>
                 </article>
                 <article className="flex flex-col items-center justify-center rounded-3xl border border-slate-200/80 bg-white p-6 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-                  <DonutChart value={metrics.progress} label="of goal" />
-                  <h2 className="mt-5 text-xl font-extrabold text-slate-900">Overall progress</h2>
+                  <DonutChart value={metrics.progress} label={t("ofGoal")} />
+                  <h2 className="mt-5 text-xl font-extrabold text-slate-900">{t("overallProgress")}</h2>
                   <p className="mt-2 text-sm leading-6 text-slate-500">
-                    {money(metrics.raised)} raised across {owned.length} campaign{owned.length === 1 ? "" : "s"}.
+                    {money(metrics.raised)} {t("raisedAcross")} {formatNumber(owned.length)} {t("campaignWord")}.
                   </p>
                 </article>
               </section>

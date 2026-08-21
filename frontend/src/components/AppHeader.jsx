@@ -8,9 +8,12 @@ import {
 import { useState, useEffect } from "react";
 import { logout } from "../services/authService";
 import api from "../api/axios";
+import LanguageSwitch from "./LanguageSwitch";
+import { useLanguage } from "../i18n/LanguageContext";
 
 export default function AppHeader({ minimal = false }) {
   const navigate = useNavigate();
+  const { t, formatDate } = useLanguage();
 
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user") || "null"));
   const [notifications, setNotifications] = useState([]);
@@ -80,24 +83,25 @@ export default function AppHeader({ minimal = false }) {
         {/* CENTER Navigation Links */}
         {!minimal && <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex">
           <a href="#hero" className={sectionClass}>
-            Home
+            {t("home")}
           </a>
           <a href="#campaigns" className={sectionClass}>
-            Campaigns
+            {t("campaigns")}
           </a>
           <a href="#campaign-request" className={sectionClass}>
-            Campaign Requests
+            {t("campaignRequests")}
           </a>
           <a href="#how-it-works" className={sectionClass}>
-            How it works
+            {t("howItWorks")}
           </a>
           <a href="#faq" className={sectionClass}>
-            FAQ
+            {t("faq")}
           </a>
         </div>}
 
         {/* RIGHT SIDE: Notifications & User Menu */}
         <div className="flex items-center gap-4 sm:gap-5">
+          <LanguageSwitch compact />
           {user ? (
             <>
               {/* Notifications */}
@@ -106,7 +110,7 @@ export default function AppHeader({ minimal = false }) {
                   type="button"
                   onClick={() => setNotificationsOpen((open) => !open)}
                   className="relative grid h-10 w-10 place-items-center rounded-xl text-on-surface-variant transition hover:bg-surface-container-low hover:text-primary"
-                  aria-label="Notifications"
+                  aria-label={t("notifications")}
                   aria-expanded={notificationsOpen}
                 >
                   <Bell size={20} aria-hidden="true" />
@@ -121,9 +125,9 @@ export default function AppHeader({ minimal = false }) {
                   <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-outline-variant/70 bg-white shadow-[0_18px_45px_rgba(41,35,62,0.16)]">
                     <div className="flex items-center justify-between border-b border-outline-variant/60 px-4 py-3">
                       <div>
-                        <p className="font-extrabold text-on-surface">Notifications</p>
+                        <p className="font-extrabold text-on-surface">{t("notifications")}</p>
                         <p className="text-xs text-on-surface-variant">
-                          {unreadCount ? `${unreadCount} unread` : "You’re all caught up"}
+                          {unreadCount ? `${unreadCount} ${t("unread")}` : t("caughtUp")}
                         </p>
                       </div>
                       {unreadCount > 0 && (
@@ -133,7 +137,7 @@ export default function AppHeader({ minimal = false }) {
                           className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
                         >
                           <CheckCheck size={15} />
-                          Mark all read
+                          {t("markAllRead")}
                         </button>
                       )}
                     </div>
@@ -162,7 +166,7 @@ export default function AppHeader({ minimal = false }) {
                                   {notification.message}
                                 </p>
                                 <p className="mt-1.5 text-[11px] font-semibold text-on-surface-variant">
-                                  {new Date(notification.created_at).toLocaleDateString()}
+                                  {formatDate(notification.created_at)}
                                 </p>
                               </div>
                             </div>
@@ -170,7 +174,7 @@ export default function AppHeader({ minimal = false }) {
                         ))
                       ) : (
                         <p className="px-5 py-10 text-center text-sm text-on-surface-variant">
-                          Updates about your campaigns and donations will appear here.
+                          {t("notificationEmpty")}
                         </p>
                       )}
                     </div>
@@ -202,7 +206,7 @@ export default function AppHeader({ minimal = false }) {
                   onClick={handleLogout}
                   className="rounded-xl border border-outline-variant px-4 py-2 text-sm font-semibold text-on-surface hover:bg-surface-container-low"
                 >
-                  Log out
+                  {t("logout")}
                 </button>
               )}
             </>
@@ -212,7 +216,7 @@ export default function AppHeader({ minimal = false }) {
                 to="/login"
                 className="text-sm font-semibold text-primary transition"
               >
-                Sign In
+                {t("signIn")}
               </Link>
 
               {!minimal && (
@@ -220,7 +224,7 @@ export default function AppHeader({ minimal = false }) {
                   to="/login"
                   className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90"
                 >
-                  Donate Now
+                  {t("donateNow")}
                   <ArrowUpRight size={16} aria-hidden="true" />
                 </Link>
               )}

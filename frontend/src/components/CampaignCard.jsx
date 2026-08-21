@@ -1,18 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CalendarDays, MapPin, Bookmark } from "lucide-react";
 import { mediaUrl } from "../utils/mediaUrl";
+import { useLanguage } from "../i18n/LanguageContext";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80";
 
 export default function CampaignCard({ campaign }) {
-  const [isSaved, setIsSaved] = useState(false);
-
-  useEffect(() => {
+  const { t, formatKyat, formatNumber } = useLanguage();
+  const [isSaved, setIsSaved] = useState(() => {
     const savedCampaigns = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
-    setIsSaved(savedCampaigns.some((item) => item.id === campaign.id));
-  }, [campaign.id]);
+    return savedCampaigns.some((item) => item.id === campaign.id);
+  });
+  const [loadedAt] = useState(() => Date.now());
 
   const toggleSave = (e) => {
     e.preventDefault(); // Link နှိပ်သလို ဖြစ်သွားတာကို တားဆီးရန်
@@ -37,7 +38,7 @@ export default function CampaignCard({ campaign }) {
   const progress = Math.min(Math.round((amountRaised / goalAmount) * 100), 100);
   const isCompleted = campaign.status === "completed";
   const daysRemaining = campaign.deadline
-    ? Math.max(0, Math.ceil((new Date(campaign.deadline).getTime() - Date.now()) / 86400000))
+    ? Math.max(0, Math.ceil((new Date(campaign.deadline).getTime() - loadedAt) / 86400000))
     : null;
 
   return (
@@ -68,7 +69,7 @@ export default function CampaignCard({ campaign }) {
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
           {/* ဘယ်ဘက်အပေါ်ထောင့် (Top-Left) - Category */}
           <span className="rounded-full bg-[#FFE27A] px-2.5 py-1 text-[11px] font-bold text-[#765E00] shadow-sm">
-            {campaign.category_label || "Community"}
+            {campaign.category_label || t("community")}
           </span>
 
           {/* ညာဘက်အပေါ်ထောင့် (Top-Right) - Save / Bookmark Icon */}
@@ -93,7 +94,7 @@ export default function CampaignCard({ campaign }) {
           </h2>
           {(isCompleted || daysRemaining !== null) && (
             <span className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-bold ${isCompleted ? "bg-[#EEE9FF] text-[#6549C9]" : "text-slate-500"}`}>
-              {isCompleted ? "Completed" : <><CalendarDays size={13} /> {daysRemaining ? `${daysRemaining} days left` : "Ending today"}</>}
+              {isCompleted ? t("completed") : <><CalendarDays size={13} /> {daysRemaining ? `${formatNumber(daysRemaining)} ${t("daysLeft")}` : t("endingToday")}</>}
             </span>
           )}
         </div>
@@ -105,7 +106,7 @@ export default function CampaignCard({ campaign }) {
             />
           </div>
           <p className="mt-2 text-sm font-extrabold text-slate-900">
-            {amountRaised.toLocaleString()} Ks <span className="font-normal text-slate-500">raised</span>
+            {formatKyat(amountRaised)} <span className="font-normal text-slate-500">{t("raised")}</span>
           </p>
         </div>
       </div>
