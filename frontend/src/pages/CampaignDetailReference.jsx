@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import api from "../api/axios";
 import { mediaUrl } from "../utils/mediaUrl";
-import LanguageSwitch from "../components/LanguageSwitch";
 import { useLanguage } from "../i18n/LanguageContext";
 
 const fallbackImage =
@@ -246,9 +245,6 @@ export default function CampaignDetailReference() {
   );
   return (
     <div className="min-h-screen bg-white pb-16 text-[#201A36]">
-      <div className="mx-auto flex max-w-[1280px] justify-end px-5 pt-5 sm:px-8">
-        <LanguageSwitch />
-      </div>
       <main className="mx-auto max-w-[1280px] px-5 py-8 sm:px-8">
         <button
           type="button"

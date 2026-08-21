@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   BarChart3,
+  ArrowUpRight,
   CircleDollarSign,
   Compass,
   Edit3,
@@ -24,6 +25,8 @@ import {
   X,
   Bookmark,
   CreditCard,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import api from "../api/axios";
@@ -37,9 +40,10 @@ const money = (value) => {
   const myanmar = localStorage.getItem("givera-language") === "my";
   return `${new Intl.NumberFormat(myanmar ? "my-MM" : "en-US", { maximumFractionDigits: 0 }).format(Number(value || 0))} ${myanmar ? "ကျပ်" : "Ks"}`;
 };
+const CAMPAIGNS_PER_PAGE = 6;
 
 /* SIDEBAR */
-function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) {
+function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts, user }) {
   const { t } = useLanguage();
   const items = [
     ["overview", t("overview"), LayoutDashboard],
@@ -110,16 +114,70 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts }) 
 
         {/* LOGOUT BUTTON */}
         <div className="mt-auto border-t border-slate-100 p-4">
+          <div className="flex items-center gap-3 px-1">
+            <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#FFD66B] to-[#FFAD66] font-extrabold text-[#24184a]">
+              {user?.username?.[0]?.toUpperCase() || "G"}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-slate-800">{user?.username || t("user")}</p>
+              <p className="text-xs text-slate-400">{t("userWorkspace")}</p>
+            </div>
+          </div>
           <button
             type="button"
             onClick={onLogout}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
+            className="mt-3 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
           >
             <LogOut size={17} /> {t("signOut")}
           </button>
         </div>
       </div>
     </aside>
+  );
+}
+
+function DashboardMetricCard({ icon: Icon, label, value, note, tone, loading }) {
+  return (
+    <article className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+      <div className="flex items-start justify-between">
+        <span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}>
+          <Icon size={21} />
+        </span>
+        <ArrowUpRight size={18} className="text-slate-300" />
+      </div>
+      <p className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">{loading ? "—" : value}</p>
+      <p className="mt-1 text-sm font-bold text-slate-700">{label}</p>
+      <p className="mt-1 text-xs text-slate-400">{note}</p>
+    </article>
+  );
+}
+
+function CampaignPagination({ page, pages, onPageChange, className = "" }) {
+  const { formatNumber } = useLanguage();
+  return (
+    <div className={`flex items-center justify-end gap-2 ${className}`}>
+      <span className="mr-1 text-xs font-bold text-slate-400">
+        {formatNumber(page)} / {formatNumber(pages)}
+      </span>
+      <button
+        type="button"
+        aria-label="Previous campaigns"
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+        className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-[#B9A8F5] hover:text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-35"
+      >
+        <ChevronLeft size={19} />
+      </button>
+      <button
+        type="button"
+        aria-label="Next campaigns"
+        disabled={page >= pages}
+        onClick={() => onPageChange(page + 1)}
+        className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-[#B9A8F5] hover:text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-35"
+      >
+        <ChevronRight size={19} />
+      </button>
+    </div>
   );
 }
 
@@ -143,32 +201,34 @@ function DonutChart({ value, label }) {
 function SavedCampaignsPanel() {
   const { t } = useLanguage();
   const [savedCampaigns, setSavedCampaigns] = useState([]);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const loadSaved = () => {
       const items = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
       setSavedCampaigns(items);
+      setPage(1);
     };
     loadSaved();
     window.addEventListener("savedCampaignsUpdated", loadSaved);
     return () => window.removeEventListener("savedCampaignsUpdated", loadSaved);
   }, []);
+  const pages = Math.max(1, Math.ceil(savedCampaigns.length / CAMPAIGNS_PER_PAGE));
+  const safePage = Math.min(page, pages);
+  const visibleCampaigns = savedCampaigns.slice((safePage - 1) * CAMPAIGNS_PER_PAGE, safePage * CAMPAIGNS_PER_PAGE);
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="relative overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-10">
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFD66B]">{t("bookmarks")}</p>
-        <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">{t("savedCampaigns")}</h1>
-        <p className="mt-3 max-w-2xl leading-7 text-indigo-100">{t("savedDescription")}</p>
-      </div>
-
-      <div className="mt-7">
+      <div>
         {savedCampaigns.length ? (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {savedCampaigns.map((campaign) => (
-              <CampaignCard key={campaign.id} campaign={campaign} />
-            ))}
-          </div>
+          <>
+            <CampaignPagination page={safePage} pages={pages} onPageChange={setPage} className="mb-4" />
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {visibleCampaigns.map((campaign) => (
+                <CampaignCard key={campaign.id} campaign={campaign} />
+              ))}
+            </div>
+          </>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
             <h2 className="text-2xl font-bold text-slate-800">{t("noSaved")}</h2>
@@ -183,19 +243,29 @@ function SavedCampaignsPanel() {
 /* HISTORY PANEL - ACTIVITY HISTORY PANEL & TOP 3 STAT CARDS HAVE PURPLE BORDERS */
 function HistoryPanel({ donations, campaigns, demoPayments }) {
   const { t, formatDate, formatKyat, formatNumber } = useLanguage();
+  const [campaignPage, setCampaignPage] = useState(1);
+  const [paymentPage, setPaymentPage] = useState(1);
   const totalDonatedAmount = donations.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const campaignPages = Math.max(1, Math.ceil(campaigns.length / CAMPAIGNS_PER_PAGE));
+  const safeCampaignPage = Math.min(campaignPage, campaignPages);
+  const visibleCampaigns = campaigns.slice((safeCampaignPage - 1) * CAMPAIGNS_PER_PAGE, safeCampaignPage * CAMPAIGNS_PER_PAGE);
+  const paymentPages = Math.max(1, Math.ceil(demoPayments.length / CAMPAIGNS_PER_PAGE));
+  const safePaymentPage = Math.min(paymentPage, paymentPages);
+  const visiblePayments = demoPayments.slice((safePaymentPage - 1) * CAMPAIGNS_PER_PAGE, safePaymentPage * CAMPAIGNS_PER_PAGE);
+  const paymentTime = (value) => formatDate(value, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  const paymentStatus = {
+    paid: [t("paymentPaid"), "bg-emerald-100 text-emerald-700"],
+    pending: [t("paymentPending"), "bg-amber-100 text-amber-800"],
+    failed: [t("paymentFailed"), "bg-rose-100 text-rose-700"],
+    cancelled: [t("paymentCancelled"), "bg-slate-100 text-slate-700"],
+    expired: [t("paymentExpired"), "bg-orange-100 text-orange-700"],
+  };
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      {/* Activity History Main Panel Card - HAS PURPLE BORDER */}
-      <div className="rounded-3xl border-2 border-purple-300 bg-white p-7 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-8">
-        <h1 className="text-3xl font-extrabold text-slate-900">{t("activityHistory")}</h1>
-        <p className="mt-2 text-sm text-slate-500">{t("activityHistoryText")}</p>
-      </div>
-
-      {/* Top 3 Stat Cards - HAVE PURPLE BORDERS */}
+      {/* Top 3 Stat Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="flex items-center gap-4 rounded-3xl border-2 border-purple-300 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+        <div className="flex items-center gap-4 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-violet-100 text-[#6F52D9]">
             <Heart size={24} />
           </div>
@@ -205,7 +275,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 rounded-3xl border-2 border-purple-300 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+        <div className="flex items-center gap-4 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#FFE27A]/50 text-[#765E00]">
             <Megaphone size={24} />
           </div>
@@ -215,7 +285,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 rounded-3xl border-2 border-purple-300 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+        <div className="flex items-center gap-4 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-indigo-100 text-indigo-700">
             <UserRound size={24} />
           </div>
@@ -226,46 +296,17 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
         </div>
       </div>
 
-      {/* Two Columns: Donation History & Created Campaigns (Standard Borders) */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Donation History List */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] space-y-5">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Heart size={18} className="text-rose-500" /> {t("donationHistory")}
-          </h2>
-          {donations.length ? (
-            <div className="space-y-3">
-              {donations.map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/60 p-4 transition hover:bg-slate-50">
-                  <div className="flex items-center gap-3">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white shadow-sm border border-slate-200 text-[#6F52D9]">
-                      <Heart size={18} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-900">{item.campaign?.title || t("supportedCampaign")}</p>
-                      <p className="text-xs text-slate-400">{item.created_at ? formatDate(item.created_at) : t("recent")}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-extrabold text-slate-900">{money(item.amount)}</p>
-                    <span className="inline-block mt-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">{t("completed")}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="py-10 text-center text-sm text-slate-400">{t("noDonationHistory")}</p>
-          )}
-        </div>
-
-        {/* Created Campaigns List */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] space-y-5">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+      {/* Created Campaigns */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
             <Megaphone size={18} className="text-[#6F52D9]" /> {t("createdCampaigns")}
           </h2>
+          {campaigns.length > 0 && <CampaignPagination page={safeCampaignPage} pages={campaignPages} onPageChange={setCampaignPage} />}
+        </div>
           {campaigns.length ? (
-            <div className="space-y-4">
-              {campaigns.map((item) => {
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {visibleCampaigns.map((item) => {
                 const raised = Number(item.amount_raised || 0);
                 const goal = Number(item.goal_amount || 1);
                 const progress = Math.min(Math.round((raised / goal) * 100), 100);
@@ -291,40 +332,56 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
           ) : (
             <p className="py-10 text-center text-sm text-slate-400">{t("noCreatedHistory")}</p>
           )}
-        </div>
       </div>
 
-      {/* Payment Activity Table (Standard Border) */}
+      {/* Payment Activity */}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
-          <CreditCard size={18} className="text-[#6F52D9]" /> {t("paymentActivity")}
-        </h2>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+            <CreditCard size={18} className="text-[#6F52D9]" /> {t("paymentActivity")}
+          </h2>
+          {demoPayments.length > 0 && <CampaignPagination page={safePaymentPage} pages={paymentPages} onPageChange={setPaymentPage} />}
+        </div>
         {demoPayments.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full min-w-[1180px] text-left text-sm">
               <thead>
                 <tr className="border-b-2 border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-400">
-                  <th className="pb-3 font-semibold">{t("date")}</th>
-                  <th className="pb-3 font-semibold">{t("transactionId")}</th>
-                  <th className="pb-3 font-semibold">{t("method")}</th>
-                  <th className="pb-3 font-semibold text-right">{t("amount")}</th>
-                  <th className="pb-3 font-semibold text-right">{t("status")}</th>
+                  <th className="pb-3 pl-2 pr-5 font-semibold">{t("initiatedAt")}</th>
+                  <th className="px-5 pb-3 font-semibold">{t("paymentCampaign")}</th>
+                  <th className="px-5 pb-3 font-semibold">{t("transactionId")}</th>
+                  <th className="px-5 pb-3 font-semibold">{t("method")}</th>
+                  <th className="px-5 pb-3 font-semibold text-right">{t("amount")}</th>
+                  <th className="px-5 pb-3 font-semibold">{t("completedAt")}</th>
+                  <th className="pb-3 pl-5 pr-2 font-semibold text-right">{t("status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-700 font-medium">
-                {demoPayments.map((payment) => (
+                {visiblePayments.map((payment) => (
                   <tr key={payment.id} className="hover:bg-slate-50/50">
-                    <td className="py-4 text-slate-500 text-xs">
-                      {payment.created_at ? formatDate(payment.created_at) : "—"}
+                    <td className="whitespace-nowrap py-4 pl-2 pr-5 text-xs text-slate-500">
+                      {payment.created_at ? paymentTime(payment.created_at) : "—"}
                     </td>
-                    <td className="py-4 font-bold text-slate-900">{payment.transaction_reference || "TXN-8923-ABCD"}</td>
-                    <td className="py-4 flex items-center gap-2 text-slate-600">
-                      <CreditCard size={15} className="text-slate-400" /> {payment.provider_label || "Visa •••• 4242"}
+                    <td className="min-w-56 px-5 py-4">
+                      {payment.campaign_id ? (
+                        <Link to={`/campaigns/${payment.campaign_id}`} className="line-clamp-2 font-bold text-slate-900 hover:text-[#6549C9]">
+                          {payment.campaign_title || payment.donation?.campaign?.title || t("supportedCampaign")}
+                        </Link>
+                      ) : (
+                        <span className="font-bold text-slate-900">{payment.campaign_title || payment.donation?.campaign?.title || t("supportedCampaign")}</span>
+                      )}
                     </td>
-                    <td className="py-4 text-right font-bold text-slate-900">{formatKyat(payment.amount)}</td>
-                    <td className="py-4 text-right">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${payment.status === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}`}>
-                        {payment.status === "paid" ? t("success") : t("processing")}
+                    <td className="whitespace-nowrap px-5 py-4 font-mono text-xs font-bold text-slate-900">{payment.transaction_reference || "—"}</td>
+                    <td className="whitespace-nowrap px-5 py-4 text-slate-600">
+                      <span className="flex items-center gap-2"><CreditCard size={15} className="text-slate-400" /> {payment.provider_label || "—"}</span>
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-right font-bold text-slate-900">{formatKyat(payment.amount)}</td>
+                    <td className="whitespace-nowrap px-5 py-4 text-xs text-slate-500">
+                      {payment.completed_at ? paymentTime(payment.completed_at) : payment.status === "pending" && payment.expires_at ? <><span className="block text-[10px] font-bold uppercase text-slate-400">{t("expiresAt")}</span>{paymentTime(payment.expires_at)}</> : "—"}
+                    </td>
+                    <td className="whitespace-nowrap py-4 pl-5 pr-2 text-right">
+                      <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-bold ${(paymentStatus[payment.status] || [null, "bg-slate-100 text-slate-700"])[1]}`}>
+                        {(paymentStatus[payment.status] || [t("paymentRecorded")])[0]}
                       </span>
                     </td>
                   </tr>
@@ -342,6 +399,7 @@ function BrowseCampaigns({ campaigns, loading }) {
   const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
+  const [page, setPage] = useState(1);
 
   const filteredCampaigns = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -353,19 +411,19 @@ function BrowseCampaigns({ campaigns, loading }) {
       return (!term || searchable.includes(term)) && (!category || campaign.category === category);
     });
   }, [campaigns, query, category]);
+  const pages = Math.max(1, Math.ceil(filteredCampaigns.length / CAMPAIGNS_PER_PAGE));
+  const safePage = Math.min(page, pages);
+  const visibleCampaigns = filteredCampaigns.slice((safePage - 1) * CAMPAIGNS_PER_PAGE, safePage * CAMPAIGNS_PER_PAGE);
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="relative overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-10">
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFD66B]">{t("verifiedCauses")}</p>
-        <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">{t("browseCampaigns")}</h1>
-        <p className="mt-3 max-w-2xl leading-7 text-indigo-100">{t("browseDashboardText")}</p>
-        <div className="mt-7 grid gap-3 rounded-2xl bg-white p-3 text-slate-800 sm:grid-cols-[1fr_220px]">
+      <div className="rounded-3xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+        <div className="grid gap-3 text-slate-800 sm:grid-cols-[1fr_220px]">
           <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 focus-within:border-[#7A5BE6]">
             <Search size={18} className="text-slate-400" />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("searchCampaignsShort")} className="min-w-0 flex-1 outline-none" />
+            <input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder={t("searchCampaignsShort")} className="min-w-0 flex-1 outline-none" />
           </label>
-          <select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#7A5BE6]">
+          <select value={category} onChange={(event) => { setCategory(event.target.value); setPage(1); }} className="rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-[#7A5BE6]">
             <option value="">{t("allCauses")}</option>
             <option value="education">{t("education")}</option>
             <option value="medical">{t("medical")}</option>
@@ -378,15 +436,18 @@ function BrowseCampaigns({ campaigns, loading }) {
         </div>
       </div>
 
-      <div className="mt-7">
+      <div className="mt-6">
         {loading ? (
           <p className="py-20 text-center text-slate-500">{t("loadingCampaigns")}</p>
         ) : filteredCampaigns.length ? (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {filteredCampaigns.map((campaign) => (
-              <CampaignCard key={campaign.id} campaign={campaign} />
-            ))}
-          </div>
+          <>
+            <CampaignPagination page={safePage} pages={pages} onPageChange={setPage} className="mb-4" />
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {visibleCampaigns.map((campaign) => (
+                <CampaignCard key={campaign.id} campaign={campaign} />
+              ))}
+            </div>
+          </>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
             <h2 className="text-2xl font-bold text-slate-800">{t("noCampaigns")}</h2>
@@ -407,32 +468,21 @@ function MyCampaignsPanel({
   onDismissSubmission,
 }) {
   const { t } = useLanguage();
+  const [page, setPage] = useState(1);
   const submittedCampaign = campaigns.find(
     (campaign) => String(campaign.id) === String(submittedId)
   );
+  const pages = Math.max(1, Math.ceil(campaigns.length / CAMPAIGNS_PER_PAGE));
+  const safePage = Math.min(page, pages);
+  const visibleCampaigns = campaigns.slice((safePage - 1) * CAMPAIGNS_PER_PAGE, safePage * CAMPAIGNS_PER_PAGE);
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="relative overflow-hidden rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#FFD66B]">
-            {t("organizerArea")}
-          </p>
-          <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">{t("myCampaigns")}</h1>
-        </div>
-        <Link
-          to="/campaigns/create"
-          className="rounded-2xl bg-[#FFD66B] px-5 py-3 font-extrabold text-[#2b1d52] shadow-lg shadow-black/10 transition"
-        >
-          {t("requestCampaignShort")}
-        </Link>
-      </div>
-
       {submittedId && (
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative mt-7 overflow-hidden rounded-3xl border border-emerald-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7"
+          className="relative overflow-hidden rounded-3xl border border-emerald-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7"
         >
           <button
             type="button"
@@ -461,31 +511,34 @@ function MyCampaignsPanel({
         </motion.section>
       )}
 
-      <div className="mt-7">
+      <div className={submittedId ? "mt-6" : ""}>
         {loading ? (
           <p className="py-20 text-center text-slate-500">{t("loadingCampaigns")}</p>
         ) : campaigns.length ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {campaigns.map((campaign) => (
-              <div key={campaign.id} className="relative">
-                <CampaignCard campaign={campaign} />
+          <>
+            <CampaignPagination page={safePage} pages={pages} onPageChange={setPage} className="mb-4" />
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {visibleCampaigns.map((campaign) => (
+                <div key={campaign.id} className="relative">
+                  <CampaignCard campaign={campaign} />
 
-                {campaign.rejection_reason && (
-                  <div className="mt-3 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
-                    <p>
-                      <strong>{t("whyRejected")}:</strong> {campaign.rejection_reason}
-                    </p>
-                    <Link
-                      to={`/campaigns/${campaign.id}/edit`}
-                      className="mt-2 inline-block rounded-xl bg-[#6F52D9] px-4 py-2 text-xs font-bold text-white"
-                    >
-                      {t("fixResubmitShort")}
-                    </Link>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                  {campaign.rejection_reason && (
+                    <div className="mt-3 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
+                      <p>
+                        <strong>{t("whyRejected")}:</strong> {campaign.rejection_reason}
+                      </p>
+                      <Link
+                        to={`/campaigns/${campaign.id}/edit`}
+                        className="mt-2 inline-block rounded-xl bg-[#6F52D9] px-4 py-2 text-xs font-bold text-white"
+                      >
+                        {t("fixResubmitShort")}
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
             <h2 className="text-2xl font-bold text-slate-800">
@@ -551,11 +604,7 @@ function ProfilePanel() {
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-5xl">
-      <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#6F52D9]">{t("accountCentre")}</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl text-slate-900">{t("yourProfile")}</h1>
-        </div>
+      <div className="mb-5 flex justify-end">
         {!editing && (
           <button
             type="button"
@@ -623,7 +672,7 @@ function ProfilePanel() {
 }
 
 function UserDashboard() {
-  const { language, t, formatNumber } = useLanguage();
+  const { language, t, formatNumber, formatDate } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const initialParams = new URLSearchParams(location.search);
@@ -670,6 +719,12 @@ function UserDashboard() {
     const donatedAmount = donated.reduce((sum, item) => sum + Number(item.amount || 0), 0);
     return { raised, goal, active, donatedAmount, progress: goal ? (raised / goal) * 100 : 0 };
   }, [owned, donated]);
+  const campaignStatuses = useMemo(() => ({
+    approved: owned.filter((item) => item.status === "approved").length,
+    pending: owned.filter((item) => item.status === "pending").length,
+    rejected: owned.filter((item) => item.status === "rejected").length,
+    completed: owned.filter((item) => item.status === "completed").length,
+  }), [owned]);
 
   const firstName = storedUser?.first_name || storedUser?.username || "there";
   const handleLogout = () => {
@@ -687,6 +742,23 @@ function UserDashboard() {
     if (section !== "my-campaigns") setShowSubmissionSuccess(false);
   };
 
+  const pageTitle = {
+    overview: `${t("welcomeUser")}, ${firstName}`,
+    browse: t("browseCampaigns"),
+    "my-campaigns": t("myCampaigns"),
+    "saved-campaigns": t("savedCampaigns"),
+    history: t("activityHistory"),
+    profile: t("profileSettings"),
+  }[activeSection];
+  const pageSubtitle = {
+    overview: t("dashboardIntro"),
+    browse: t("browseDashboardText"),
+    "my-campaigns": t("tellStory"),
+    "saved-campaigns": t("savedDescription"),
+    history: t("activityHistoryText"),
+    profile: t("accountCentre"),
+  }[activeSection];
+
   return (
     <div data-language={language} className="min-h-screen bg-[#F6F6FB] text-slate-900">
       <div className="mx-auto max-w-[1500px] p-4 lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-6">
@@ -695,9 +767,28 @@ function UserDashboard() {
           activeSection={activeSection}
           onSectionChange={handleSectionChange}
           counts={{ myCampaigns: owned.length, savedCampaigns: savedCount, history: donated.length }}
+          user={storedUser}
         />
 
         <main className="min-w-0 py-6 lg:py-4">
+          <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-extrabold text-[#7A5BE6] md:text-4xl">{pageTitle}</h1>
+              <p className="mt-2 max-w-2xl text-sm text-slate-500">{pageSubtitle}</p>
+            </div>
+            {(activeSection === "overview" || activeSection === "my-campaigns") && (
+              <div className="flex flex-wrap gap-2">
+                {activeSection === "overview" && (
+                  <button type="button" onClick={() => setActiveSection("browse")} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-[#6549C9] shadow-sm">
+                    <Compass size={17} /> {t("browse")}
+                  </button>
+                )}
+                <Link to="/campaigns/create" className="inline-flex items-center gap-2 rounded-2xl bg-[#FFD66B] px-4 py-2.5 text-sm font-extrabold text-[#2b1d52] shadow-sm">
+                  <Plus size={17} /> {t("requestCampaignShort")}
+                </Link>
+              </div>
+            )}
+          </header>
           {activeSection === "browse" ? (
             <BrowseCampaigns campaigns={discover} loading={loading} />
           ) : activeSection === "my-campaigns" ? (
@@ -717,61 +808,21 @@ function UserDashboard() {
             <ProfilePanel />
           ) : (
             <>
-              <motion.section
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative flex overflow-hidden flex-col gap-6 rounded-3xl bg-[#25194B] p-7 text-white shadow-xl shadow-violet-950/15 md:flex-row md:items-center md:justify-between md:p-9"
-              >
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[.2em] text-[#D7C8FF]">
-                    {t("yourGiveraHome")}
-                  </p>
-                  <h1 className="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl">
-                    {t("welcomeUser")}, {firstName}.
-                  </h1>
-                  <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100">
-                    {t("dashboardIntro")}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setActiveSection("browse")}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-extrabold text-[#2b1d52] shadow-lg shadow-black/10 transition"
-                  >
-                    <Compass size={18} /> {t("browse")}
-                  </button>
-                  <Link
-                    to="/campaigns/create"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-[#FFD66B] px-5 py-3 text-sm font-extrabold text-[#2b1d52] shadow-lg shadow-black/10 transition"
-                  >
-                    <Plus size={18} /> {t("requestCampaignShort")}
-                  </Link>
-                </div>
-              </motion.section>
-
-              <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  { Icon: CircleDollarSign, label: t("raisedByCampaigns"), value: money(metrics.raised), tone: "bg-violet-100 text-[#6549C9]" },
-                  { Icon: Target, label: t("combinedGoals"), value: money(metrics.goal), tone: "bg-emerald-100 text-emerald-700" },
-                  { Icon: BarChart3, label: t("activeCampaigns"), value: formatNumber(metrics.active), tone: "bg-amber-100 text-amber-700" },
-                  { Icon: Heart, label: t("yourDonations"), value: money(metrics.donatedAmount), tone: "bg-sky-100 text-sky-700" },
-                ].map(({ Icon, label, value, tone }, index) => (
-                  <motion.article
+                  { Icon: CircleDollarSign, label: t("raisedByCampaigns"), value: money(metrics.raised), note: t("campaignPerformance"), tone: "bg-violet-100 text-[#6549C9]" },
+                  { Icon: Target, label: t("combinedGoals"), value: money(metrics.goal), note: t("overallProgress"), tone: "bg-emerald-100 text-emerald-700" },
+                  { Icon: BarChart3, label: t("activeCampaigns"), value: formatNumber(metrics.active), note: t("acceptingSupport"), tone: "bg-amber-100 text-amber-700" },
+                  { Icon: Heart, label: t("yourDonations"), value: money(metrics.donatedAmount), note: t("activityHistoryText"), tone: "bg-sky-100 text-sky-700" },
+                ].map(({ Icon, label, value, note, tone }, index) => (
+                  <motion.div
                     key={label}
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.08 * index }}
-                    className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_rgba(43,37,80,.06)]"
                   >
-                    <span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}>
-                      <Icon size={21} />
-                    </span>
-                    <p className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">
-                      {loading ? "—" : value}
-                    </p>
-                    <p className="mt-1 text-sm font-bold text-slate-700">{label}</p>
-                  </motion.article>
+                    <DashboardMetricCard icon={Icon} label={label} value={value} note={note} tone={tone} loading={loading} />
+                  </motion.div>
                 ))}
               </section>
 
@@ -818,6 +869,64 @@ function UserDashboard() {
                   <p className="mt-2 text-sm leading-6 text-slate-500">
                     {money(metrics.raised)} {t("raisedAcross")} {formatNumber(owned.length)} {t("campaignWord")}.
                   </p>
+                </article>
+              </section>
+
+              <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+                <article className="rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+                  <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-6 py-5">
+                    <div>
+                      <h2 className="text-xl font-extrabold text-slate-900">{t("recentDonations")}</h2>
+                      <p className="mt-1 text-sm text-slate-500">{t("recentDonationsOverview")}</p>
+                    </div>
+                    <button type="button" onClick={() => setActiveSection("history")} className="text-sm font-bold text-[#6F52D9]">
+                      {t("viewHistory")}
+                    </button>
+                  </div>
+                  {donated.length ? (
+                    <div className="divide-y divide-slate-100">
+                      {donated.slice(0, 3).map((donation) => (
+                        <div key={donation.id} className="flex items-center justify-between gap-4 px-6 py-4">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-violet-100 text-[#6549C9]"><Heart size={18} /></span>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-bold text-slate-800">{donation.campaign_title || donation.campaign?.title || t("supportedCampaign")}</p>
+                              <p className="mt-1 text-xs text-slate-400">{donation.created_at ? formatDate(donation.created_at) : t("recent")}</p>
+                            </div>
+                          </div>
+                          <p className="shrink-0 text-sm font-extrabold text-[#6549C9]">{money(donation.amount)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="px-6 py-12 text-center text-sm text-slate-400">{t("noDonationHistory")}</p>
+                  )}
+                </article>
+
+                <article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-extrabold text-slate-900">{t("campaignStatusOverview")}</h2>
+                      <p className="mt-1 text-sm leading-6 text-slate-500">{t("campaignStatusOverviewText")}</p>
+                    </div>
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-100 text-amber-700"><Megaphone size={20} /></span>
+                  </div>
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    {[
+                      ["approved", campaignStatuses.approved, "bg-emerald-50 text-emerald-700"],
+                      ["pendingReview", campaignStatuses.pending, "bg-amber-50 text-amber-700"],
+                      ["rejected", campaignStatuses.rejected, "bg-rose-50 text-rose-700"],
+                      ["completed", campaignStatuses.completed, "bg-violet-50 text-violet-700"],
+                    ].map(([label, value, tone]) => (
+                      <div key={label} className={`rounded-2xl p-4 ${tone}`}>
+                        <p className="text-2xl font-extrabold">{formatNumber(value)}</p>
+                        <p className="mt-1 text-xs font-bold">{t(label)}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <button type="button" onClick={() => setActiveSection("my-campaigns")} className="mt-5 w-full rounded-xl bg-[#F0ECFF] px-4 py-2.5 text-sm font-extrabold text-[#6549C9] hover:bg-[#E5DDFF]">
+                    {t("manageCampaigns")}
+                  </button>
                 </article>
               </section>
             </>

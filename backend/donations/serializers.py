@@ -98,9 +98,11 @@ class DemoPaymentCreateSerializer(serializers.ModelSerializer):
 
 class DemoPaymentSerializer(serializers.ModelSerializer):
     provider_label = serializers.CharField(source="get_provider_display", read_only=True)
+    campaign_id = serializers.UUIDField(source="campaign.id", read_only=True)
+    campaign_title = serializers.CharField(source="campaign.title", read_only=True)
     donation = DonationSerializer(read_only=True)
 
     class Meta:
         model = DemoPayment
-        fields = ["id", "provider", "provider_label", "amount", "status", "transaction_reference", "failure_reason", "donation", "created_at", "completed_at", "expires_at"]
+        fields = ["id", "campaign_id", "campaign_title", "provider", "provider_label", "amount", "status", "transaction_reference", "failure_reason", "donation", "created_at", "completed_at", "expires_at"]
         read_only_fields = fields
