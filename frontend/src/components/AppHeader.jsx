@@ -13,7 +13,7 @@ import { useLanguage } from "../i18n/LanguageContext";
 
 export default function AppHeader({ minimal = false }) {
   const navigate = useNavigate();
-  const { t, formatDate } = useLanguage();
+  const { t, formatDate, language } = useLanguage();
 
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user") || "null"));
   const [notifications, setNotifications] = useState([]);
@@ -67,21 +67,21 @@ export default function AppHeader({ minimal = false }) {
   };
 
   const sectionClass =
-    "text-sm font-semibold text-on-surface-variant transition hover:text-primary";
+    `whitespace-nowrap text-sm font-bold text-on-surface-variant transition hover:text-primary 2xl:text-base ${language === "my" ? "leading-7" : "leading-5"}`;
 
   return (
     <header className="sticky top-0 z-40 border-b border-outline-variant/30 bg-white backdrop-blur">
-      <nav className="relative mx-auto flex h-18 max-w-container-max items-center justify-between px-6">
+      <nav className="relative mx-auto flex min-h-18 max-w-container-max items-center justify-between gap-5 px-5 py-3 sm:px-6 xl:gap-7">
         
         {/* LEFT SIDE: Brand Logo */}
-        <div className="flex items-center gap-6">
+        <div className="flex shrink-0 items-center">
           <Link to="/" className="text-2xl font-extrabold text-primary">
             Givera
           </Link>
         </div>
 
         {/* CENTER Navigation Links */}
-        {!minimal && <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex">
+        {!minimal && <div aria-label="Primary navigation links" className={`absolute left-1/2 hidden -translate-x-1/2 items-center justify-center xl:flex ${language === "my" ? "gap-4 2xl:gap-6" : "gap-6 2xl:gap-8"}`}>
           <a href="#hero" className={sectionClass}>
             {t("home")}
           </a>
@@ -100,7 +100,7 @@ export default function AppHeader({ minimal = false }) {
         </div>}
 
         {/* RIGHT SIDE: Notifications & User Menu */}
-        <div className="flex items-center gap-4 sm:gap-5">
+        <div className="flex shrink-0 items-center justify-end gap-3 sm:gap-4">
           <LanguageSwitch compact />
           {user ? (
             <>
@@ -236,31 +236,31 @@ export default function AppHeader({ minimal = false }) {
       {/* MOBILE SECONDARY NAV ROW */}
       {!minimal && <nav
         aria-label="Mobile Navigation"
-        className="mx-auto flex max-w-container-max justify-center gap-2 overflow-x-auto border-t border-outline-variant/30 px-4 py-2 lg:hidden"
+        className="mx-auto flex max-w-container-max justify-start gap-2 overflow-x-auto border-t border-outline-variant/30 px-4 py-2 xl:hidden sm:justify-center"
       >
         <a
           href="#campaigns"
           className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold text-on-surface-variant hover:bg-primary-fixed hover:text-primary"
         >
-          Browse Campaigns
+          {t("campaigns")}
         </a>
         <a
           href="#campaign-request"
           className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold text-on-surface-variant hover:bg-primary-fixed hover:text-primary"
         >
-          Campaign Requests
+          {t("campaignRequests")}
         </a>
         <a
           href="#how-it-works"
           className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold text-on-surface-variant hover:bg-primary-fixed hover:text-primary"
         >
-          How it works
+          {t("howItWorks")}
         </a>
         <a
           href="#faq"
           className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold text-on-surface-variant hover:bg-primary-fixed hover:text-primary"
         >
-          FAQ
+          {t("faq")}
         </a>
       </nav>}
     </header>
