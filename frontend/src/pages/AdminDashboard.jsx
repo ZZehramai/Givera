@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   BarChart3,
@@ -19,6 +19,7 @@ import {
   MapPin,
   Megaphone,
   Phone,
+  Plus,
   Save,
   Search,
   Settings,
@@ -34,6 +35,7 @@ import api from "../api/axios";
 import { logout } from "../services/authService";
 import LanguageSwitch from "../components/LanguageSwitch";
 import { useLanguage } from "../i18n/LanguageContext";
+import CreateCampaign from "./CreateCampaign";
 
 const activeLocale = () => localStorage.getItem("givera-language") === "my" ? "my-MM" : "en-US";
 const kyat = (value) => `${Number(value || 0).toLocaleString(activeLocale())} ${activeLocale() === "my-MM" ? "ကျပ်" : "Ks"}`;
@@ -258,6 +260,50 @@ function Info({ label, value }) {
         {label}
       </p>
       <p className="mt-1 text-sm font-bold text-slate-700">{value}</p>
+    </div>
+  );
+}
+
+function CreateCampaignModal({ onClose, onCreated }) {
+  const { t } = useLanguage();
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-[#17102F]/55 p-3 backdrop-blur-sm sm:p-6"
+      onMouseDown={onClose}
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("createCampaign")}
+        className="relative max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-[30px] bg-[#F8F7FC] shadow-[0_28px_90px_rgba(20,12,52,.32)]"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t("close")}
+          className="sticky top-4 z-10 ml-auto mr-4 mt-4 grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-md transition hover:text-[#6549C9]"
+        >
+          <X size={19} />
+        </button>
+        <div className="-mt-14">
+          <CreateCampaign embedded onSuccess={onCreated} />
+        </div>
+      </section>
     </div>
   );
 }
@@ -1839,10 +1885,16 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
 export default function AdminDashboard() {
   const { language, t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(() =>
     JSON.parse(localStorage.getItem("user") || "null"),
   );
-  const [section, setSection] = useState("overview");
+  const [section, setSection] = useState(() => {
+    const requestedSection = new URLSearchParams(window.location.search).get("section");
+    return ["overview", "campaigns", "donations", "users", "settings"].includes(requestedSection)
+      ? requestedSection
+      : "overview";
+  });
   const [report, setReport] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
   const [campaignPage, setCampaignPage] = useState(1);
@@ -1865,8 +1917,13 @@ export default function AdminDashboard() {
     previous: null,
   });
   const [selectedUser, setSelectedUser] = useState(null);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState(() =>
+    location.state?.adminCampaignCreated
+      ? `${t("campaignPublished")}: “${location.state.adminCampaignCreated}”`
+      : "",
+  );
   const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [creatingCampaign, setCreatingCampaign] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -1964,6 +2021,21 @@ export default function AdminDashboard() {
       setNotice(`“${campaign.title}” was ${status}.`);
     } catch {
       setNotice(t("reviewSaveError"));
+    }
+  };
+  const campaignCreated = async (campaign) => {
+    setCreatingCampaign(false);
+    setNotice(`${t("campaignPublished")}: “${campaign.title}”`);
+    try {
+      const [reportResponse, campaignResponse] = await Promise.all([
+        api.get("/reports/dashboard/"),
+        api.get("/campaigns/admin/all/"),
+      ]);
+      setReport(reportResponse.data);
+      setCampaigns(campaignResponse.data);
+      setCampaignPage(1);
+    } catch {
+      setNotice(t("dashboardLoadError"));
     }
   };
   const viewUser = useCallback(async (item) => {
@@ -2103,6 +2175,15 @@ export default function AdminDashboard() {
               </h3>
               <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
             </div>
+            {section === "campaigns" && (
+              <button
+                type="button"
+                onClick={() => setCreatingCampaign(true)}
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#6F52D9] px-5 py-3 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(111,82,217,.22)] transition hover:bg-[#6045C4]"
+              >
+                <Plus size={18} /> {t("createCampaign")}
+              </button>
+            )}
             {/* <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               <span className="text-sm font-bold text-slate-600">
@@ -2134,6 +2215,12 @@ export default function AdminDashboard() {
           currentUser={user}
           onClose={() => setSelectedUser(null)}
           onChange={changeUser}
+        />
+      )}
+      {creatingCampaign && (
+        <CreateCampaignModal
+          onClose={() => setCreatingCampaign(false)}
+          onCreated={campaignCreated}
         />
       )}
     </div>

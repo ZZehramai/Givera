@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 const messages = {
   en: {
     home: "Home", campaigns: "Campaigns", campaignRequests: "Campaign Requests", howItWorks: "How it works", faq: "FAQ",
-    notifications: "Notifications", unread: "unread", caughtUp: "You’re all caught up", markAllRead: "Mark all read",
+    notifications: "Notifications", unread: "unread", caughtUp: "You’re all caught up", markAllRead: "Mark all read", close: "Close",
     notificationEmpty: "Updates about your campaigns and donations will appear here.", logout: "Log out", signIn: "Sign In", donateNow: "Donate Now",
     english: "English", myanmar: "မြန်မာ", overview: "Overview", browseCampaigns: "Browse campaigns", myCampaigns: "My campaigns",
     history: "History", savedCampaigns: "Saved campaigns", profileSettings: "Profile & settings", userWorkspace: "User workspace", adminWorkspace: "Admin workspace",
@@ -19,7 +19,7 @@ const messages = {
     emergency: "Emergency Relief", community: "Community", environment: "Environment", animals: "Animals", other: "Other Causes",
     noMatching: "No matching campaigns", noCampaigns: "No campaigns found", differentSearch: "Try a different keyword or filter category.",
     campaignsLater: "New verified campaigns will appear here once approved.", createCampaign: "Create a campaign", campaignRevision: "Campaign revision",
-    startImpact: "Start making an impact", fixResubmit: "Fix and resubmit your campaign", submitPrivate: "Your submission will remain private until an administrator approves it.",
+    startImpact: "Start making an impact", fixResubmit: "Fix and resubmit your campaign", submitPrivate: "Your submission will remain private until an administrator approves it.", adminPublishHelp: "As an administrator, this campaign will be approved and published immediately.", publishCampaign: "Create and publish campaign", publishingCampaign: "Publishing campaign…", campaignPublished: "Campaign published successfully",
     revisionHelp: "Update the requested details below. Your campaign will return to the admin review queue.", campaignTitle: "Campaign title",
     shortSummary: "Short summary", fullStory: "Full story", category: "Category", goalAmount: "Goal amount (Ks)", beneficiaryForm: "Beneficiary",
     location: "Location", deadline: "Deadline", coverImages: "Campaign cover images", submitReview: "Submit for review", submitting: "Submitting…",
@@ -71,7 +71,7 @@ const messages = {
   },
   my: {
     home: "ပင်မစာမျက်နှာ", campaigns: "ကမ်ပိန်းများ", campaignRequests: "ကမ်ပိန်းတောင်းဆိုမှုများ", howItWorks: "လုပ်ဆောင်ပုံ", faq: "မေးလေ့ရှိသော မေးခွန်းများ",
-    notifications: "အသိပေးချက်များ", unread: "မဖတ်ရသေး", caughtUp: "အသိပေးချက်အားလုံး ဖတ်ပြီးပါပြီ", markAllRead: "အားလုံးဖတ်ပြီးဟု သတ်မှတ်ရန်",
+    notifications: "အသိပေးချက်များ", unread: "မဖတ်ရသေး", caughtUp: "အသိပေးချက်အားလုံး ဖတ်ပြီးပါပြီ", markAllRead: "အားလုံးဖတ်ပြီးဟု သတ်မှတ်ရန်", close: "ပိတ်ရန်",
     notificationEmpty: "သင့်ကမ်ပိန်းနှင့် လှူဒါန်းမှုဆိုင်ရာ အသိပေးချက်များကို ဤနေရာတွင် ပြသပါမည်။", logout: "ထွက်ရန်", signIn: "ဝင်ရောက်ရန်", donateNow: "ယခုလှူဒါန်းရန်",
     english: "English", myanmar: "မြန်မာ", overview: "ခြုံငုံသုံးသပ်ချက်", browseCampaigns: "ကမ်ပိန်းများရှာဖွေရန်", myCampaigns: "ကျွန်ုပ်၏ကမ်ပိန်းများ",
     history: "မှတ်တမ်း", savedCampaigns: "သိမ်းထားသော ကမ်ပိန်းများ", profileSettings: "ကိုယ်ရေးအချက်အလက်နှင့် ဆက်တင်များ", userWorkspace: "အသုံးပြုသူနေရာ", adminWorkspace: "စီမံခန့်ခွဲသူနေရာ",
@@ -87,7 +87,7 @@ const messages = {
     emergency: "အရေးပေါ်ကူညီရေး", community: "လူမှုအသိုင်းအဝိုင်း", environment: "သဘာဝပတ်ဝန်းကျင်", animals: "တိရစ္ဆာန်များ", other: "အခြားအကြောင်းအရာများ",
     noMatching: "ကိုက်ညီသော ကမ်ပိန်းမရှိပါ", noCampaigns: "ကမ်ပိန်းမရှိသေးပါ", differentSearch: "အခြားစကားလုံး သို့မဟုတ် အမျိုးအစားဖြင့် ရှာကြည့်ပါ။",
     campaignsLater: "အတည်ပြုပြီးသော ကမ်ပိန်းအသစ်များကို ဤနေရာတွင် ပြသပါမည်။", createCampaign: "ကမ်ပိန်းဖန်တီးရန်", campaignRevision: "ကမ်ပိန်းပြင်ဆင်မှု",
-    startImpact: "အပြောင်းအလဲတစ်ခု စတင်ပါ", fixResubmit: "ကမ်ပိန်းကို ပြင်ဆင်ပြီး ပြန်လည်တင်သွင်းပါ", submitPrivate: "စီမံခန့်ခွဲသူ အတည်ပြုမချင်း သင့်တင်သွင်းမှုကို အများပြည်သူ မမြင်နိုင်ပါ။",
+    startImpact: "အပြောင်းအလဲတစ်ခု စတင်ပါ", fixResubmit: "ကမ်ပိန်းကို ပြင်ဆင်ပြီး ပြန်လည်တင်သွင်းပါ", submitPrivate: "စီမံခန့်ခွဲသူ အတည်ပြုမချင်း သင့်တင်သွင်းမှုကို အများပြည်သူ မမြင်နိုင်ပါ။", adminPublishHelp: "စီမံခန့်ခွဲသူအဖြစ် ဤကမ်ပိန်းကို ချက်ချင်းအတည်ပြုပြီး ထုတ်ပြန်ပါမည်။", publishCampaign: "ကမ်ပိန်းဖန်တီးပြီး ထုတ်ပြန်ရန်", publishingCampaign: "ကမ်ပိန်း ထုတ်ပြန်နေသည်…", campaignPublished: "ကမ်ပိန်း အောင်မြင်စွာ ထုတ်ပြန်ပြီးပါပြီ",
     revisionHelp: "တောင်းဆိုထားသော အချက်များကို ပြင်ဆင်ပါ။ ထို့နောက် ကမ်ပိန်းကို ပြန်လည်စစ်ဆေးပါမည်။", campaignTitle: "ကမ်ပိန်းခေါင်းစဉ်",
     shortSummary: "အကျဉ်းချုပ်", fullStory: "အကြောင်းအရာအပြည့်အစုံ", category: "အမျိုးအစား", goalAmount: "ရည်မှန်းငွေပမာဏ (ကျပ်)", beneficiaryForm: "အကျိုးခံစားသူ",
     location: "တည်နေရာ", deadline: "နောက်ဆုံးရက်", coverImages: "ကမ်ပိန်းမျက်နှာဖုံးပုံများ", submitReview: "စစ်ဆေးရန် တင်သွင်းမည်", submitting: "တင်သွင်းနေသည်…",
