@@ -416,7 +416,7 @@ function Campaigns({ campaigns, page, onPageChange, onReview, onView }) {
                     <button
                       type="button"
                       onClick={() => onView(campaign)}
-                      className="rounded-xl border border-[#ffe96e] bg-[#ffe96e] px-3 py-2 text-xs font-bold text-[#4C3910] shadow-sm transition hover:bg-[#fce249]"
+                      className="rounded-xl border border-[#FFD66B] bg-[#FFD66B] px-3 py-2 text-xs font-bold text-[#4C3910] shadow-sm transition hover:bg-[#ffd25e]"
                     >
                       {t("viewDetails")}
                     </button>
@@ -1076,7 +1076,7 @@ function Overview({ report, campaigns, onReview, onSection }) {
           <button
             type="button"
             onClick={() => onSection("campaigns")}
-            className="mt-6 text-sm font-extrabold text-[#6B4B00] bg-[#FFF1B8] rounded-xl px-4 py-2.5 hover:bg-[#FFE58F]"
+            className="mt-6 text-sm font-extrabold text-[#4C3910] bg-[#ffd25e] rounded-xl px-4 py-2.5 hover:transition hover:bg-[#ffd25e]"
           >
             {t("openReviewQueue")}
           </button>

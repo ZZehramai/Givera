@@ -235,12 +235,12 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
   const content = (
       <main className={`mx-auto max-w-3xl px-6 ${embedded ? "pb-8 pt-7" : "py-12"}`}>
         {backLink}
-        <p className="text-sm font-bold uppercase tracking-widest text-primary">
+        <p className="text-sm font-bold uppercase tracking-[0.1em] text-primary">
           {isEditing ? t("campaignRevision") : t("startImpact")}
         </p>
-        <h1 className="mt-2 text-4xl font-bold text-on-surface">
+        <h3 className="mt-2 text-4xl font-bold text-on-surface">
           {isEditing ? (isAdmin ? t("editCampaign") : t("fixResubmit")) : t("createCampaign")}
-        </h1>
+        </h3>
         <p className="mt-3 text-on-surface-variant">
           {isEditing
             ? isAdmin
