@@ -101,7 +101,7 @@ export default function AppHeader({ minimal = false }) {
 
         {/* RIGHT SIDE: Notifications & User Menu */}
         <div className="flex shrink-0 items-center justify-end gap-3 sm:gap-4">
-          <LanguageSwitch compact />
+          {/* <LanguageSwitch compact /> */}
           {user ? (
             <>
               {/* Notifications */}

@@ -52,7 +52,7 @@ const trustItems = [
 const faqKeys = [1, 2, 3, 4];
 
 export function LandingPage() {
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const [featured, setFeatured] = useState([]);
   const [openFaq, setOpenFaq] = useState(null);
 
@@ -76,14 +76,18 @@ export function LandingPage() {
     e.preventDefault();
     if (!newsletterEmail) return;
 
-    // Set state to subscribed
     setIsSubscribed(true);
     setNewsletterEmail("");
 
-    // Optional: Reset button back to 'Subscribe' after 5 seconds
     setTimeout(() => {
       setIsSubscribed(false);
     }, 5000);
+  };
+
+  const handleLanguageSelect = (selectedLang) => {
+    if (setLanguage && language !== selectedLang) {
+      setLanguage(selectedLang);
+    }
   };
 
   const mainCampaign = featured[0];
@@ -103,12 +107,12 @@ export function LandingPage() {
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="flex flex-col items-center"
             >
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 border-purple-100 bg-purple-100 text-purple-700 px-5 py-2 text-xs font-bold uppercase tracking-[0.16em] text-primary shadow-md">
+              <div className="inline-flex items-center gap-2 rounded-full border border-purple-100 bg-purple-100 px-5 py-2 text-xs font-bold uppercase tracking-[0.16em] text-purple-700 shadow-md">
                 <Heart size={16} strokeWidth={2.5} aria-hidden="true" />
                 {t("heroBadgeLong")}
               </div>
 
-               <h1 className="mt-7 text-4xl font-black uppercase tracking-tight text-slate-900 sm:text-6xl md:text-7xl xl:text-6xl leading-[0.95]">
+               <h1 className="mt-7 text-4xl font-black uppercase tracking-tight text-slate-900 leading-[0.95] sm:text-6xl md:text-7xl xl:text-6xl">
                 {t("heroHeadline")} <br />
                 <span className="text-primary">{t("byGiving")}</span>
               </h1>
@@ -126,79 +130,77 @@ export function LandingPage() {
               
             </motion.div>
           </div>
-          
 
           {/* POLAROID GALLERY */}
-<motion.div
-  className="relative mt-16 w-full max-w-none pb-6 pt-4"
-  initial={{ opacity: 0, y: 30 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.75, delay: 0.15, ease: "easeOut" }}
->
-  <svg
-    className="pointer-events-none absolute left-0 top-8 -z-0 hidden h-28 w-full stroke-slate-300/80 lg:block"
-    viewBox="0 0 1400 120"
-    fill="none"
-    preserveAspectRatio="none"
-  >
-    <path d="M 0,20 Q 700,110 1400,20" strokeWidth="2.5" strokeDasharray="6 6" />
-  </svg>
+          <motion.div
+            className="relative mt-16 w-full max-w-none pb-6 pt-4"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, delay: 0.15, ease: "easeOut" }}
+          >
+            <svg
+              className="pointer-events-none absolute left-0 top-8 -z-0 hidden h-28 w-full stroke-slate-300/80 lg:block"
+              viewBox="0 0 1400 120"
+              fill="none"
+              preserveAspectRatio="none"
+            >
+              <path d="M 0,20 Q 700,110 1400,20" strokeWidth="2.5" strokeDasharray="6 6" />
+            </svg>
 
-  <div className="relative z-10 flex w-full flex-wrap items-center justify-center gap-y-10 gap-x-4 pb-6 pt-10 sm:gap-x-6 lg:gap-x-8 px-6">
-    {/* Card 1 */}
-    <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform -rotate-12 lg:translate-y-8 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
-      <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
-      <div className="overflow-hidden rounded-xl bg-slate-100">
-        <img src={image} alt="Donation impact one" className="aspect-[4/3] w-full object-cover" />
-      </div>
-      <div className="mt-3 text-left">
-        <p className="font-bold text-slate-900 text-sm md:text-base">{t("reviewedCare")}</p>
-        <p className="text-xs text-slate-500 mt-0.5">{t("reviewedCareText")}</p>
-      </div>
-    </div>
+            <div className="relative z-10 flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-10 px-6 pb-6 pt-10 sm:gap-x-6 lg:gap-x-8">
+              {/* Card 1 */}
+              <div className="relative shrink-0 w-48 sm:w-56 md:w-64 -rotate-12 transform rounded-2xl border border-slate-100 bg-white p-3.5 shadow-xl transition duration-300 hover:z-30 hover:rotate-0 hover:scale-105 lg:translate-y-8">
+                <div className="absolute -top-3 left-1/2 z-20 h-4 w-4 -translate-x-1/2 rounded-full bg-emerald-500 shadow-md ring-4 ring-white" />
+                <div className="overflow-hidden rounded-xl bg-slate-100">
+                  <img src={image} alt="Donation impact one" className="aspect-[4/3] w-full object-cover" />
+                </div>
+                <div className="mt-3 text-left">
+                  <p className="text-sm font-bold text-slate-900 md:text-base">{t("reviewedCare")}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{t("reviewedCareText")}</p>
+                </div>
+              </div>
 
-    {/* Card 2 */}
-    <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform -rotate-6 lg:translate-y-3 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
-      <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
-      <div className="overflow-hidden rounded-xl bg-slate-100">
-        <img src={communityHeroImage} alt="Donation impact two" className="aspect-[4/3] w-full object-cover filter brightness-95" />
-      </div>
-      <div className="mt-3 text-left">
-        <p className="font-bold text-slate-900 text-sm md:text-base">{t("communityPowered")}</p>
-        <p className="text-xs text-slate-500 mt-0.5">{t("communityPoweredText")}</p>
-      </div>
-    </div>
+              {/* Card 2 */}
+              <div className="relative shrink-0 w-48 sm:w-56 md:w-64 -rotate-6 transform rounded-2xl border border-slate-100 bg-white p-3.5 shadow-xl transition duration-300 hover:z-30 hover:rotate-0 hover:scale-105 lg:translate-y-3">
+                <div className="absolute -top-3 left-1/2 z-20 h-4 w-4 -translate-x-1/2 rounded-full bg-emerald-500 shadow-md ring-4 ring-white" />
+                <div className="overflow-hidden rounded-xl bg-slate-100">
+                  <img src={communityHeroImage} alt="Donation impact two" className="aspect-[4/3] w-full object-cover filter brightness-95" />
+                </div>
+                <div className="mt-3 text-left">
+                  <p className="text-sm font-bold text-slate-900 md:text-base">{t("communityPowered")}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{t("communityPoweredText")}</p>
+                </div>
+              </div>
 
-    {/* Card 3 (Center Highlight) */}
-    <div className="relative shrink-0 w-56 sm:w-64 md:w-72 rounded-2xl bg-white p-4 shadow-2xl border border-slate-100 transform rotate-0 lg:-translate-y-4 lg:scale-105 z-20 transition duration-300 hover:scale-110">
-      <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4.5 w-4.5 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
-      <div className="overflow-hidden rounded-xl bg-slate-100">
-        <img src={image1} alt="Donation impact three" className="aspect-[16/11] w-full object-cover" />
-      </div>
-      <div className="mt-3.5 text-left">
-        <p className="font-bold text-slate-900 text-base md:text-lg">{t("reviewedCare")}</p>
-        <p className="text-xs md:text-sm text-slate-500 mt-0.5">{t("reviewedCareText")}</p>
-      </div>
-    </div>
+              {/* Card 3 (Center Highlight) */}
+              <div className="relative z-20 shrink-0 w-56 sm:w-64 md:w-72 rotate-0 transform rounded-2xl border border-slate-100 bg-white p-4 shadow-2xl transition duration-300 hover:scale-110 lg:-translate-y-4 lg:scale-105">
+                <div className="absolute -top-3 left-1/2 z-20 h-4.5 w-4.5 -translate-x-1/2 rounded-full bg-emerald-500 shadow-md ring-4 ring-white" />
+                <div className="overflow-hidden rounded-xl bg-slate-100">
+                  <img src={image1} alt="Donation impact three" className="aspect-[16/11] w-full object-cover" />
+                </div>
+                <div className="mt-3.5 text-left">
+                  <p className="text-base font-bold text-slate-900 md:text-lg">{t("reviewedCare")}</p>
+                  <p className="mt-0.5 text-xs text-slate-500 md:text-sm">{t("reviewedCareText")}</p>
+                </div>
+              </div>
 
-    {/* Card 4 */}
-    <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform rotate-6 lg:translate-y-3 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
-      <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
-      <div className="overflow-hidden rounded-xl bg-slate-100">
-        <img src={image2} alt="Donation impact four" className="aspect-[4/3] w-full object-cover filter contrast-105" />
-      </div>
-      <div className="mt-3 text-left">
-        <p className="font-bold text-slate-900 text-sm md:text-base">{t("communityPowered")}</p>
-        <p className="text-xs text-slate-500 mt-0.5">{t("communityPoweredText")}</p>
-      </div>
-    </div>
-  </div>
-</motion.div>
-</section>
+              {/* Card 4 */}
+              <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rotate-6 transform rounded-2xl border border-slate-100 bg-white p-3.5 shadow-xl transition duration-300 hover:z-30 hover:rotate-0 hover:scale-105 lg:translate-y-3">
+                <div className="absolute -top-3 left-1/2 z-20 h-4 w-4 -translate-x-1/2 rounded-full bg-emerald-500 shadow-md ring-4 ring-white" />
+                <div className="overflow-hidden rounded-xl bg-slate-100">
+                  <img src={image2} alt="Donation impact four" className="aspect-[4/3] w-full object-cover filter contrast-105" />
+                </div>
+                <div className="mt-3 text-left">
+                  <p className="text-sm font-bold text-slate-900 md:text-base">{t("communityPowered")}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{t("communityPoweredText")}</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </section>
 
-        
         {/* TRANSPARENCY SECTION */}
-        <section className="relative overflow-hidden  rounded-t-[50%_10%] bg-gray-100 pb-28 pt-36">
+        <section className="relative overflow-hidden rounded-t-[50%_10%] bg-gray-100 pb-28 pt-36">
           <div className="relative mx-auto max-w-container-max px-6">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">{t("impactTitle")}</h2>
@@ -231,8 +233,6 @@ export function LandingPage() {
         {/* CAMPAIGNS SECTION */}
         <section id="campaigns" className="scroll-mt-28 bg-white py-20">
           <div className="mx-auto max-w-container-max px-6">
-            
-            {/* STYLISH SECTION HEADER */}
             <div className="mb-10 flex flex-wrap items-end justify-between gap-6 border-b border-slate-200/60 pb-8 dark:border-slate-800">
               <div className="max-w-2xl">
                 <h2 className="text-5xl font-bold text-slate-900 sm:text-5xl md:text-6xl">
@@ -244,27 +244,23 @@ export function LandingPage() {
                 </p>
               </div>
 
-              {/* Browse All Button */}
               <Link 
                 to="/campaigns" 
                 className="group inline-flex items-center gap-2.5 rounded-full border border-slate-300 bg-white px-6 py-3.5 text-sm font-bold text-slate-800 shadow-sm transition-all duration-300 hover:border-primary hover:bg-slate-50 hover:shadow-md"
               >
                 <span>{t("browseAll")}</span>
-                <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1 text-primary" aria-hidden="true" />
+                <ArrowRight size={18} className="text-primary transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
               </Link>
             </div>
 
-            {/* CAMPAIGNS GRID */}
             {featured.length ? (
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                {/* Main Large Card (Left side) */}
                 {mainCampaign && (
                   <div className="lg:col-span-6 flex flex-col">
                     <CampaignCard campaign={mainCampaign} isFeatured={true} />
                   </div>
                 )}
 
-                {/* 2x2 Grid of Cards (Right side) */}
                 <div className="lg:col-span-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
                   {sideCampaigns.map((campaign) => (
                     <CampaignCard key={campaign.id} campaign={campaign} />
@@ -285,8 +281,7 @@ export function LandingPage() {
         {/* COMMUNITY PROPOSALS SECTION */}
         <section
           id="campaign-request"
-          className="bg-purple-100 pb-28 pt-14 rounded-b-[50%_10%] md:pb-36 md:pt-20"
-          // style={{ clipPath: "ellipse(86% 100% at 50% 0%)" }}
+          className="rounded-b-[50%_10%] bg-purple-100 pb-28 pt-14 md:pb-36 md:pt-20"
         >
           <div className="mx-auto max-w-container-max px-6">
             <motion.div
@@ -303,7 +298,7 @@ export function LandingPage() {
                     {t("communityProposals")}
                   </div>
 
-                  <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-352B0B][# md:text-5xl">
+                  <h2 className="mt-4 text-4xl font-extrabold tracking-tight md:text-5xl">
                     {t("directFunding")}
                   </h2>
 
@@ -350,24 +345,21 @@ export function LandingPage() {
         {/* HOW IT WORKS SECTION */}
         <section
           id="how-it-works"
-          className="relative mt-8 mb-16 scroll-mt-20 overflow-hidden bg-white py-24 min-h-[calc(100vh-5rem)] flex items-center justify-center"
+          className="relative mb-16 mt-8 flex min-h-[calc(100vh-5rem)] scroll-mt-20 items-center justify-center overflow-hidden bg-white py-24"
         >
-          <div className="relative mx-auto max-w-container-max px-6 w-full">
-            
-            {/* Header */}
+          <div className="relative mx-auto w-full max-w-container-max px-6">
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
                 {t("donorJourney")}
               </p>
-              <h2 className="mt-1 text-3xl md:text-4xl font-extrabold text-on-surface">
+              <h2 className="mt-1 text-3xl font-extrabold text-on-surface md:text-4xl">
                 {t("threeSteps")}
               </h2>
-              <p className="mx-auto mt-1.5 text-xs md:text-sm text-on-surface-variant max-w-lg leading-relaxed">
+              <p className="mx-auto mt-1.5 max-w-lg text-xs leading-relaxed text-on-surface-variant md:text-sm">
                 See how easy it is to turn your generosity into real-world change.
               </p>
             </div>
 
-            {/* Graphic Wave & Steps */}
             <div className="mx-auto mt-6 max-w-container-max">
               <div className="relative aspect-[1000/220] w-full">
                 <svg
@@ -378,11 +370,10 @@ export function LandingPage() {
                   aria-hidden="true"
                 >
                   <defs>
-                    {/* Multi-color gradient for the path */}
                     <linearGradient id="journey-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stop-color="#8B5CF6" />   {/* Purple */}
-                      <stop offset="50%" stop-color="#EC4899" />  {/* Pink */}
-                      <stop offset="100%" stop-color="#3B82F6" /> {/* Blue */}
+                      <stop offset="0%" stopColor="#8B5CF6" />
+                      <stop offset="50%" stopColor="#EC4899" />
+                      <stop offset="100%" stopColor="#3B82F6" />
                     </linearGradient>
                   </defs>
 
@@ -400,7 +391,6 @@ export function LandingPage() {
 
                 {donorJourneySteps.map((step, index) => {
                   const StepIcon = step.icon;
-                  // Assign unique vibrant colors for each step's icon
                   const iconColorClass = 
                     index === 0 ? "text-purple-600 bg-purple-50" : 
                     index === 1 ? "text-pink-600 bg-pink-50" : 
@@ -425,7 +415,6 @@ export function LandingPage() {
                 })}
               </div>
 
-              {/* Step Text Below SVG */}
               <div className="mt-3 grid gap-6 sm:grid-cols-3">
                 {donorJourneySteps.map((step, index) => (
                   <motion.div
@@ -436,9 +425,9 @@ export function LandingPage() {
                     viewport={{ once: true, amount: 0.4 }}
                     transition={{ duration: 0.35, delay: 0.1 + index * 0.1 }}
                   >
-                    <span className="text-2xl md:text-3xl font-extrabold text-outline-variant/70">0{index + 1}</span>
-                    <h3 className="mt-0.5 text-base md:text-lg font-bold text-on-surface">{t(step.titleKey)}</h3>
-                    <p className="mt-1 text-xs md:text-sm text-on-surface-variant leading-relaxed">{t(step.textKey)}</p>
+                    <span className="text-2xl font-extrabold text-outline-variant/70 md:text-3xl">0{index + 1}</span>
+                    <h3 className="mt-0.5 text-base font-bold text-on-surface md:text-lg">{t(step.titleKey)}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-on-surface-variant md:text-sm">{t(step.textKey)}</p>
                   </motion.div>
                 ))}
               </div>
@@ -447,7 +436,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        
         {/* FAQ SECTION */}
         <section id="faq" className="mb-16 ml-8 mr-8 p-4 scroll-mt-28 overflow-hidden bg-purple-100 pb-36 pt-24 sm:mb-20 sm:rounded-br-[10rem] sm:rounded-tl-[10rem] lg:mb-24 lg:rounded-br-[8rem] lg:rounded-tl-[8rem]">
           <div className="mx-auto max-w-container-max px-6">
@@ -517,8 +505,38 @@ export function LandingPage() {
       </main>
 
       {/* FOOTER */}
-      <footer className="mt-auto w-full border-t border-slate-200 bg-white text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
+      <footer id="footer" className="mt-auto w-full border-t border-slate-200 bg-white text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
         <div className="mx-auto max-w-container-max px-6 py-12">
+          
+          {/* Segmented EN / မြန်မာ Toggle Button */}
+          <div className="mb-8 border-b border-slate-200/80 pb-6 dark:border-slate-800">
+          
+            <div className="inline-flex items-center rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-800">
+              <button
+                type="button"
+                onClick={() => handleLanguageSelect("en")}
+                className={`rounded-xl px-4 py-1.5 text-base font-extrabold transition-all duration-200 ${
+                  language !== "my"
+                    ? "bg-[#6c52ee] text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                }`}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLanguageSelect("my")}
+                className={`rounded-xl px-4 py-1.5 text-base font-bold transition-all duration-200 ${
+                  language === "my"
+                    ? "bg-[#6c52ee] text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                }`}
+              >
+                မြန်မာ
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
             
             {/* Brand & Trust */}
