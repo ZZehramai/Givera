@@ -1705,10 +1705,10 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
           <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+                <p className="text-xs font-bold uppercase tracking-[.1em] text-[#6F52D9]">
                   {t("personalInformation")}
                 </p>
-                <h2 className="mt-2 text-xl font-extrabold">{t("adminDetails")}</h2>
+                <h3 className="mt-2 text-2xl font-extrabold">{t("adminDetails")}</h3>
                 <p className="mt-1 text-sm text-slate-500">
                   {t("adminContactInfo")}
                 </p>
@@ -1854,10 +1854,10 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">
+              <p className="text-xs font-bold uppercase tracking-[.1em] text-[#6F52D9]">
                 {t("security")}
               </p>
-              <h2 className="mt-2 text-xl font-extrabold">{t("changePassword")}</h2>
+              <h3 className="mt-2 text-2xl font-extrabold">{t("changePassword")}</h3>
               <p className="mt-1 text-sm text-slate-500">
                 {t("strongPassword")}
               </p>

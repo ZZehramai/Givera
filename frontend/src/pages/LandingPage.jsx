@@ -103,7 +103,7 @@ export function LandingPage() {
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="flex flex-col items-center"
             >
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 border-purple-100 bg-purple-100 text-purple-700 px-5 py-2 text-xs font-bold uppercase tracking-[0.16em] text-primary shadow-md">
+              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 border-purple-100 bg-purple-100 text-[#6F52D9] px-5 py-2 text-xs font-bold uppercase tracking-[0.1em] text-primary shadow-md">
                 <Heart size={16} strokeWidth={2.5} aria-hidden="true" />
                 {t("heroBadgeLong")}
               </div>
@@ -297,8 +297,8 @@ export function LandingPage() {
               transition={{ duration: 0.55 }}
             >
               <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-                <div className="flex flex-col items-start">
-                  <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-purple-500">
+                <div className="flex flex-col items-start lg:order-2">
+                  <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-[0.1em] text-[#6F52D9] bg-purple-200 shadow-md">
                     <Sparkles size={14} aria-hidden="true" />
                     {t("communityProposals")}
                   </div>
@@ -332,7 +332,7 @@ export function LandingPage() {
                   </div>
                 </div>
 
-                <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
+                <div className="relative mx-auto w-full max-w-lg lg:order-1 lg:max-w-none">
                   <div className="relative overflow-hidden rounded-[2rem] border-4 border-white bg-surface-container-low">
                     <img
                       src={communityHeroImage}
@@ -356,13 +356,13 @@ export function LandingPage() {
             
             {/* Header */}
             <div className="mx-auto max-w-2xl text-center">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+              <p className="text-xs mb-4 font-bold uppercase tracking-[0.1em] text-primary">
                 {t("donorJourney")}
               </p>
               <h3 className="mt-1 text-4xl md:text-5xl font-extrabold text-on-surface">
                 {t("threeSteps")}
               </h3>
-              <p className="mx-auto mt-1.5 text-xs md:text-sm text-on-surface-variant max-w-lg leading-relaxed">
+              <p className="mx-auto mt-4 text-xs md:text-sm text-on-surface-variant max-w-lg leading-relaxed">
                 {t("threeStepsText")}
               </p>
             </div>
