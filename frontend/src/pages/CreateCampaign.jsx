@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AlertTriangle, CheckCircle2, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, Trash2 } from "lucide-react";
 
 import api from "../api/axios";
-import AppHeader from "../components/AppHeader";
 import { mediaUrl } from "../utils/mediaUrl";
 import { useLanguage } from "../i18n/LanguageContext";
 
@@ -23,11 +22,13 @@ const tomorrow = new Date();
 tomorrow.setDate(tomorrow.getDate() + 1);
 const minimumDeadline = tomorrow.toISOString().split("T")[0];
 
-export default function CreateCampaign() {
+export default function CreateCampaign({ embedded = false, onSuccess }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = Boolean(id);
+  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+  const isAdmin = currentUser?.role === "admin" || currentUser?.is_staff;
   const [form, setForm] = useState(initialForm);
   const [imagePreview, setImagePreview] = useState("");
   const [supportingMedia, setSupportingMedia] = useState([]);
@@ -125,6 +126,16 @@ export default function CreateCampaign() {
       const { data } = isEditing
         ? await api.patch(`/campaigns/${id}/`, payload)
         : await api.post("/campaigns/", payload);
+      if (!isEditing && isAdmin) {
+        if (onSuccess) {
+          onSuccess(data);
+          return;
+        }
+        navigate(`/dashboard?section=campaigns&created=${data.id}`, {
+          state: { adminCampaignCreated: data.title },
+        });
+        return;
+      }
       navigate(`/dashboard?section=my-campaigns&submitted=${data.id}`, {
         state: {
           submissionMessage: isEditing ? "Campaign updated and resubmitted" : "Campaign submitted successfully",
@@ -146,20 +157,32 @@ export default function CreateCampaign() {
   const inputClass =
     "w-full rounded-xl border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/10";
 
+  const backLink = !embedded && (
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-primary"
+        >
+          <ArrowLeft size={17} /> {t("back")}
+        </button>
+  );
+
   if (loading) {
-    return <div className="min-h-screen bg-surface"><AppHeader /><p className="py-24 text-center text-on-surface-variant">Loading campaign…</p></div>;
+    if (embedded) {
+      return <p className="py-24 text-center text-on-surface-variant">Loading campaign…</p>;
+    }
+    return <div className="min-h-screen bg-surface"><p className="py-24 text-center text-on-surface-variant">Loading campaign…</p></div>;
   }
 
-  return (
-    <div className="min-h-screen bg-surface">
-      <AppHeader />
-      <main className="mx-auto max-w-3xl px-6 py-12">
+  const content = (
+      <main className={`mx-auto max-w-3xl px-6 ${embedded ? "pb-8 pt-7" : "py-12"}`}>
+        {backLink}
         <p className="text-sm font-bold uppercase tracking-widest text-primary">
           {isEditing ? t("campaignRevision") : t("startImpact")}
         </p>
         <h1 className="mt-2 text-4xl font-bold text-on-surface">{isEditing ? t("fixResubmit") : t("createCampaign")}</h1>
         <p className="mt-3 text-on-surface-variant">
-          {isEditing ? t("revisionHelp") : t("submitPrivate")}
+          {isEditing ? t("revisionHelp") : isAdmin ? t("adminPublishHelp") : t("submitPrivate")}
         </p>
 
         {isEditing && rejectionReason && (
@@ -318,10 +341,27 @@ export default function CreateCampaign() {
             disabled={saving}
             className="w-full rounded-xl bg-primary px-6 py-4 font-bold text-white hover:opacity-90 disabled:opacity-50"
           >
-            {saving ? (isEditing ? t("resubmitting") : t("submitting")) : (isEditing ? t("saveResubmit") : t("submitReview"))}
+            {saving
+              ? isEditing
+                ? t("resubmitting")
+                : isAdmin
+                  ? t("publishingCampaign")
+                  : t("submitting")
+              : isEditing
+                ? t("saveResubmit")
+                : isAdmin
+                  ? t("publishCampaign")
+                  : t("submitReview")}
           </button>
         </form>
       </main>
+  );
+
+  if (embedded) return content;
+
+  return (
+    <div className="min-h-screen bg-surface">
+      {content}
     </div>
   );
 }

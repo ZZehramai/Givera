@@ -40,7 +40,12 @@ class CampaignListCreateView(generics.ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user, status=Campaign.Status.PENDING)
+        is_admin = self.request.user.is_admin_role or self.request.user.is_staff
+        serializer.save(
+            owner=self.request.user,
+            status=Campaign.Status.APPROVED if is_admin else Campaign.Status.PENDING,
+            approved_at=timezone.now() if is_admin else None,
+        )
 
     def create(self, request, *args, **kwargs):
         files = request.FILES.getlist("cover_images")

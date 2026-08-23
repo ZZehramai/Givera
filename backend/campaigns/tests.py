@@ -56,6 +56,18 @@ class CampaignApiTests(APITestCase):
         self.assertEqual(campaign.owner, self.owner)
         self.assertEqual(campaign.status, Campaign.Status.PENDING)
 
+    def test_admin_created_campaign_is_published_immediately(self):
+        self.client.force_authenticate(self.admin)
+
+        response = self.client.post(reverse("campaign-list"), self.payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        campaign = Campaign.objects.get()
+        self.assertEqual(campaign.owner, self.admin)
+        self.assertEqual(campaign.status, Campaign.Status.APPROVED)
+        self.assertIsNotNone(campaign.approved_at)
+        self.assertEqual(response.data["status"], Campaign.Status.APPROVED)
+
     def test_campaign_request_accepts_multiple_cover_images(self):
         self.client.force_authenticate(self.owner)
         payload = {
