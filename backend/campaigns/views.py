@@ -10,8 +10,8 @@ from rest_framework.views import APIView
 from accounts.models import Notification
 from accounts.permissions import IsAdmin
 
-from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization
-from .serializers import AdminCampaignSerializer, CampaignManagementSerializer, CampaignMediaSerializer, CampaignRecommendationRequestSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer, MAX_CAMPAIGN_MEDIA_FILES, validate_campaign_cover_upload, validate_campaign_media_upload
+from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization, Comment
+from .serializers import AdminCampaignSerializer, CampaignManagementSerializer, CampaignMediaSerializer, CampaignRecommendationRequestSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer, MAX_CAMPAIGN_MEDIA_FILES, validate_campaign_cover_upload, validate_campaign_media_upload, CommentSerializer
 from .recommendations import recommend_campaigns
 from .services import complete_campaign_if_due, complete_due_campaigns
 
@@ -485,3 +485,19 @@ class FundUtilizationReviewView(APIView):
         utilization.reviewed_at = timezone.now()
         utilization.save(update_fields=["status", "review_note", "reviewed_at", "updated_at"])
         return Response(FundUtilizationSerializer(utilization).data)
+
+class CommentListCreateView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        campaign_id = self.kwargs['campaign_id']
+        return Comment.objects.filter(campaign_id=campaign_id)
+
+    def perform_create(self, serializer):
+        campaign_id = self.kwargs['campaign_id']
+        serializer.save(author=self.request.user, campaign_id=campaign_id)

@@ -89,4 +89,14 @@ api.interceptors.response.use(
     }
 );
 
+export const getComments = async (campaignId) => {
+  // Check casing: Use API (or api) matching whatever variable you defined above
+  const response = await API.get(`/campaigns/${campaignId}/comments/`);
+  return response.data;
+};
+
+export const postComment = async (campaignId, content) => {
+  const response = await API.post(`/campaigns/${campaignId}/comments/`, { content });
+  return response.data;
+};
 export default api;

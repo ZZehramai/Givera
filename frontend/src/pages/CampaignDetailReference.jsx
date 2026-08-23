@@ -17,6 +17,7 @@ import {
 import api from "../api/axios";
 import { mediaUrl } from "../utils/mediaUrl";
 import { useLanguage } from "../i18n/LanguageContext";
+import  CommentsSection from "../components/CommentsSection.jsx";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80";
@@ -368,6 +369,11 @@ export default function CampaignDetailReference() {
                   {t("noReports")}
                 </p>
               )}
+            </section>
+
+            {/* ADD COMMENTS SECTION HERE */}
+            <section className="mt-10">
+              <CommentsSection campaignId={id} />
             </section>
           </section>
 
