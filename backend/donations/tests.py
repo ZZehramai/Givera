@@ -141,6 +141,43 @@ class DonationApiTests(APITestCase):
         self.assertEqual(response.data["status"], "failed")
         self.assertEqual(Donation.objects.count(), 0)
 
+    def test_completed_demo_payment_certificate_is_private_pdf(self):
+        checkout = self.client.post(
+            "/api/donations/demo-checkout/",
+            {"campaign_id": self.campaign.id, "provider": "kbzpay", "amount": "25000.00"},
+            format="json",
+        )
+        payment_id = checkout.data["id"]
+
+        pending = self.client.get(
+            f"/api/donations/demo-checkout/{payment_id}/certificate/"
+        )
+        self.assertEqual(pending.status_code, 400)
+
+        self.client.post(
+            f"/api/donations/demo-checkout/{payment_id}/simulate/",
+            {"outcome": "success"},
+            format="json",
+        )
+        certificate = self.client.get(
+            f"/api/donations/demo-checkout/{payment_id}/certificate/"
+        )
+        self.assertEqual(certificate.status_code, 200)
+        self.assertEqual(certificate["Content-Type"], "application/pdf")
+        self.assertIn("givera-certificate-GIV-", certificate["Content-Disposition"])
+        self.assertTrue(certificate.content.startswith(b"%PDF"))
+
+        another_donor = User.objects.create_user(
+            username="another-donor",
+            email="another@example.com",
+            password="test-password",
+        )
+        self.client.force_authenticate(another_donor)
+        private = self.client.get(
+            f"/api/donations/demo-checkout/{payment_id}/certificate/"
+        )
+        self.assertEqual(private.status_code, 404)
+
     def test_admin_donation_list_is_paginated_and_contains_transaction_details(self):
         admin = User.objects.create_user(username="admin", email="admin@example.com", password="test-password", role=User.Role.ADMIN)
         donation = Donation.objects.create(donor=self.donor, campaign=self.campaign, amount=Decimal("1000.00"))

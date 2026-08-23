@@ -1,9 +1,8 @@
 import { GoogleLogin } from "@react-oauth/google";
-import { LockKeyhole, Mail } from "lucide-react";
+import { ArrowLeft, Heart, LockKeyhole, Mail } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import AuthShell from "../components/AuthShell";
 import { login, loginWithGoogle } from "../services/authService";
 import { useLanguage } from "../i18n/LanguageContext";
 
@@ -11,7 +10,7 @@ const inputClass =
   "w-full rounded-2xl border border-outline-variant bg-white py-3.5 pl-12 pr-4 text-on-surface outline-none transition placeholder:text-on-surface-variant/55 focus:border-primary focus:ring-4 focus:ring-primary/10";
 
 export function Login() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
@@ -29,12 +28,14 @@ export function Login() {
       navigate("/dashboard");
     } catch (requestError) {
       const data = requestError.response?.data;
-      if (data?.non_field_errors) {
+      if (language === "my") {
+        setError(t("signInError"));
+      } else if (data?.non_field_errors) {
         setError(data.non_field_errors[0]);
       } else if (typeof data === "string") {
         setError(data);
       } else {
-        setError("We couldn’t sign you in. Check your email and password.");
+        setError(t("signInError"));
       }
     } finally {
       setLoading(false);
@@ -50,8 +51,8 @@ export function Login() {
       navigate("/dashboard");
     } catch (requestError) {
       setError(
-        requestError.response?.data?.detail ||
-          "Google sign-in didn’t work. Please try again.",
+        (language === "en" && requestError.response?.data?.detail) ||
+          t("googleSignInError"),
       );
     } finally {
       setLoading(false);
@@ -59,14 +60,26 @@ export function Login() {
   };
 
   return (
-    <AuthShell mode="login">
-      <div>
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">{t("welcomeBack")}</p>
-        <h2 className="mt-2 text-4xl font-extrabold">{t("signInGivera")}</h2>
-        <p className="mt-3 leading-7 text-on-surface-variant">
-          {t("signInDescription")}
-        </p>
-      </div>
+    <main className="min-h-screen bg-surface px-4 py-6 text-on-surface sm:px-6 sm:py-8">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm font-bold text-on-surface-variant transition hover:text-primary">
+          <ArrowLeft size={17} aria-hidden="true" />
+          {t("backHome")}
+        </Link>
+        {/* <Link to="/" className="inline-flex items-center gap-2 text-xl font-extrabold text-primary">
+          <Heart size={21} fill="currentColor" aria-hidden="true" />
+          Givera
+        </Link> */}
+      </header>
+
+      <section className="mx-auto mt-10 w-full max-w-lg rounded-[2rem] border border-outline-variant/70 bg-white p-6 shadow-xl shadow-primary/10 sm:mt-14 sm:p-10">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.1em] text-primary">{t("welcomeBack")}</p>
+          <h3 className="mt-2 text-4xl font-extrabold">{t("signInGivera")}</h3>
+          <p className="mt-3 leading-7 text-on-surface-variant">
+            {t("signInDescription")}
+          </p>
+        </div>
 
       {location.state?.message && (
         <div className="mt-6 rounded-2xl bg-tertiary-container px-4 py-3 text-sm font-semibold text-tertiary">
@@ -83,7 +96,7 @@ export function Login() {
               required
               autoComplete="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder={t("emailPlaceholder")}
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className={inputClass}
@@ -131,7 +144,7 @@ export function Login() {
       <div className="flex min-h-11 justify-center overflow-hidden rounded-full">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
-          onError={() => setError("Google sign-in was cancelled or failed.")}
+          onError={() => setError(t("googleSignInCancelled"))}
           useOneTap={false}
           shape="pill"
           size="large"
@@ -139,12 +152,13 @@ export function Login() {
         />
       </div>
 
-      <p className="mt-8 text-center text-sm text-on-surface-variant">
-        {t("newToGivera")}{" "}
-        <Link to="/register" className="font-bold text-primary hover:underline">
-          {t("createAccount")}
-        </Link>
-      </p>
-    </AuthShell>
+        <p className="mt-8 text-center text-sm text-on-surface-variant">
+          {t("newToGivera")}{" "}
+          <Link to="/register" className="font-bold text-primary hover:underline">
+            {t("createAccount")}
+          </Link>
+        </p>
+      </section>
+    </main>
   );
 }

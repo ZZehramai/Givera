@@ -11,7 +11,8 @@ from accounts.models import Notification
 from accounts.permissions import IsAdmin
 
 from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization
-from .serializers import AdminCampaignSerializer, CampaignManagementSerializer, CampaignMediaSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer, MAX_CAMPAIGN_MEDIA_FILES, validate_campaign_cover_upload, validate_campaign_media_upload
+from .serializers import AdminCampaignSerializer, CampaignManagementSerializer, CampaignMediaSerializer, CampaignRecommendationRequestSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer, MAX_CAMPAIGN_MEDIA_FILES, validate_campaign_cover_upload, validate_campaign_media_upload
+from .recommendations import recommend_campaigns
 from .services import complete_campaign_if_due, complete_due_campaigns
 
 
@@ -169,6 +170,31 @@ class AdminCampaignListView(generics.ListAPIView):
     def get_queryset(self):
         complete_due_campaigns()
         return Campaign.objects.select_related("owner")
+
+
+class CampaignRecommendationView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = CampaignRecommendationRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        recommendations = recommend_campaigns(
+            request.user,
+            serializer.validated_data["saved_campaign_ids"],
+        )
+        campaign_data = CampaignSerializer(
+            [item["campaign"] for item in recommendations],
+            many=True,
+            context={"request": request},
+        ).data
+        results = []
+        for data, recommendation in zip(campaign_data, recommendations):
+            results.append({
+                **data,
+                "recommendation_reason": recommendation["reason_code"],
+                "recommendation_category": recommendation["reason_category"],
+            })
+        return Response({"results": results})
 
 
 class CampaignReviewView(APIView):

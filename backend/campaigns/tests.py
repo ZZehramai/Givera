@@ -172,6 +172,85 @@ class CampaignApiTests(APITestCase):
             ["Owner campaign", "Community campaign"],
         )
 
+    def test_recommendations_prioritize_categories_the_donor_supported(self):
+        supported = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.COMPLETED,
+            **{**self.payload, "title": "Past medical campaign", "category": Campaign.Category.MEDICAL},
+        )
+        Donation.objects.create(donor=self.owner, campaign=supported, amount=Decimal("1000.00"))
+        medical = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "New medical campaign", "category": Campaign.Category.MEDICAL},
+        )
+        Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "Education campaign", "category": Campaign.Category.EDUCATION},
+        )
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.post(
+            reverse("campaign-recommendations"),
+            {"saved_campaign_ids": []},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["results"][0]["id"], str(medical.pk))
+        self.assertEqual(response.data["results"][0]["recommendation_reason"], "donated_category")
+        self.assertNotIn(str(supported.pk), [item["id"] for item in response.data["results"]])
+
+    def test_recommendations_use_locally_saved_campaign_categories(self):
+        saved = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "Saved environment campaign", "category": Campaign.Category.ENVIRONMENT},
+        )
+        similar = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "Similar environment campaign", "category": Campaign.Category.ENVIRONMENT},
+        )
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.post(
+            reverse("campaign-recommendations"),
+            {"saved_campaign_ids": [str(saved.pk)]},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["results"][0]["id"], str(similar.pk))
+        self.assertEqual(response.data["results"][0]["recommendation_reason"], "saved_category")
+        self.assertNotIn(str(saved.pk), [item["id"] for item in response.data["results"]])
+
+    def test_recommendations_only_include_active_campaigns_not_owned_by_donor(self):
+        own_campaign = Campaign.objects.create(
+            owner=self.owner,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "My own campaign"},
+        )
+        completed = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.COMPLETED,
+            **{**self.payload, "title": "Completed campaign"},
+        )
+        active = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "Active campaign"},
+        )
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.post(reverse("campaign-recommendations"), {}, format="json")
+
+        returned_ids = [item["id"] for item in response.data["results"]]
+        self.assertIn(str(active.pk), returned_ids)
+        self.assertNotIn(str(own_campaign.pk), returned_ids)
+        self.assertNotIn(str(completed.pk), returned_ids)
+
     def test_admin_can_approve_pending_campaign(self):
         campaign = Campaign.objects.create(
             owner=self.owner,

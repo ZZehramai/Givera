@@ -17,17 +17,19 @@ import {
 
 import api from "../api/axios";
 import AppHeader from "../components/AppHeader";
+import { useLanguage } from "../i18n/LanguageContext";
 
 const emptyProfile = { username: "", email: "", phone_number: "", country: "", avatar: "" };
 
 const profileFields = [
-  { label: "Full Name", name: "username", type: "text", icon: UserRound, placeholder: "Your full name" },
-  { label: "Email Address", name: "email", type: "email", icon: Mail, placeholder: "you@example.com" },
-  { label: "Phone Number", name: "phone_number", type: "tel", icon: Phone, placeholder: "+95 9 000 000 000" },
-  { label: "Location", name: "country", type: "text", icon: MapPin, placeholder: "City, Country" },
+  { labelKey: "fullName", name: "username", type: "text", icon: UserRound, placeholderKey: "yourFullName" },
+  { labelKey: "emailAddress", name: "email", type: "email", icon: Mail, placeholderKey: "emailPlaceholder" },
+  { labelKey: "phoneNumber", name: "phone_number", type: "tel", icon: Phone, placeholder: "+95 9 000 000 000" },
+  { labelKey: "location", name: "country", type: "text", icon: MapPin, placeholderKey: "cityCountry" },
 ];
 
 export default function Profile() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
@@ -52,9 +54,9 @@ export default function Profile() {
         });
         if (data.avatar) setPreviewImage(data.avatar);
       })
-      .catch(() => setNotice("We couldn't load your profile. Please try again shortly."))
+      .catch(() => setNotice(t("profileLoadLongError")))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   const handleChange = ({ target }) => setFormData((current) => ({ ...current, [target.name]: target.value }));
 
@@ -105,9 +107,9 @@ export default function Profile() {
       localStorage.setItem("user", JSON.stringify(data));
       window.dispatchEvent(new Event("userUpdated"));
       setIsEditing(false);
-      setNotice("Your profile has been updated.");
+      setNotice(t("profileSavedShort"));
     } catch {
-      setNotice("We couldn't save those changes. Please check your details.");
+      setNotice(t("profileSaveLongError"));
     } finally {
       setSaveLoading(false);
     }
@@ -126,7 +128,7 @@ export default function Profile() {
         <AppHeader />
         <div className="flex h-[70vh] items-center justify-center">
           <p className="text-sm font-semibold tracking-wide text-slate-400 animate-pulse">
-            Loading your profile…
+            {t("loadingProfile")}
           </p>
         </div>
       </div>
@@ -138,14 +140,14 @@ export default function Profile() {
       <div className="min-h-screen bg-[#FDFCFE]">
         <AppHeader />
         <main className="mx-auto max-w-xl px-6 py-24 text-center">
-          <h1 className="text-2xl font-extrabold text-slate-900">Profile unavailable</h1>
-          <p className="mt-3 text-slate-500">{notice || "Please refresh and try again."}</p>
+          <h1 className="text-2xl font-extrabold text-slate-900">{t("profileUnavailable")}</h1>
+          <p className="mt-3 text-slate-500">{notice || t("refreshTryAgain")}</p>
         </main>
       </div>
     );
   }
 
-  const noticeIsSuccess = notice === "Your profile has been updated.";
+  const noticeIsSuccess = notice === t("profileSavedShort");
 
   return (
     <div className="min-h-screen bg-[#FAF8FC] text-slate-900 selection:bg-purple-100 selection:text-purple-900">
@@ -156,7 +158,7 @@ export default function Profile() {
         {/* SECTION HEADER WITH EDIT BUTTON */}
         <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
-            Welcome {user.username}
+            {t("welcomeName")} {user.username}
           </h1>
 
           <div className="flex items-center gap-3">
@@ -166,7 +168,7 @@ export default function Profile() {
                 onClick={beginEditing}
                 className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3.5 text-sm font-medium text-white transition hover:bg-purple-700 hover:shadow-lg hover:shadow-purple-200"
               >
-                <Edit3 size={16} /> Edit profile
+                <Edit3 size={16} /> {t("editProfile")}
               </button>
             ) : (
               <div className="flex items-center gap-2">
@@ -176,7 +178,7 @@ export default function Profile() {
                   disabled={saveLoading}
                   className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
                 >
-                  <X size={16} /> Cancel
+                  <X size={16} /> {t("cancel")}
                 </button>
                 <button
                   type="button"
@@ -184,7 +186,7 @@ export default function Profile() {
                   disabled={saveLoading}
                   className="inline-flex items-center gap-1.5 rounded-full bg-purple-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-purple-700 disabled:opacity-50"
                 >
-                  <Check size={16} /> {saveLoading ? "Saving…" : "Save changes"}
+                  <Check size={16} /> {saveLoading ? t("saving") : t("saveChanges")}
                 </button>
               </div>
             )}
@@ -205,10 +207,10 @@ export default function Profile() {
               {/* TOP FLOATING PILL BADGES */}
               <div className="mb-8 flex items-center justify-between gap-2">
                 <span className="rounded-full bg-white/80 px-4 py-1.5 text-xs font-semibold text-slate-700 shadow-xs backdrop-blur-md">
-                  {user.country || "Global Member"}
+                  {user.country || t("globalMember")}
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3.5 py-1.5 text-xs font-semibold text-emerald-700">
-                  <ShieldCheck size={14} /> Verified
+                  <ShieldCheck size={14} /> {t("verified")}
                 </span>
               </div>
 
@@ -218,13 +220,13 @@ export default function Profile() {
                   {previewImage ? (
                     <img 
                       src={previewImage} 
-                      alt="Profile Avatar" 
+                      alt={t("profileAvatar")}
                       className="h-full w-full object-cover" 
                     />
                   ) : (
                     <div className="flex h-full w-full flex-col items-center justify-center bg-purple-50 text-purple-300">
                       <UserRound size={64} />
-                      <span className="mt-2 text-xs font-medium text-slate-400">No Photo Selected</span>
+                      <span className="mt-2 text-xs font-medium text-slate-400">{t("noPhotoSelected")}</span>
                     </div>
                   )}
 
@@ -236,7 +238,7 @@ export default function Profile() {
                         onClick={() => fileInputRef.current?.click()}
                         className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-slate-900 hover:bg-purple-50"
                       >
-                        <Camera size={14} /> Upload Image
+                        <Camera size={14} /> {t("uploadImage")}
                       </button>
                       {previewImage && (
                         <button
@@ -244,7 +246,7 @@ export default function Profile() {
                           onClick={removeImage}
                           className="inline-flex items-center gap-1 rounded-full bg-rose-500/80 px-3 py-1 text-xs font-semibold text-white hover:bg-rose-600"
                         >
-                          <Trash2 size={12} /> Remove
+                          <Trash2 size={12} /> {t("remove")}
                         </button>
                       )}
                     </div>
@@ -262,7 +264,7 @@ export default function Profile() {
 
                 {isEditing && (
                   <p className="mt-3 text-center text-xs font-medium text-slate-500">
-                    Hover over image to change or remove
+                    {t("imageChangeHelp")}
                   </p>
                 )}
               </div>
@@ -279,7 +281,7 @@ export default function Profile() {
                 onClick={handleLogout}
                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold text-rose-600 transition hover:bg-rose-50"
               >
-                <LogOut size={15} /> Log out from account
+                <LogOut size={15} /> {t("logoutAccount")}
               </button>
             </div>
           </div>
@@ -291,7 +293,7 @@ export default function Profile() {
             <div className="relative pl-2">
               <Quote size={32} className="mb-2 text-purple-200" />
               <p className="text-2xl font-normal leading-snug text-slate-800 md:text-3xl">
-                Profile details serve as your main identity across Givera campaigns and notifications.
+                {t("profileIdentityText")}
               </p>
             </div>
 
@@ -311,13 +313,13 @@ export default function Profile() {
 
             {/* TWO-COLUMN GRID FIELDS */}
             <div className="grid gap-4 sm:grid-cols-2">
-              {profileFields.map(({ label, name, type, icon: Icon, placeholder }) => (
+              {profileFields.map(({ labelKey, name, type, icon: Icon, placeholder, placeholderKey }) => (
                 <div
                   key={name}
                   className="group relative flex flex-col justify-between rounded-2xl bg-white p-5 border border-slate-100 shadow-xs transition hover:border-purple-200 hover:shadow-md"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-400">{label}</span>
+                    <span className="text-xs font-semibold text-slate-400">{t(labelKey)}</span>
                     <span className="p-1.5 text-purple-500">
                       <Icon size={16} />
                     </span>
@@ -330,12 +332,12 @@ export default function Profile() {
                         name={name}
                         value={formData[name]}
                         onChange={handleChange}
-                        placeholder={placeholder}
+                        placeholder={placeholderKey ? t(placeholderKey) : placeholder}
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100"
                       />
                     ) : (
                       <p className="text-base font-medium text-slate-800 truncate">
-                        {user[name] || <span className="text-slate-300">Not provided</span>}
+                        {user[name] || <span className="text-slate-300">{t("notProvided")}</span>}
                       </p>
                     )}
                   </div>

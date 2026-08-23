@@ -19,12 +19,14 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  Sparkles,
   Target,
   UserRound,
   Check,
   X,
   Bookmark,
   CreditCard,
+  Download,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -59,7 +61,7 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts, us
       <div className="flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_18px_45px_rgba(41,35,80,.09)] lg:h-[calc(100vh-2rem)]">
         {/* LOGO */}
         <div className="border-b border-slate-100 px-6 py-6">
-          <Link to="/" aria-label="Go to Givera home" className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F52D9]/30">
+          <Link to="/" aria-label={t("goGiveraHome")} className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F52D9]/30">
             <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">G</div>
             <div>
               <p className="text-xl font-extrabold tracking-tight text-[#24184a]">Givera</p>
@@ -152,8 +154,63 @@ function DashboardMetricCard({ icon: Icon, label, value, note, tone, loading }) 
   );
 }
 
+function RecommendationsPanel({ recommendations, loading, onBrowse }) {
+  const { t } = useLanguage();
+  const reasonLabels = {
+    donated_category: "recommendSupportedReason",
+    saved_category: "recommendSavedReason",
+    ending_soon: "recommendEndingReason",
+    new_campaign: "recommendNewReason",
+    popular: "recommendPopularReason",
+    active_campaign: "recommendActiveReason",
+  };
+
+  return (
+    <section className="mt-6 rounded-[28px] bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex items-start gap-3">
+          {/* <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#FFD66B] text-[#2B1D52]"><Sparkles size={20} /></span> */}
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-[.16em] text-[#6F52D9]">{t("pickedForYou")}</p>
+            <h2 className="mt-1 text-xl font-extrabold text-slate-900">{t("recommendedCampaigns")}</h2>
+            {/* <p className="mt-1 text-sm text-slate-500">{t("recommendationDescription")}</p> */}
+          </div>
+        </div>
+        <button type="button" onClick={onBrowse} className="rounded-full border border-[#D8CFFA] bg-[#F7F4FF] px-4 py-2 text-sm font-extrabold text-[#6549C9] transition hover:bg-[#EEE9FF]">
+          {t("browseAll")}
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="mt-6 grid gap-5 md:grid-cols-3">
+          {[0, 1, 2].map((item) => <div key={item} className="h-72 animate-pulse rounded-2xl bg-slate-100" />)}
+        </div>
+      ) : recommendations.length ? (
+        <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {recommendations.slice(0, 3).map((campaign) => (
+            <div key={campaign.id} className="bg-white border border-slate-100 rounded-2xl p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="rounded-full bg-[#EEE9FF] px-2.5 py-1 text-[11px] font-extrabold text-[#6549C9]">
+                  {t(reasonLabels[campaign.recommendation_reason] || "recommendActiveReason")}
+                </span>
+                {/* <span className="text-[11px] font-bold text-slate-400">· {t(campaign.category)}</span> */}
+              </div>
+              <CampaignCard campaign={campaign} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-6 rounded-2xl border border-dashed border-[#D8CFFA] bg-[#FAF8FF] px-5 py-10 text-center">
+          <p className="font-extrabold text-slate-800">{t("noRecommendations")}</p>
+          <p className="mt-2 text-sm text-slate-500">{t("noRecommendationsText")}</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function CampaignPagination({ page, pages, onPageChange, className = "" }) {
-  const { formatNumber } = useLanguage();
+  const { t, formatNumber } = useLanguage();
   return (
     <div className={`flex items-center justify-end gap-2 ${className}`}>
       <span className="mr-1 text-xs font-bold text-slate-400">
@@ -161,7 +218,7 @@ function CampaignPagination({ page, pages, onPageChange, className = "" }) {
       </span>
       <button
         type="button"
-        aria-label="Previous campaigns"
+        aria-label={t("previousCampaigns")}
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
         className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-[#B9A8F5] hover:text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-35"
@@ -170,7 +227,7 @@ function CampaignPagination({ page, pages, onPageChange, className = "" }) {
       </button>
       <button
         type="button"
-        aria-label="Next campaigns"
+        aria-label={t("nextCampaigns")}
         disabled={page >= pages}
         onClick={() => onPageChange(page + 1)}
         className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-[#B9A8F5] hover:text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-35"
@@ -244,6 +301,8 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
   const { t, formatDate, formatKyat, formatNumber } = useLanguage();
   const [campaignPage, setCampaignPage] = useState(1);
   const [paymentPage, setPaymentPage] = useState(1);
+  const [certificateBusy, setCertificateBusy] = useState("");
+  const [certificateError, setCertificateError] = useState("");
   const totalDonatedAmount = donations.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const campaignPages = Math.max(1, Math.ceil(campaigns.length / CAMPAIGNS_PER_PAGE));
   const safeCampaignPage = Math.min(campaignPage, campaignPages);
@@ -258,6 +317,31 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
     failed: [t("paymentFailed"), "bg-rose-100 text-rose-700"],
     cancelled: [t("paymentCancelled"), "bg-slate-100 text-slate-700"],
     expired: [t("paymentExpired"), "bg-orange-100 text-orange-700"],
+  };
+  const downloadCertificate = async (payment) => {
+    setCertificateBusy(payment.id);
+    setCertificateError("");
+    try {
+      const response = await api.get(
+        `/donations/demo-checkout/${payment.id}/certificate/`,
+        { responseType: "blob" },
+      );
+      const disposition = response.headers["content-disposition"] || "";
+      const filename = disposition.match(/filename="?([^";]+)"?/)?.[1]
+        || `givera-certificate-${payment.transaction_reference}.pdf`;
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setCertificateError(t("certificateDownloadError"));
+    } finally {
+      setCertificateBusy("");
+    }
   };
 
   return (
@@ -312,7 +396,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-bold text-slate-900 truncate">{item.title}</p>
                       <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${item.status === "approved" ? "bg-violet-100 text-[#6F52D9]" : "bg-slate-200 text-slate-700"}`}>
-                        {item.status === "approved" ? t("active") : item.status_label || item.status}
+                        {item.status === "approved" ? t("active") : t(item.status)}
                       </span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200/70">
@@ -340,7 +424,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
         </div>
         {demoPayments.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1180px] text-left text-sm">
+            <table className="w-full min-w-[1360px] text-left text-sm">
               <thead>
                 <tr className="border-b-2 border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-400">
                   <th className="pb-3 pl-2 pr-5 font-semibold">{t("initiatedAt")}</th>
@@ -350,6 +434,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
                   <th className="px-5 pb-3 font-semibold text-right">{t("amount")}</th>
                   <th className="px-5 pb-3 font-semibold">{t("completedAt")}</th>
                   <th className="pb-3 pl-5 pr-2 font-semibold text-right">{t("status")}</th>
+                  <th className="pb-3 pl-5 pr-2 font-semibold text-right">{t("certificate")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-700 font-medium">
@@ -380,12 +465,28 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
                         {(paymentStatus[payment.status] || [t("paymentRecorded")])[0]}
                       </span>
                     </td>
+                    <td className="whitespace-nowrap py-4 pl-5 pr-2 text-right">
+                      {payment.status === "paid" && payment.donation ? (
+                        <button
+                          type="button"
+                          onClick={() => downloadCertificate(payment)}
+                          disabled={certificateBusy === payment.id}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-[#D8CCFF] bg-[#F5F2FF] px-3 py-2 text-xs font-bold text-[#6549C9] transition hover:border-[#6F52D9] hover:bg-[#ECE6FF] disabled:cursor-wait disabled:opacity-55"
+                        >
+                          <Download size={14} />
+                          {certificateBusy === payment.id ? t("downloadingCertificate") : t("downloadCertificate")}
+                        </button>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : <p className="py-10 text-center text-sm text-slate-400">{t("noDonationHistory")}</p>}
+        {certificateError && <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{certificateError}</p>}
       </div>
     </motion.section>
   );
@@ -483,7 +584,7 @@ function MyCampaignsPanel({
           <button
             type="button"
             onClick={onDismissSubmission}
-            aria-label="Dismiss confirmation"
+            aria-label={t("dismissConfirmation")}
             className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
           >
             <X size={18} />
@@ -678,19 +779,33 @@ function UserDashboard() {
   const [discover, setDiscover] = useState([]);
   const [donated, setDonated] = useState([]);
   const [demoPayments, setDemoPayments] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(true);
   const [savedCount, setSavedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState(initialParams.get("section") || "overview");
   const [showSubmissionSuccess, setShowSubmissionSuccess] = useState(Boolean(submittedId));
 
   useEffect(() => {
-    const updateSavedCount = () => {
+    const updateSavedData = async () => {
       const items = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
       setSavedCount(items.length);
+      setRecommendationsLoading(true);
+      try {
+        const savedCampaignIds = Array.isArray(items) ? items.map((item) => item.id).filter(Boolean) : [];
+        const { data } = await api.post("/campaigns/recommendations/", {
+          saved_campaign_ids: savedCampaignIds,
+        });
+        setRecommendations(data.results || []);
+      } catch {
+        setRecommendations([]);
+      } finally {
+        setRecommendationsLoading(false);
+      }
     };
-    updateSavedCount();
-    window.addEventListener("savedCampaignsUpdated", updateSavedCount);
-    return () => window.removeEventListener("savedCampaignsUpdated", updateSavedCount);
+    updateSavedData();
+    window.addEventListener("savedCampaignsUpdated", updateSavedData);
+    return () => window.removeEventListener("savedCampaignsUpdated", updateSavedData);
   }, []);
 
   useEffect(() => {
@@ -824,6 +939,12 @@ function UserDashboard() {
                   </motion.div>
                 ))}
               </section>
+
+              <RecommendationsPanel
+                recommendations={recommendations}
+                loading={recommendationsLoading}
+                onBrowse={() => setActiveSection("browse")}
+              />
 
               <section className="mt-6 grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
                 <article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">

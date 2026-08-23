@@ -1,9 +1,8 @@
-import { AtSign, LockKeyhole, Mail, UserRound } from "lucide-react";
+import { ArrowLeft, AtSign, Heart, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import api from "../api/axios";
-import AuthShell from "../components/AuthShell";
 import { useLanguage } from "../i18n/LanguageContext";
 
 const inputClass =
@@ -31,7 +30,7 @@ function Field({ label, icon: Icon, ...inputProps }) {
 }
 
 export function Register() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
@@ -53,15 +52,17 @@ export function Register() {
       await api.post("/auth/register/", form);
       navigate("/login", {
         replace: true,
-        state: { message: "Your account is ready. You can sign in now." },
+        state: { message: t("accountReady") },
       });
     } catch (requestError) {
       const data = requestError.response?.data;
-      if (data && typeof data === "object") {
+      if (language === "my") {
+        setError(t("accountCreateError"));
+      } else if (data && typeof data === "object") {
         const firstError = Object.values(data).flat()[0];
-        setError(firstError || "We couldn’t create your account.");
+        setError(firstError || t("accountCreateError"));
       } else {
-        setError("We couldn’t create your account. Please try again.");
+        setError(t("accountCreateError"));
       }
     } finally {
       setLoading(false);
@@ -69,14 +70,26 @@ export function Register() {
   };
 
   return (
-    <AuthShell mode="register">
-      <div>
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">{t("getStarted")}</p>
-        <h2 className="mt-2 text-4xl font-extrabold">{t("createYourAccount")}</h2>
-        <p className="mt-3 leading-7 text-on-surface-variant">
-          {t("registerDescription")}
-        </p>
-      </div>
+    <main className="min-h-screen bg-surface px-4 py-6 text-on-surface sm:px-6 sm:py-8">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm font-bold text-on-surface-variant transition hover:text-primary">
+          <ArrowLeft size={17} aria-hidden="true" />
+          {t("backHome")}
+        </Link>
+        {/* <Link to="/" className="inline-flex items-center gap-2 text-xl font-extrabold text-primary">
+          <Heart size={21} fill="currentColor" aria-hidden="true" />
+          Givera
+        </Link> */}
+      </header>
+
+      <section className="mx-auto mt-10 w-full max-w-2xl rounded-[2rem] border border-outline-variant/70 bg-white p-6 shadow-xl shadow-primary/10 sm:p-10">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.1em] text-primary">{t("getStarted")}</p>
+          <h3 className="mt-2 text-4xl font-extrabold">{t("createYourAccount")}</h3>
+          <p className="mt-3 leading-7 text-on-surface-variant">
+            {t("registerDescription")}
+          </p>
+        </div>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         <div className="grid gap-5 sm:grid-cols-2">
@@ -108,7 +121,7 @@ export function Register() {
           label={t("username")}
           icon={AtSign}
           name="username"
-          placeholder="Choose a username"
+          placeholder={t("usernamePlaceholder")}
           value={form.username}
           onChange={handleChange}
         />
@@ -120,7 +133,7 @@ export function Register() {
           icon={Mail}
           name="email"
           type="email"
-          placeholder="you@example.com"
+          placeholder={t("emailPlaceholder")}
           value={form.email}
           onChange={handleChange}
         />
@@ -169,12 +182,13 @@ export function Register() {
         </button>
       </form>
 
-      <p className="mt-7 text-center text-sm text-on-surface-variant">
-        {t("alreadyAccount")}{" "}
-        <Link to="/login" className="font-bold text-primary hover:underline">
-          {t("signInLower")}
-        </Link>
-      </p>
-    </AuthShell>
+        <p className="mt-7 text-center text-sm text-on-surface-variant">
+          {t("alreadyAccount")}{" "}
+          <Link to="/login" className="font-bold text-primary hover:underline">
+            {t("signInLower")}
+          </Link>
+        </p>
+      </section>
+    </main>
   );
 }

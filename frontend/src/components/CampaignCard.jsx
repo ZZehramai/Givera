@@ -49,7 +49,7 @@ export default function CampaignCard({ campaign }) {
       <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-slate-100">
         <img
           src={mediaUrl(campaign.cover_image, fallbackImage)}
-          alt={campaign.title || "Campaign image"}
+          alt={campaign.title || t("campaignPhoto")}
           className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           onError={(event) => {
             event.currentTarget.onerror = null;
@@ -69,7 +69,7 @@ export default function CampaignCard({ campaign }) {
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
           {/* ဘယ်ဘက်အပေါ်ထောင့် (Top-Left) - Category */}
           <span className="rounded-full bg-[#FFE27A] px-2.5 py-1 text-[11px] font-bold text-[#765E00] shadow-sm">
-            {campaign.category_label || t("community")}
+            {t(campaign.category || "community")}
           </span>
 
           {/* ညာဘက်အပေါ်ထောင့် (Top-Right) - Save / Bookmark Icon */}
