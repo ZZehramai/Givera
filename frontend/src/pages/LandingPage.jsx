@@ -196,43 +196,7 @@ export function LandingPage() {
 </motion.div>
 </section>
 
-        {/* STATS SECTION */}
-        {/* <section className="bg-white px-6 pb-20 pt-16">
-          <div className="mx-auto max-w-container-max">
-            <div className="grid gap-6 sm:grid-cols-3">
-              {statsItems.map(({ value, label, text, icon: Icon }, index) => (
-                <motion.div
-                  key={label}
-                  className="group relative flex flex-col justify-between rounded-[2rem] border border-outline-variant/60 bg-surface-container-low/40 p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-white hover:shadow-xl hover:shadow-primary/5"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-fixed text-primary transition-colors group-hover:bg-primary group-hover:text-white">
-                      <Icon size={22} aria-hidden="true" />
-                    </div>
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20" />
-                  </div>
-
-                  <div className="mt-8">
-                    <span className="block text-4xl font-extrabold tracking-tight text-on-surface sm:text-5xl">
-                      {value}
-                    </span>
-                    <p className="mt-1 text-lg font-bold text-primary">
-                      {label}
-                    </p>
-                    <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">
-                      {text}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section> */}
-
+        
         {/* TRANSPARENCY SECTION */}
         <section className="relative overflow-hidden  rounded-t-[50%_10%] bg-gray-100 pb-28 pt-36">
           <div className="relative mx-auto max-w-container-max px-6">
@@ -399,7 +363,7 @@ export function LandingPage() {
                 {t("threeSteps")}
               </h2>
               <p className="mx-auto mt-1.5 text-xs md:text-sm text-on-surface-variant max-w-lg leading-relaxed">
-                {t("threeStepsText")}
+                See how easy it is to turn your generosity into real-world change.
               </p>
             </div>
 
@@ -413,10 +377,19 @@ export function LandingPage() {
                   className="absolute inset-0 h-full w-full"
                   aria-hidden="true"
                 >
+                  <defs>
+                    {/* Multi-color gradient for the path */}
+                    <linearGradient id="journey-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#8B5CF6" />   {/* Purple */}
+                      <stop offset="50%" stop-color="#EC4899" />  {/* Pink */}
+                      <stop offset="100%" stop-color="#3B82F6" /> {/* Blue */}
+                    </linearGradient>
+                  </defs>
+
                   <motion.path
                     d="M20,170 C90,170 110,140 150,130 C230,110 320,50 430,50 C520,50 600,110 690,110 C780,110 880,50 970,30"
-                    className="stroke-primary/70"
-                    strokeWidth="3"
+                    stroke="url(#journey-gradient)"
+                    strokeWidth="3.5"
                     strokeLinecap="round"
                     initial={{ pathLength: 0, opacity: 0 }}
                     whileInView={{ pathLength: 1, opacity: 1 }}
@@ -427,6 +400,12 @@ export function LandingPage() {
 
                 {donorJourneySteps.map((step, index) => {
                   const StepIcon = step.icon;
+                  // Assign unique vibrant colors for each step's icon
+                  const iconColorClass = 
+                    index === 0 ? "text-purple-600 bg-purple-50" : 
+                    index === 1 ? "text-pink-600 bg-pink-50" : 
+                    "text-blue-600 bg-blue-50";
+
                   return (
                     <motion.div
                       key={step.titleKey}
@@ -438,8 +417,8 @@ export function LandingPage() {
                       transition={{ duration: 0.35, delay: 0.25 + index * 0.2 }}
                     >
                       <span className="absolute inset-0 -z-10 rounded-full bg-primary/25 blur-md" aria-hidden="true" />
-                      <span className="grid h-12 w-12 place-items-center rounded-xl border border-outline-variant/50 bg-white text-primary shadow-md shadow-primary/15">
-                        <StepIcon size={20} aria-hidden="true" />
+                      <span className={`grid h-12 w-12 place-items-center rounded-xl border border-outline-variant/50 shadow-md ${iconColorClass}`}>
+                        <StepIcon size={22} aria-hidden="true" />
                       </span>
                     </motion.div>
                   );
@@ -465,10 +444,10 @@ export function LandingPage() {
               </div>
             </div>
 
-            
           </div>
         </section>
 
+        
         {/* FAQ SECTION */}
         <section id="faq" className="mb-16 ml-8 mr-8 p-4 scroll-mt-28 overflow-hidden bg-purple-100 pb-36 pt-24 sm:mb-20 sm:rounded-br-[10rem] sm:rounded-tl-[10rem] lg:mb-24 lg:rounded-br-[8rem] lg:rounded-tl-[8rem]">
           <div className="mx-auto max-w-container-max px-6">
