@@ -172,6 +172,85 @@ class CampaignApiTests(APITestCase):
             ["Owner campaign", "Community campaign"],
         )
 
+    def test_recommendations_prioritize_categories_the_donor_supported(self):
+        supported = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.COMPLETED,
+            **{**self.payload, "title": "Past medical campaign", "category": Campaign.Category.MEDICAL},
+        )
+        Donation.objects.create(donor=self.owner, campaign=supported, amount=Decimal("1000.00"))
+        medical = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "New medical campaign", "category": Campaign.Category.MEDICAL},
+        )
+        Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "Education campaign", "category": Campaign.Category.EDUCATION},
+        )
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.post(
+            reverse("campaign-recommendations"),
+            {"saved_campaign_ids": []},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["results"][0]["id"], str(medical.pk))
+        self.assertEqual(response.data["results"][0]["recommendation_reason"], "donated_category")
+        self.assertNotIn(str(supported.pk), [item["id"] for item in response.data["results"]])
+
+    def test_recommendations_use_locally_saved_campaign_categories(self):
+        saved = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "Saved environment campaign", "category": Campaign.Category.ENVIRONMENT},
+        )
+        similar = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "Similar environment campaign", "category": Campaign.Category.ENVIRONMENT},
+        )
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.post(
+            reverse("campaign-recommendations"),
+            {"saved_campaign_ids": [str(saved.pk)]},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["results"][0]["id"], str(similar.pk))
+        self.assertEqual(response.data["results"][0]["recommendation_reason"], "saved_category")
+        self.assertNotIn(str(saved.pk), [item["id"] for item in response.data["results"]])
+
+    def test_recommendations_only_include_active_campaigns_not_owned_by_donor(self):
+        own_campaign = Campaign.objects.create(
+            owner=self.owner,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "My own campaign"},
+        )
+        completed = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.COMPLETED,
+            **{**self.payload, "title": "Completed campaign"},
+        )
+        active = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "Active campaign"},
+        )
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.post(reverse("campaign-recommendations"), {}, format="json")
+
+        returned_ids = [item["id"] for item in response.data["results"]]
+        self.assertIn(str(active.pk), returned_ids)
+        self.assertNotIn(str(own_campaign.pk), returned_ids)
+        self.assertNotIn(str(completed.pk), returned_ids)
+
     def test_admin_can_approve_pending_campaign(self):
         campaign = Campaign.objects.create(
             owner=self.owner,
@@ -192,6 +271,85 @@ class CampaignApiTests(APITestCase):
         self.assertIsNotNone(campaign.approved_at)
         notification = Notification.objects.get(recipient=self.owner)
         self.assertEqual(notification.type, Notification.Type.CAMPAIGN_APPROVED)
+
+    def test_admin_can_manage_approved_campaign_lifecycle(self):
+        campaign = Campaign.objects.create(
+            owner=self.owner,
+            status=Campaign.Status.APPROVED,
+            approved_at=timezone.now(),
+            **self.payload,
+        )
+        self.client.force_authenticate(self.admin)
+
+        unpublished = self.client.patch(
+            reverse("campaign-management", kwargs={"pk": campaign.pk}),
+            {"action": "unpublish"},
+            format="json",
+        )
+        self.assertEqual(unpublished.status_code, status.HTTP_200_OK)
+        self.assertEqual(unpublished.data["status"], Campaign.Status.UNPUBLISHED)
+
+        hidden = self.client.get(reverse("campaign-list"))
+        self.assertNotIn(str(campaign.pk), [item["id"] for item in hidden.data])
+
+        republished = self.client.patch(
+            reverse("campaign-management", kwargs={"pk": campaign.pk}),
+            {"action": "republish"},
+            format="json",
+        )
+        self.assertEqual(republished.data["status"], Campaign.Status.APPROVED)
+
+        closed = self.client.patch(
+            reverse("campaign-management", kwargs={"pk": campaign.pk}),
+            {"action": "close"},
+            format="json",
+        )
+        self.assertEqual(closed.data["status"], Campaign.Status.COMPLETED)
+
+        archived = self.client.patch(
+            reverse("campaign-management", kwargs={"pk": campaign.pk}),
+            {"action": "archive"},
+            format="json",
+        )
+        self.assertEqual(archived.data["status"], Campaign.Status.ARCHIVED)
+
+    def test_admin_can_edit_an_approved_campaign_without_changing_status(self):
+        campaign = Campaign.objects.create(
+            owner=self.owner,
+            status=Campaign.Status.APPROVED,
+            approved_at=timezone.now(),
+            **self.payload,
+        )
+        self.client.force_authenticate(self.admin)
+
+        response = self.client.patch(
+            reverse("campaign-detail", kwargs={"pk": campaign.pk}),
+            {"summary": "Updated by an administrator."},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        campaign.refresh_from_db()
+        self.assertEqual(campaign.summary, "Updated by an administrator.")
+        self.assertEqual(campaign.status, Campaign.Status.APPROVED)
+
+    def test_regular_user_cannot_manage_campaign_lifecycle(self):
+        campaign = Campaign.objects.create(
+            owner=self.owner,
+            status=Campaign.Status.APPROVED,
+            **self.payload,
+        )
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.patch(
+            reverse("campaign-management", kwargs={"pk": campaign.pk}),
+            {"action": "archive"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        campaign.refresh_from_db()
+        self.assertEqual(campaign.status, Campaign.Status.APPROVED)
 
     def test_owner_can_fix_and_resubmit_rejected_campaign(self):
         campaign = Campaign.objects.create(

@@ -66,14 +66,14 @@ export default function Campaigns() {
         });
         setCampaigns(response.data);
       } catch {
-        setError("Campaigns could not be loaded. Is the Django server running?");
+        setError(t("campaignsLoadError"));
       } finally {
         setLoading(false);
       }
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, t]);
 
   // Filter campaigns by selected category pill
   const filteredCampaigns = useMemo(() => {
@@ -107,7 +107,7 @@ export default function Campaigns() {
                 <button
                   type="button"
                   onClick={() => setQuery("")}
-                  aria-label="Clear search"
+                  aria-label={t("clearSearch")}
                   className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                 >
                   <X size={16} />

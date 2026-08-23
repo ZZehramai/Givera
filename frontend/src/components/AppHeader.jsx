@@ -81,7 +81,7 @@ export default function AppHeader({ minimal = false }) {
         </div>
 
         {/* CENTER Navigation Links */}
-        {!minimal && <div aria-label="Primary navigation links" className={`absolute left-1/2 hidden -translate-x-1/2 items-center justify-center xl:flex ${language === "my" ? "gap-4 2xl:gap-6" : "gap-6 2xl:gap-8"}`}>
+        {!minimal && <div aria-label={t("primaryNavigation")} className={`absolute left-1/2 hidden -translate-x-1/2 items-center justify-center xl:flex ${language === "my" ? "gap-4 2xl:gap-6" : "gap-6 2xl:gap-8"}`}>
           <a href="#hero" className={sectionClass}>
             {t("home")}
           </a>
@@ -235,7 +235,7 @@ export default function AppHeader({ minimal = false }) {
 
       {/* MOBILE SECONDARY NAV ROW */}
       {!minimal && <nav
-        aria-label="Mobile Navigation"
+        aria-label={t("mobileNavigation")}
         className="mx-auto flex max-w-container-max justify-start gap-2 overflow-x-auto border-t border-outline-variant/30 px-4 py-2 xl:hidden sm:justify-center"
       >
         <a

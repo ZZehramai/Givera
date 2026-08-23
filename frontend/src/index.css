@@ -64,6 +64,19 @@ html { scroll-behavior: smooth; }
 body { background: #fffdfd; }
 ::selection { background: #e7ddff; color: #29233e; }
 h1, h2 { font-family: 'Inter', sans-serif; letter-spacing: -0.04em; }
+
+html[lang="my"] body,
+html[lang="my"] button,
+html[lang="my"] input,
+html[lang="my"] textarea,
+html[lang="my"] select,
+html[lang="my"] h1,
+html[lang="my"] h2,
+html[lang="my"] h3,
+html[lang="my"] h4 {
+  font-family: "Noto Sans Myanmar", "Myanmar Text", "Pyidaungsu", sans-serif;
+  letter-spacing: 0;
+}
 button, a, summary { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 3px solid rgba(79, 70, 229, 0.45); outline-offset: 3px; }
 summary::-webkit-details-marker { display: none; }
