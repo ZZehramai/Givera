@@ -240,7 +240,6 @@ function SavedCampaignsPanel() {
   );
 }
 
-/* HISTORY PANEL - ACTIVITY HISTORY PANEL & TOP 3 STAT CARDS HAVE PURPLE BORDERS */
 function HistoryPanel({ donations, campaigns, demoPayments }) {
   const { t, formatDate, formatKyat, formatNumber } = useLanguage();
   const [campaignPage, setCampaignPage] = useState(1);
@@ -263,7 +262,6 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      {/* Top 3 Stat Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <div className="flex items-center gap-4 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-violet-100 text-[#6F52D9]">
@@ -296,7 +294,6 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
         </div>
       </div>
 
-      {/* Created Campaigns */}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
@@ -334,7 +331,6 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
           )}
       </div>
 
-      {/* Payment Activity */}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
@@ -719,6 +715,7 @@ function UserDashboard() {
     const donatedAmount = donated.reduce((sum, item) => sum + Number(item.amount || 0), 0);
     return { raised, goal, active, donatedAmount, progress: goal ? (raised / goal) * 100 : 0 };
   }, [owned, donated]);
+  
   const campaignStatuses = useMemo(() => ({
     approved: owned.filter((item) => item.status === "approved").length,
     pending: owned.filter((item) => item.status === "pending").length,
@@ -750,6 +747,7 @@ function UserDashboard() {
     history: t("activityHistory"),
     profile: t("profileSettings"),
   }[activeSection];
+  
   const pageSubtitle = {
     overview: t("dashboardIntro"),
     browse: t("browseDashboardText"),
@@ -773,7 +771,8 @@ function UserDashboard() {
         <main className="min-w-0 py-6 lg:py-4">
           <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-extrabold text-[#7A5BE6] md:text-4xl">{pageTitle}</h1>
+              {/* Updated heading using exact requested admin style classes */}
+              <h1 className="mt-2 text-3xl font-extrabold text-[#7A5BE6] md:text-4xl">{pageTitle}</h1>
               <p className="mt-2 max-w-2xl text-sm text-slate-500">{pageSubtitle}</p>
             </div>
             {(activeSection === "overview" || activeSection === "my-campaigns") && (
