@@ -26,6 +26,7 @@ import {
   X,
   Bookmark,
   CreditCard,
+  Download,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -301,6 +302,8 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
   const { t, formatDate, formatKyat, formatNumber } = useLanguage();
   const [campaignPage, setCampaignPage] = useState(1);
   const [paymentPage, setPaymentPage] = useState(1);
+  const [certificateBusy, setCertificateBusy] = useState("");
+  const [certificateError, setCertificateError] = useState("");
   const totalDonatedAmount = donations.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const campaignPages = Math.max(1, Math.ceil(campaigns.length / CAMPAIGNS_PER_PAGE));
   const safeCampaignPage = Math.min(campaignPage, campaignPages);
@@ -315,6 +318,31 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
     failed: [t("paymentFailed"), "bg-rose-100 text-rose-700"],
     cancelled: [t("paymentCancelled"), "bg-slate-100 text-slate-700"],
     expired: [t("paymentExpired"), "bg-orange-100 text-orange-700"],
+  };
+  const downloadCertificate = async (payment) => {
+    setCertificateBusy(payment.id);
+    setCertificateError("");
+    try {
+      const response = await api.get(
+        `/donations/demo-checkout/${payment.id}/certificate/`,
+        { responseType: "blob" },
+      );
+      const disposition = response.headers["content-disposition"] || "";
+      const filename = disposition.match(/filename="?([^";]+)"?/)?.[1]
+        || `givera-certificate-${payment.transaction_reference}.pdf`;
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setCertificateError(t("certificateDownloadError"));
+    } finally {
+      setCertificateBusy("");
+    }
   };
 
   return (
@@ -400,7 +428,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
         </div>
         {demoPayments.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1180px] text-left text-sm">
+            <table className="w-full min-w-[1360px] text-left text-sm">
               <thead>
                 <tr className="border-b-2 border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-400">
                   <th className="pb-3 pl-2 pr-5 font-semibold">{t("initiatedAt")}</th>
@@ -410,6 +438,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
                   <th className="px-5 pb-3 font-semibold text-right">{t("amount")}</th>
                   <th className="px-5 pb-3 font-semibold">{t("completedAt")}</th>
                   <th className="pb-3 pl-5 pr-2 font-semibold text-right">{t("status")}</th>
+                  <th className="pb-3 pl-5 pr-2 font-semibold text-right">{t("certificate")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-700 font-medium">
@@ -440,12 +469,28 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
                         {(paymentStatus[payment.status] || [t("paymentRecorded")])[0]}
                       </span>
                     </td>
+                    <td className="whitespace-nowrap py-4 pl-5 pr-2 text-right">
+                      {payment.status === "paid" && payment.donation ? (
+                        <button
+                          type="button"
+                          onClick={() => downloadCertificate(payment)}
+                          disabled={certificateBusy === payment.id}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-[#D8CCFF] bg-[#F5F2FF] px-3 py-2 text-xs font-bold text-[#6549C9] transition hover:border-[#6F52D9] hover:bg-[#ECE6FF] disabled:cursor-wait disabled:opacity-55"
+                        >
+                          <Download size={14} />
+                          {certificateBusy === payment.id ? t("downloadingCertificate") : t("downloadCertificate")}
+                        </button>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : <p className="py-10 text-center text-sm text-slate-400">{t("noDonationHistory")}</p>}
+        {certificateError && <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{certificateError}</p>}
       </div>
     </motion.section>
   );

@@ -14,6 +14,7 @@ from campaigns.services import campaign_is_due, complete_campaign_if_due
 
 from .models import DemoPayment, Donation
 from .serializers import AdminDonationSerializer, DemoPaymentCreateSerializer, DemoPaymentSerializer, DonationSerializer
+from .certificates import donation_certificate_response
 
 
 class DonationCreateView(generics.CreateAPIView):
@@ -162,3 +163,22 @@ class MyDemoPaymentListView(generics.ListAPIView):
 
     def get_queryset(self):
         return DemoPayment.objects.filter(donor=self.request.user).select_related("donation", "campaign")
+
+
+class DemoPaymentCertificateView(APIView):
+    """Downloads a certificate for the authenticated donor's completed demo payment."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        payment = get_object_or_404(
+            DemoPayment.objects.select_related("donor", "campaign", "donation"),
+            pk=pk,
+            donor=request.user,
+        )
+        if payment.status != DemoPayment.Status.PAID or not payment.donation_id:
+            return Response(
+                {"detail": "A certificate is available only after the demo donation is completed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return donation_certificate_response(payment)
