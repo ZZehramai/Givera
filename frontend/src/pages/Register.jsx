@@ -31,7 +31,7 @@ function Field({ label, icon: Icon, ...inputProps }) {
 }
 
 export function Register() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
@@ -53,15 +53,17 @@ export function Register() {
       await api.post("/auth/register/", form);
       navigate("/login", {
         replace: true,
-        state: { message: "Your account is ready. You can sign in now." },
+        state: { message: t("accountReady") },
       });
     } catch (requestError) {
       const data = requestError.response?.data;
-      if (data && typeof data === "object") {
+      if (language === "my") {
+        setError(t("accountCreateError"));
+      } else if (data && typeof data === "object") {
         const firstError = Object.values(data).flat()[0];
-        setError(firstError || "We couldn’t create your account.");
+        setError(firstError || t("accountCreateError"));
       } else {
-        setError("We couldn’t create your account. Please try again.");
+        setError(t("accountCreateError"));
       }
     } finally {
       setLoading(false);
@@ -108,7 +110,7 @@ export function Register() {
           label={t("username")}
           icon={AtSign}
           name="username"
-          placeholder="Choose a username"
+          placeholder={t("usernamePlaceholder")}
           value={form.username}
           onChange={handleChange}
         />
@@ -120,7 +122,7 @@ export function Register() {
           icon={Mail}
           name="email"
           type="email"
-          placeholder="you@example.com"
+          placeholder={t("emailPlaceholder")}
           value={form.email}
           onChange={handleChange}
         />

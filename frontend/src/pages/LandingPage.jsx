@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowRight,
   ArrowUpRight,
   BarChart3,
   Check,
@@ -150,7 +149,7 @@ export function LandingPage() {
     <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform -rotate-12 lg:translate-y-8 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
       <div className="overflow-hidden rounded-xl bg-slate-100">
-        <img src={image} alt="Donation impact one" className="aspect-[4/3] w-full object-cover" />
+        <img src={image} alt={t("impactImageOne")} className="aspect-[4/3] w-full object-cover" />
       </div>
       <div className="mt-3 text-left">
         <p className="font-bold text-slate-900 text-sm md:text-base">{t("reviewedCare")}</p>
@@ -162,7 +161,7 @@ export function LandingPage() {
     <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform -rotate-6 lg:translate-y-3 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
       <div className="overflow-hidden rounded-xl bg-slate-100">
-        <img src={communityHeroImage} alt="Donation impact two" className="aspect-[4/3] w-full object-cover filter brightness-95" />
+        <img src={communityHeroImage} alt={t("impactImageTwo")} className="aspect-[4/3] w-full object-cover filter brightness-95" />
       </div>
       <div className="mt-3 text-left">
         <p className="font-bold text-slate-900 text-sm md:text-base">{t("communityPowered")}</p>
@@ -174,7 +173,7 @@ export function LandingPage() {
     <div className="relative shrink-0 w-56 sm:w-64 md:w-72 rounded-2xl bg-white p-4 shadow-2xl border border-slate-100 transform rotate-0 lg:-translate-y-4 lg:scale-105 z-20 transition duration-300 hover:scale-110">
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4.5 w-4.5 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
       <div className="overflow-hidden rounded-xl bg-slate-100">
-        <img src={image1} alt="Donation impact three" className="aspect-[16/11] w-full object-cover" />
+        <img src={image1} alt={t("impactImageThree")} className="aspect-[16/11] w-full object-cover" />
       </div>
       <div className="mt-3.5 text-left">
         <p className="font-bold text-slate-900 text-base md:text-lg">{t("reviewedCare")}</p>
@@ -186,7 +185,7 @@ export function LandingPage() {
     <div className="relative shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl bg-white p-3.5 shadow-xl border border-slate-100 transform rotate-6 lg:translate-y-3 transition duration-300 hover:rotate-0 hover:z-30 hover:scale-105">
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white shadow-md z-20" />
       <div className="overflow-hidden rounded-xl bg-slate-100">
-        <img src={image2} alt="Donation impact four" className="aspect-[4/3] w-full object-cover filter contrast-105" />
+        <img src={image2} alt={t("impactImageFour")} className="aspect-[4/3] w-full object-cover filter contrast-105" />
       </div>
       <div className="mt-3 text-left">
         <p className="font-bold text-slate-900 text-sm md:text-base">{t("communityPowered")}</p>
@@ -337,7 +336,7 @@ export function LandingPage() {
                   <div className="relative overflow-hidden rounded-[2rem] border-4 border-white bg-surface-container-low">
                     <img
                       src={communityHeroImage}
-                      alt="Frontline project initiative"
+                      alt={t("frontlineInitiative")}
                       className="aspect-[4/3] w-full object-cover transition-transform duration-700 hover:scale-105"
                     />
                   </div>
@@ -364,7 +363,7 @@ export function LandingPage() {
                 {t("threeSteps")}
               </h3>
               <p className="mx-auto mt-1.5 text-xs md:text-sm text-on-surface-variant max-w-lg leading-relaxed">
-                See how easy it is to turn your generosity into real-world change.
+                {t("threeStepsText")}
               </p>
             </div>
 
@@ -460,7 +459,7 @@ export function LandingPage() {
                   {t("faqIntro")}
                 </p>
                 <p className="mt-7 text-sm text-black/65">
-                  Still have questions? <a href="#footer" className="font-bold text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">Learn more about how Givera works</a>.
+                  {t("faqMoreQuestions")} <a href="#footer" className="font-bold text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">{t("learnGiveraWorks")}</a>.
                 </p>
               </div>
 
@@ -527,16 +526,16 @@ export function LandingPage() {
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-7 w-7 text-primary" aria-hidden="true" />
                 <span className="text-xl font-extrabold text-slate-900 dark:text-white">
-                  Donation Transparent
+                  {t("donationTransparent")}
                 </span>
               </div>
               <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                Accountability, clarity, and impact in every transaction.
+                {t("accountabilityText")}
               </p>
               <div className="mt-2 flex items-center">
                 <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                   <ShieldCheck className="h-4 w-4" />
-                  <span>Verified Transparent</span>
+                  <span>{t("verifiedTransparent")}</span>
                 </div>
               </div>
             </div>
@@ -544,7 +543,7 @@ export function LandingPage() {
             {/* Navigation Links */}
             <div className="flex flex-col gap-3">
               <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                Platform
+                {t("platform")}
               </h4>
               <nav className="flex flex-col gap-2.5 text-sm font-medium">
                 <a
@@ -580,7 +579,7 @@ export function LandingPage() {
                 {t("stayInformed")}
               </h4>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Get transparency updates and impact summaries delivered to your inbox.
+                {t("transparencyUpdates")}
               </p>
               <form
                 className="mt-1 flex w-full max-w-md flex-col gap-2.5 sm:flex-row"

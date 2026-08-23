@@ -66,7 +66,7 @@ export default function MyCampaigns() {
                         statusStyles[campaign.status] || statusStyles.draft
                       }`}
                     >
-                      {campaign.status_label}
+                      {t(campaign.status)}
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-on-surface-variant">{campaign.summary}</p>

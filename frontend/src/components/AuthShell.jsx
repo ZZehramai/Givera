@@ -1,13 +1,15 @@
 import { ArrowLeft, Heart, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "../i18n/LanguageContext";
 
 const benefits = [
-  { icon: ShieldCheck, text: "Campaigns reviewed with care" },
-  { icon: Users, text: "A community built around generosity" },
-  { icon: Sparkles, text: "Clear progress from goal to impact" },
+  { icon: ShieldCheck, textKey: "authCampaignCare" },
+  { icon: Users, textKey: "authCommunity" },
+  { icon: Sparkles, textKey: "authClearProgress" },
 ];
 
 export default function AuthShell({ mode, children }) {
+  const { t } = useLanguage();
   const isRegister = mode === "register";
 
   return (
@@ -27,33 +29,33 @@ export default function AuthShell({ mode, children }) {
 
           <div className="relative z-10 my-auto py-16">
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-primary-fixed">
-              {isRegister ? "Join the community" : "Welcome home"}
+              {isRegister ? t("joinCommunity") : t("welcomeHome")}
             </p>
             <h1 className="mt-5 max-w-md text-4xl font-extrabold leading-tight xl:text-5xl">
               {isRegister
-                ? "Your next act of kindness starts here."
-                : "Come back to the good you’re growing."}
+                ? t("registerHeroTitle")
+                : t("loginHeroTitle")}
             </h1>
             <p className="mt-5 max-w-md text-base leading-7 text-white/65">
               {isRegister
-                ? "Create an account to support meaningful causes, start a campaign, and follow every step of its impact."
-                : "Sign in to discover causes, manage your campaigns, and stay close to the people and stories you support."}
+                ? t("registerHeroText")
+                : t("loginHeroText")}
             </p>
 
             <div className="mt-10 space-y-3">
-              {benefits.map(({ icon: Icon, text }) => (
-                <div key={text} className="flex items-center gap-3 text-sm font-semibold text-white/85">
+              {benefits.map(({ icon: Icon, textKey }) => (
+                <div key={textKey} className="flex items-center gap-3 text-sm font-semibold text-white/85">
                   <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-primary-fixed">
                     <Icon size={18} aria-hidden="true" />
                   </span>
-                  {text}
+                  {t(textKey)}
                 </div>
               ))}
             </div>
           </div>
 
           <p className="relative z-10 text-sm text-white/45">
-            Fundraising made human.
+            {t("humanFundraising")}
           </p>
         </section>
 
@@ -61,7 +63,7 @@ export default function AuthShell({ mode, children }) {
           <div className="flex items-center justify-between">
             <Link to="/" className="inline-flex items-center gap-2 text-sm font-bold text-on-surface-variant transition hover:text-primary">
               <ArrowLeft size={17} aria-hidden="true" />
-              Back home
+              {t("backHome")}
             </Link>
             <Link to="/" className="flex items-center gap-2 text-lg font-extrabold text-primary lg:hidden">
               <Heart size={19} fill="currentColor" aria-hidden="true" />

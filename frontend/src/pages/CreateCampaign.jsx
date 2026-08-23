@@ -51,7 +51,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
     api.get(`/campaigns/${id}/`)
       .then(({ data }) => {
         if (data.status !== "rejected" && !isAdmin) {
-          setError("Only rejected campaigns can be edited and resubmitted from this page.");
+          setError(t("rejectedEditOnly"));
           return;
         }
         setForm({
@@ -67,23 +67,23 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
         });
         setImagePreview(mediaUrl(data.cover_image, ""));
         setExistingMedia(data.cover_media || []);
-        setRejectionReason(data.rejection_reason || "Review the campaign details before resubmitting.");
+        setRejectionReason(data.rejection_reason || t("reviewBeforeResubmit"));
       })
-      .catch((requestError) => setError(requestError.response?.data?.detail || "This campaign could not be loaded."))
+      .catch((requestError) => setError((language === "en" && requestError.response?.data?.detail) || t("campaignLoadError")))
       .finally(() => setLoading(false));
-  }, [id, isAdmin, isEditing]);
+  }, [id, isAdmin, isEditing, language, t]);
 
   const update = (event) => {
     if (event.target.name === "cover_image") {
       const files = Array.from(event.target.files || []);
       if (files.length > 6) {
-        setError("Choose no more than 6 cover images.");
+        setError(t("maxCoverImages"));
         event.target.value = "";
         return;
       }
       const invalidFile = files.find((file) => !file.type.startsWith("image/") || file.size > 5 * 1024 * 1024);
       if (invalidFile) {
-        setError(`${invalidFile.name} must be a supported image no larger than 5 MB.`);
+        setError(`${invalidFile.name} ${t("invalidCoverImage")}`);
         event.target.value = "";
         return;
       }
@@ -113,7 +113,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
       await api.delete(`/campaigns/${id}/media/${mediaId}/`);
       setExistingMedia((items) => items.filter((item) => item.id !== mediaId));
     } catch (requestError) {
-      setError(requestError.response?.data?.detail || "This media item could not be removed.");
+      setError((language === "en" && requestError.response?.data?.detail) || t("removeMediaError"));
     }
   };
 
@@ -141,7 +141,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
       const validationMessage = responseData && typeof responseData === "object"
         ? Object.values(responseData).flat().join(" ")
         : "";
-      setAssistantError(validationMessage || t("writingAssistantError"));
+      setAssistantError((language === "en" && validationMessage) || t("writingAssistantError"));
     } finally {
       setAssistantLoading(false);
     }
@@ -196,7 +196,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
       }
       navigate(`/dashboard?section=my-campaigns&submitted=${data.id}`, {
         state: {
-          submissionMessage: isEditing ? "Campaign updated and resubmitted" : "Campaign submitted successfully",
+          submissionMessage: isEditing ? t("campaignResubmitted") : t("submittedSuccess"),
           campaignTitle: data.title,
         },
       });
@@ -206,7 +206,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
         data && typeof data === "object"
           ? Object.values(data).flat().join(" ")
           : null;
-      setError(firstError || "The campaign could not be submitted.");
+      setError((language === "en" && firstError) || t("campaignSubmitError"));
     } finally {
       setSaving(false);
     }
@@ -227,9 +227,9 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
 
   if (loading) {
     if (embedded) {
-      return <p className="py-24 text-center text-on-surface-variant">Loading campaign…</p>;
+      return <p className="py-24 text-center text-on-surface-variant">{t("loadingCampaign")}</p>;
     }
-    return <div className="min-h-screen bg-surface"><p className="py-24 text-center text-on-surface-variant">Loading campaign…</p></div>;
+    return <div className="min-h-screen bg-surface"><p className="py-24 text-center text-on-surface-variant">{t("loadingCampaign")}</p></div>;
   }
 
   const content = (
@@ -258,10 +258,10 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
               <div><p className="font-extrabold">{t("whyRejected")}</p><p className="mt-1 text-sm leading-6">{rejectionReason}</p></div>
             </div>
             <div className="px-5 py-4">
-              <p className="text-sm font-extrabold text-slate-800">Suggested places to review</p>
+              <p className="text-sm font-extrabold text-slate-800">{t("suggestedReviewPlaces")}</p>
               <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-                {["Title and short summary", "Story and planned use of funds", "Goal, beneficiary, and location", "Deadline and cover image"].map((item) => (
-                  <p key={item} className="flex items-center gap-2"><CheckCircle2 size={15} className="shrink-0 text-primary" /> {item}</p>
+                {["reviewTitleSummary", "reviewStoryFunds", "reviewGoalBeneficiary", "reviewDeadlineCover"].map((item) => (
+                  <p key={item} className="flex items-center gap-2"><CheckCircle2 size={15} className="shrink-0 text-primary" /> {t(item)}</p>
                 ))}
               </div>
             </div>
@@ -348,7 +348,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
               value={form.title}
               onChange={update}
               className={inputClass}
-              placeholder="Build a community learning center"
+              placeholder={t("campaignTitlePlaceholder")}
             />
           </label>
 
@@ -362,7 +362,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
               value={form.summary}
               onChange={update}
               className={inputClass}
-              placeholder="Explain the need and expected impact in two sentences."
+              placeholder={t("summaryPlaceholder")}
             />
             <span className="mt-1 block text-right text-xs text-on-surface-variant">
               {form.summary.length}/280
@@ -378,7 +378,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
               value={form.story}
               onChange={update}
               className={inputClass}
-              placeholder="Describe the problem, your plan, and how funds will be used."
+              placeholder={t("storyPlaceholder")}
             />
           </label>
 
@@ -386,13 +386,13 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
             <label>
               <span className="mb-2 block text-sm font-bold">{t("category")}</span>
               <select name="category" value={form.category} onChange={update} className={inputClass}>
-                <option value="education">Education</option>
-                <option value="medical">Medical</option>
-                <option value="emergency">Emergency relief</option>
-                <option value="community">Community</option>
-                <option value="environment">Environment</option>
-                <option value="animals">Animals</option>
-                <option value="other">Other</option>
+                <option value="education">{t("education")}</option>
+                <option value="medical">{t("medical")}</option>
+                <option value="emergency">{t("emergency")}</option>
+                <option value="community">{t("community")}</option>
+                <option value="environment">{t("environment")}</option>
+                <option value="animals">{t("animals")}</option>
+                <option value="other">{t("other")}</option>
               </select>
             </label>
             <label>
@@ -419,7 +419,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
                 value={form.beneficiary}
                 onChange={update}
                 className={inputClass}
-                placeholder="Who receives the help?"
+                placeholder={t("beneficiaryPlaceholder")}
               />
             </label>
             <label>
@@ -430,7 +430,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
                 value={form.location}
                 onChange={update}
                 className={inputClass}
-                placeholder="Yangon, Myanmar"
+                placeholder={t("locationPlaceholder")}
               />
             </label>
           </div>
@@ -460,14 +460,14 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
                 className="w-full rounded-xl border border-dashed border-outline-variant bg-surface px-4 py-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:font-bold file:text-white"
               />
               <span className="mt-1 block text-xs text-on-surface-variant">
-                Choose up to 6 JPG, PNG, or WebP images · maximum 5 MB each
+                {t("coverImageHelp")}
               </span>
               {(imagePreview || existingMedia.length > 0 || supportingPreviews.length > 0) && <div className="mt-4 grid grid-cols-2 gap-2">
-                {imagePreview && <MediaPreview type="image" src={imagePreview} label="Primary cover" />}
-                {existingMedia.map((item) => <MediaPreview key={item.id} type="image" src={mediaUrl(item.file)} label="Existing cover" onRemove={() => removeExistingMedia(item.id)} />)}
+                {imagePreview && <MediaPreview type="image" src={imagePreview} label={t("primaryCover")} />}
+                {existingMedia.map((item) => <MediaPreview key={item.id} type="image" src={mediaUrl(item.file)} label={t("existingCover")} onRemove={() => removeExistingMedia(item.id)} />)}
                 {supportingPreviews.map((preview, index) => <MediaPreview key={`${preview.file.name}-${preview.file.lastModified}`} type="image" src={preview.url} label={preview.file.name} onRemove={() => removeSelectedMedia(index)} />)}
               </div>}
-              <span className="mt-2 block text-xs font-semibold text-primary">{(imagePreview ? 1 : 0) + existingMedia.length + supportingMedia.length} cover image{(imagePreview ? 1 : 0) + existingMedia.length + supportingMedia.length === 1 ? "" : "s"} ready</span>
+              <span className="mt-2 block text-xs font-semibold text-primary">{(imagePreview ? 1 : 0) + existingMedia.length + supportingMedia.length} {t("coverReady")}</span>
             </label>
           </div>
 
@@ -505,6 +505,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
 }
 
 function MediaPreview({ type, src, label, onRemove }) {
+  const { t } = useLanguage();
   return (
     <article className="group relative overflow-hidden rounded-xl bg-slate-900">
       {type === "video" ? (
@@ -514,7 +515,7 @@ function MediaPreview({ type, src, label, onRemove }) {
       )}
       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-slate-950/90 to-transparent px-3 pb-2 pt-8 text-white">
         <p className="min-w-0 truncate text-[11px] font-bold">{label}</p>
-        {onRemove && <button type="button" onClick={onRemove} aria-label={`Remove ${label}`} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 hover:bg-rose-500">
+        {onRemove && <button type="button" onClick={onRemove} aria-label={`${t("removeSelected")}: ${label}`} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 hover:bg-rose-500">
           <Trash2 size={13} />
         </button>}
       </div>

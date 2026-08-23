@@ -78,7 +78,7 @@ function Sidebar({ section, onSection, user, onLogout, pending }) {
   return (
     <aside className="flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_18px_45px_rgba(41,35,80,.09)] lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:self-start">
       <div className="border-b border-slate-100 px-6 py-6">
-        <Link to="/" aria-label="Go to Givera home" className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F52D9]/30">
+        <Link to="/" aria-label={t("goGiveraHome")} className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F52D9]/30">
           <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">
             G
           </div>
@@ -362,7 +362,7 @@ function Campaigns({ campaigns, page, onPageChange, onReview, onView }) {
     <section className="rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
       {/* <div className="flex flex-wrap items-end justify-between gap-3 px-6 py-5">
         <div>
-          <h2 className="text-lg font-extrabold">Campaign review queue</h2>
+          <h2 className="text-lg font-extrabold">{t("reviewQueue")}</h2>
           <p className="mt-1 text-sm text-slate-500">
             Verify organizers and decide which campaigns can go live.
           </p>
@@ -391,7 +391,7 @@ function Campaigns({ campaigns, page, onPageChange, onReview, onView }) {
                 <td className="px-6 py-4 text-left">
                   <p className="font-bold text-slate-800">{campaign.title}</p>
                   <p className="mt-1 text-xs text-slate-400">
-                    {campaign.category_label} · {campaign.location}
+                    {t(campaign.category)} · {campaign.location}
                   </p>
                 </td>
                 <td className="px-6 py-4">
@@ -408,7 +408,7 @@ function Campaigns({ campaigns, page, onPageChange, onReview, onView }) {
                 <td className="px-6 py-4">
                   <StatusBadge
                     status={campaign.status}
-                    label={campaign.status_label}
+                    label={t(campaign.status)}
                   />
                 </td>
                 <td className="px-6 py-4 text-right">
@@ -460,7 +460,7 @@ function Transactions({
     <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
       <div className="flex flex-wrap items-end justify-between gap-4 px-6 py-5">
         {/* <div>
-          <h2 className="text-lg font-extrabold">Donation transactions</h2>
+          <h2 className="text-lg font-extrabold">{t("donationTransactions")}</h2>
           <p className="mt-1 text-sm text-slate-500">
             Full payment and donor record for every completed contribution.
           </p>
@@ -513,7 +513,7 @@ function Transactions({
                       {donation.campaign_title}
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
-                      By {donation.campaign_owner_name}
+                      {t("by")} {donation.campaign_owner_name}
                     </p>
                   </td>
                   <td className="px-5 py-4 font-extrabold text-[#6549C9]">
@@ -533,7 +533,7 @@ function Transactions({
                           ? "approved"
                           : "pending"
                       }
-                      label={donation.payment_status_label}
+                      label={t(`payment${donation.payment_status?.charAt(0).toUpperCase()}${donation.payment_status?.slice(1)}`)}
                     />
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap text-xs text-slate-500">
@@ -592,7 +592,7 @@ function AdminPagination({
         </strong>{" "}
         {t("of")} <strong className="text-slate-700">{formatNumber(count)}</strong>
       </p>
-      <nav className="flex items-center gap-1.5" aria-label="Pagination">
+      <nav className="flex items-center gap-1.5" aria-label={t("pagination")}>
         <button
           type="button"
           disabled={!hasPrevious}
@@ -709,10 +709,10 @@ function UserDetailModal({ user, currentUser, onClose, onChange }) {
                   >
                     <div>
                       <p className="font-bold text-slate-700">
-                        {action.action_label}
+                        {t(action.action)}
                       </p>
                       <p className="mt-1 text-xs text-slate-400">
-                        By {action.actor_name} · {dateTime(action.created_at)}
+                        {t("by")} {action.actor_name} · {dateTime(action.created_at)}
                       </p>
                     </div>
                     <p className="text-xs font-bold text-[#6549C9]">
@@ -782,7 +782,7 @@ function UserManagement({
       <div className="px-6 py-5">
         {/* <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-lg font-extrabold">Registered users</h2>
+            <h2 className="text-lg font-extrabold">{t("registeredUsers")}</h2>
             <p className="mt-1 text-sm text-slate-500">
               Review account activity and control platform access.
             </p>
@@ -1200,7 +1200,7 @@ function ExportCenter() {
       link.remove();
       URL.revokeObjectURL(url);
     } catch {
-      setError("The export could not be generated. Please try again.");
+      setError(t("exportError"));
     } finally {
       setDownloading("");
     }
@@ -1336,7 +1336,7 @@ function Insights({ report }) {
               ))
             ) : (
               <p className="py-10 text-center text-sm text-slate-400">
-                No campaign status data yet.
+                {t("noCampaignStatusData")}
               </p>
             )}
           </div>
@@ -1386,7 +1386,7 @@ function Insights({ report }) {
               ))
             ) : (
               <p className="py-10 text-center text-sm text-slate-400">
-                Category insights will appear after donations are recorded.
+                {t("categoryInsightsEmpty")}
               </p>
             )}
           </div>
@@ -1403,7 +1403,7 @@ function Insights({ report }) {
               {t("topCampaigns")}
             </h3>
             <p className="mt-1 text-sm text-slate-500">
-              Ranked by total donations received.
+              {t("rankedDonations")}
             </p>
           </div>
           <div className="border-t border-slate-100">
@@ -1454,7 +1454,7 @@ function Insights({ report }) {
               })
             ) : (
               <p className="px-7 py-12 text-center text-sm text-slate-400">
-                Campaign rankings will appear after the first donation.
+                {t("campaignRankingsEmpty")}
               </p>
             )}
           </div>
@@ -1468,8 +1468,7 @@ function Insights({ report }) {
             </p>
             <p className="mt-2 text-4xl font-extrabold">{anonymousRate}%</p>
             <p className="mt-2 text-sm leading-6 text-indigo-100">
-              {report?.anonymous_donations || 0} of{" "}
-              {report?.total_donations || 0} donations were made anonymously.
+              {formatNumber(report?.anonymous_donations || 0)} {t("of")} {formatNumber(report?.total_donations || 0)} {t("anonymousDonationsText")}
             </p>
           </article>
           <article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
@@ -1503,7 +1502,7 @@ function Insights({ report }) {
                 ))
               ) : (
                 <p className="py-5 text-center text-sm text-slate-400">
-                  No payment-method data yet.
+                  {t("noPaymentData")}
                 </p>
               )}
             </div>
@@ -1532,7 +1531,7 @@ const apiError = (error, fallback) => {
 };
 
 function AdminSettings({ user: sessionUser, onUserChange }) {
-  const { t, formatDate } = useLanguage();
+  const { language, t, formatDate } = useLanguage();
   const [profile, setProfile] = useState(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -1589,7 +1588,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
       setEditing(false);
       setProfileMessage(t("profileSaved"));
     } catch (error) {
-      setProfileMessage(apiError(error, t("profileSaveError")));
+      setProfileMessage(language === "my" ? t("profileSaveError") : apiError(error, t("profileSaveError")));
     } finally {
       setSaving(false);
     }
@@ -1613,10 +1612,10 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
         new_password: "",
         confirm_password: "",
       });
-      setPasswordMessage(data.detail || t("passwordUpdated"));
+      setPasswordMessage((language === "en" && data.detail) || t("passwordUpdated"));
     } catch (error) {
       setPasswordMessage(
-        apiError(error, t("passwordUpdateError")),
+        language === "my" ? t("passwordUpdateError") : apiError(error, t("passwordUpdateError")),
       );
     } finally {
       setChangingPassword(false);
@@ -1711,7 +1710,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
                 </p>
                 <h2 className="mt-2 text-xl font-extrabold">{t("adminDetails")}</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Your contact and public account information.
+                  {t("adminContactInfo")}
                 </p>
               </div>
               <button
@@ -1775,7 +1774,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
                   {t("updateAdminDetails")}
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Change the fields below, then save your updates.
+                  {t("adminEditHint")}
                 </p>
               </div>
               <span className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]">
@@ -1869,8 +1868,7 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
           </div>
           {profile.auth_provider === "google" && (
             <p className="mt-6 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-              This account uses Google Sign-In. Password changes are available
-              only when the account has a password.
+              {t("googlePasswordInfo")}
             </p>
           )}
           <div className="mt-7 grid gap-5 md:grid-cols-3">
@@ -2044,7 +2042,7 @@ export default function AdminDashboard() {
             ? {
                 ...item,
                 status,
-                status_label: status === "approved" ? "Approved" : "Rejected",
+                status_label: t(status),
               }
             : item,
         ),
@@ -2093,7 +2091,7 @@ export default function AdminDashboard() {
       const { data: refreshedReport } = await api.get("/reports/dashboard/");
       setReport(refreshedReport);
     } catch (requestError) {
-      setNotice(requestError.response?.data?.action?.[0] || t("campaignActionError"));
+      setNotice((language === "en" && requestError.response?.data?.action?.[0]) || t("campaignActionError"));
     }
   };
   const editCampaign = (campaign) => {
@@ -2109,15 +2107,15 @@ export default function AdminDashboard() {
     }
   }, [t]);
   const changeUser = useCallback(async (item, changes) => {
-    const action =
+    const actionKey =
       "role" in changes
         ? changes.role === "admin"
-          ? "promote this user to administrator"
-          : "change this administrator to donor"
+          ? "promoteAdmin"
+          : "changeDonor"
         : changes.is_active
-          ? "activate this account"
-          : "suspend this account";
-    if (!window.confirm(`Are you sure you want to ${action}?`)) return;
+          ? "activateAccount"
+          : "suspendAccount";
+    if (!window.confirm(`${t("confirmUserAction")} ${t(actionKey)}?`)) return;
     try {
       const { data } = await api.patch(
         `/auth/admin/users/${item.id}/`,
@@ -2129,13 +2127,13 @@ export default function AdminDashboard() {
         ),
       );
       if (selectedUser?.id === data.id) setSelectedUser(data);
-      setNotice(`User account updated successfully.`);
+      setNotice(t("userAccountUpdated"));
     } catch (error) {
       setNotice(
-        error.response?.data?.detail || t("userUpdateError"),
+        (language === "en" && error.response?.data?.detail) || t("userUpdateError"),
       );
     }
-  }, [selectedUser, t]);
+  }, [language, selectedUser, t]);
   const content = useMemo(
     () => ({
       overview: (

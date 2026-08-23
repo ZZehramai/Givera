@@ -22,7 +22,7 @@ const fallbackImage =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80";
 
 export default function CampaignDetailReference() {
-  const { t, formatKyat, formatDate } = useLanguage();
+  const { language, t, formatKyat, formatDate } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loadedAt] = useState(() => Date.now());
@@ -143,8 +143,8 @@ export default function CampaignDetailReference() {
       setUpdateMedia([]);
     } catch (requestError) {
       setUpdateError(
-        requestError.response?.data?.media?.[0] ||
-          requestError.response?.data?.detail ||
+        (language === "en" && (requestError.response?.data?.media?.[0] ||
+          requestError.response?.data?.detail)) ||
           t("updatePublishError"),
       );
     } finally {
@@ -170,8 +170,8 @@ export default function CampaignDetailReference() {
       setGalleryInputKey((value) => value + 1);
     } catch (requestError) {
       setGalleryError(
-        requestError.response?.data?.files?.[0] ||
-          requestError.response?.data?.detail ||
+        (language === "en" && (requestError.response?.data?.files?.[0] ||
+          requestError.response?.data?.detail)) ||
           t("mediaUploadError"),
       );
     } finally {
@@ -448,6 +448,7 @@ export default function CampaignDetailReference() {
 }
 
 function CoverChoices({ campaign, activeCover, setActiveCover }) {
+  const { t, formatNumber } = useLanguage();
   const covers = [
     campaign.cover_image,
     ...(campaign.cover_media || []).map((item) => item.file),
@@ -456,7 +457,7 @@ function CoverChoices({ campaign, activeCover, setActiveCover }) {
   return (
     <div
       className="mt-3 flex gap-2 overflow-x-auto pb-1"
-      aria-label="Campaign cover images"
+      aria-label={t("campaignCoverImagesLabel")}
     >
       {covers.map((cover, index) => (
         <button
@@ -464,7 +465,7 @@ function CoverChoices({ campaign, activeCover, setActiveCover }) {
           type="button"
           onClick={() => setActiveCover(cover)}
           className={`shrink-0 overflow-hidden rounded-lg border-2 ${activeCover === cover ? "border-[#6F52D9]" : "border-transparent opacity-70 hover:opacity-100"}`}
-          aria-label={`Show cover image ${index + 1}`}
+          aria-label={`${t("showCoverImage")} ${formatNumber(index + 1)}`}
         >
           <img
             src={mediaUrl(cover)}
@@ -625,7 +626,7 @@ function MediaTile({ item, canRemove, onRemove }) {
             <button
               type="button"
               onClick={() => onRemove(item.id)}
-              aria-label="Remove media"
+              aria-label={t("removeMediaLabel")}
               className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15 hover:bg-rose-500"
             >
               <Trash2 size={15} />
@@ -649,7 +650,7 @@ function EvidenceTile({ report }) {
         <a href={url} target="_blank" rel="noreferrer">
           <img
             src={url}
-            alt={`${report.title} evidence`}
+            alt={`${report.title} ${t("evidence")}`}
             className="aspect-video w-full object-cover"
           />
         </a>
@@ -668,7 +669,7 @@ function EvidenceTile({ report }) {
           className="grid aspect-video place-items-center bg-[#FFF4C7] text-[#755A08]"
         >
           <FileImage size={34} />
-          <span className="sr-only">Open evidence</span>
+          <span className="sr-only">{t("openEvidence")}</span>
         </a>
       )}
       <div className="flex items-center justify-between gap-3 px-4 py-3">

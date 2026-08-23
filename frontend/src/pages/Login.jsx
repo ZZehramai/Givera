@@ -11,7 +11,7 @@ const inputClass =
   "w-full rounded-2xl border border-outline-variant bg-white py-3.5 pl-12 pr-4 text-on-surface outline-none transition placeholder:text-on-surface-variant/55 focus:border-primary focus:ring-4 focus:ring-primary/10";
 
 export function Login() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
@@ -29,12 +29,14 @@ export function Login() {
       navigate("/dashboard");
     } catch (requestError) {
       const data = requestError.response?.data;
-      if (data?.non_field_errors) {
+      if (language === "my") {
+        setError(t("signInError"));
+      } else if (data?.non_field_errors) {
         setError(data.non_field_errors[0]);
       } else if (typeof data === "string") {
         setError(data);
       } else {
-        setError("We couldn’t sign you in. Check your email and password.");
+        setError(t("signInError"));
       }
     } finally {
       setLoading(false);
@@ -50,8 +52,8 @@ export function Login() {
       navigate("/dashboard");
     } catch (requestError) {
       setError(
-        requestError.response?.data?.detail ||
-          "Google sign-in didn’t work. Please try again.",
+        (language === "en" && requestError.response?.data?.detail) ||
+          t("googleSignInError"),
       );
     } finally {
       setLoading(false);
@@ -83,7 +85,7 @@ export function Login() {
               required
               autoComplete="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder={t("emailPlaceholder")}
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className={inputClass}
@@ -131,7 +133,7 @@ export function Login() {
       <div className="flex min-h-11 justify-center overflow-hidden rounded-full">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
-          onError={() => setError("Google sign-in was cancelled or failed.")}
+          onError={() => setError(t("googleSignInCancelled"))}
           useOneTap={false}
           shape="pill"
           size="large"

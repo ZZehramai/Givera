@@ -60,7 +60,7 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts, us
       <div className="flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_18px_45px_rgba(41,35,80,.09)] lg:h-[calc(100vh-2rem)]">
         {/* LOGO */}
         <div className="border-b border-slate-100 px-6 py-6">
-          <Link to="/" aria-label="Go to Givera home" className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F52D9]/30">
+          <Link to="/" aria-label={t("goGiveraHome")} className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F52D9]/30">
             <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">G</div>
             <div>
               <p className="text-xl font-extrabold tracking-tight text-[#24184a]">Givera</p>
@@ -192,7 +192,7 @@ function RecommendationsPanel({ recommendations, loading, onBrowse }) {
                 <span className="rounded-full bg-[#EEE9FF] px-2.5 py-1 text-[11px] font-extrabold text-[#6549C9]">
                   {t(reasonLabels[campaign.recommendation_reason] || "recommendActiveReason")}
                 </span>
-                <span className="text-[11px] font-bold text-slate-400">· {campaign.category_label}</span>
+                <span className="text-[11px] font-bold text-slate-400">· {t(campaign.category)}</span>
               </div>
               <CampaignCard campaign={campaign} />
             </div>
@@ -209,7 +209,7 @@ function RecommendationsPanel({ recommendations, loading, onBrowse }) {
 }
 
 function CampaignPagination({ page, pages, onPageChange, className = "" }) {
-  const { formatNumber } = useLanguage();
+  const { t, formatNumber } = useLanguage();
   return (
     <div className={`flex items-center justify-end gap-2 ${className}`}>
       <span className="mr-1 text-xs font-bold text-slate-400">
@@ -217,7 +217,7 @@ function CampaignPagination({ page, pages, onPageChange, className = "" }) {
       </span>
       <button
         type="button"
-        aria-label="Previous campaigns"
+        aria-label={t("previousCampaigns")}
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
         className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-[#B9A8F5] hover:text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-35"
@@ -226,7 +226,7 @@ function CampaignPagination({ page, pages, onPageChange, className = "" }) {
       </button>
       <button
         type="button"
-        aria-label="Next campaigns"
+        aria-label={t("nextCampaigns")}
         disabled={page >= pages}
         onClick={() => onPageChange(page + 1)}
         className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-[#B9A8F5] hover:text-[#6549C9] disabled:cursor-not-allowed disabled:opacity-35"
@@ -371,7 +371,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-bold text-slate-900 truncate">{item.title}</p>
                       <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${item.status === "approved" ? "bg-violet-100 text-[#6F52D9]" : "bg-slate-200 text-slate-700"}`}>
-                        {item.status === "approved" ? t("active") : item.status_label || item.status}
+                        {item.status === "approved" ? t("active") : t(item.status)}
                       </span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200/70">
@@ -543,7 +543,7 @@ function MyCampaignsPanel({
           <button
             type="button"
             onClick={onDismissSubmission}
-            aria-label="Dismiss confirmation"
+            aria-label={t("dismissConfirmation")}
             className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
           >
             <X size={18} />
