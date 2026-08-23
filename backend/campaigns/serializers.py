@@ -159,6 +159,15 @@ class CampaignManagementSerializer(serializers.Serializer):
         return attrs
 
 
+class CampaignRecommendationRequestSerializer(serializers.Serializer):
+    saved_campaign_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+        default=list,
+        max_length=100,
+    )
+
+
 class AdminCampaignSerializer(CampaignSerializer):
     owner_phone_number = serializers.CharField(source="owner.phone_number", read_only=True)
     owner_country = serializers.CharField(source="owner.country", read_only=True)

@@ -63,7 +63,7 @@ export default function GiveraChatbot() {
             <div className="space-y-3">
               {messages.map((message, index) => (
                 <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[86%] rounded-2xl px-3.5 py-2.5 text-sm leading-6 ${message.role === "user" ? "rounded-br-md bg-[#FFD66B] text-black" : "rounded-bl-md border border-[#E8E3F5] bg-[#DED4FF] text-black shadow-sm"}`}>
+                  <div className={`max-w-[86%] rounded-2xl px-3.5 py-2.5 text-sm leading-6 ${message.role === "user" ? "rounded-br-md bg-[#FFD66B] text-black" : "rounded-bl-md border border-[#DED4FF] bg-[#DED4FF] text-black shadow-sm"}`}>
                     {message.content}
                   </div>
                 </div>

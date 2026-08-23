@@ -109,10 +109,10 @@ export function LandingPage() {
                 {t("heroBadgeLong")}
               </div>
 
-               <h1 className="mt-7 text-4xl font-black uppercase tracking-tight text-slate-900 sm:text-6xl md:text-7xl xl:text-6xl leading-[0.95]">
+               <h3 className="mt-7 text-4xl font-black uppercase text-slate-900 sm:text-6xl md:text-7xl xl:text-6xl leading-[0.95]">
                 {t("heroHeadline")} <br />
                 <span className="text-primary">{t("byGiving")}</span>
-              </h1>
+              </h3>
               <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-on-surface-variant md:text-xl">
                 {t("heroDescription")}
               </p>
@@ -120,7 +120,7 @@ export function LandingPage() {
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>
                   <Link to="/campaigns" className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-9 py-4 font-bold text-white shadow-xl shadow-primary/25 transition hover:-translate-y-0.5">
-                    {t("startBrowsing")} <ArrowRight size={18} aria-hidden="true" />
+                    {t("startBrowsing")} 
                   </Link>
                 </motion.div>
               </div>
@@ -202,7 +202,7 @@ export function LandingPage() {
         <section className="relative overflow-hidden  rounded-t-[50%_10%] bg-gray-100 pb-28 pt-36">
           <div className="relative mx-auto max-w-container-max px-6">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">{t("impactTitle")}</h2>
+              <h3 className="mt-3 text-4xl font-extrabold text-slate-900 sm:text-5xl lg:text-6xl">{t("impactTitle")}</h3>
               <p className="mt-4 text-base leading-7 text-slate-700">
                 {t("impactDescription")}
               </p>
@@ -236,9 +236,9 @@ export function LandingPage() {
             {/* STYLISH SECTION HEADER */}
             <div className="mb-10 flex flex-wrap items-end justify-between gap-6 border-b border-slate-200/60 pb-8 dark:border-slate-800">
               <div className="max-w-2xl">
-                <h2 className="text-5xl font-bold text-slate-900 sm:text-5xl md:text-6xl">
+                <h3 className="text-4xl font-bold text-slate-900 sm:text-5xl md:text-5xl">
                    <span className="text-slate-900">{t("featuredCampaigns")}</span>
-                </h2>
+                </h3>
                 
                 <p className="mt-3 text-base font-medium leading-relaxed text-on-surface-variant md:text-lg">
                   {t("featuredDescription")}
@@ -248,10 +248,10 @@ export function LandingPage() {
               {/* Browse All Button */}
               <Link 
                 to="/campaigns" 
-                className="group inline-flex items-center gap-2.5 rounded-full border border-slate-300 bg-white px-6 py-3.5 text-sm font-bold text-slate-800 shadow-sm transition-all duration-300 hover:border-primary hover:bg-slate-50 hover:shadow-md"
+                className="group inline-flex items-center gap-2.5 rounded-full border border-slate-300 bg-white px-6 py-3.5 text-sm font-bold text-slate-800 shadow-sm transition-all duration-300 hover:border-primary hover:bg-[#6F52D9] hover:shadow-md hover:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
               >
                 <span>{t("browseAll")}</span>
-                <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1 text-primary" aria-hidden="true" />
+                {/* <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1 text-primary" aria-hidden="true" /> */}
               </Link>
             </div>
 
@@ -304,9 +304,9 @@ export function LandingPage() {
                     {t("communityProposals")}
                   </div>
 
-                  <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-352B0B][# md:text-5xl">
+                  <h3 className="mt-4 text-4xl font-extrabold text-352B0B][# md:text-5xl">
                     {t("directFunding")}
-                  </h2>
+                  </h3>
 
                   <p className="mt-3 text-base leading-relaxed text-slate-600 md:text-lg">
                     {t("proposalDescription")}
@@ -360,9 +360,9 @@ export function LandingPage() {
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
                 {t("donorJourney")}
               </p>
-              <h2 className="mt-1 text-3xl md:text-4xl font-extrabold text-on-surface">
+              <h3 className="mt-1 text-4xl md:text-5xl font-extrabold text-on-surface">
                 {t("threeSteps")}
-              </h2>
+              </h3>
               <p className="mx-auto mt-1.5 text-xs md:text-sm text-on-surface-variant max-w-lg leading-relaxed">
                 See how easy it is to turn your generosity into real-world change.
               </p>
@@ -455,7 +455,7 @@ export function LandingPage() {
             <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:gap-16">
               <div className="lg:sticky lg:top-28">
                 <p className="text-sm font-bold uppercase tracking-[0.11em] text-primary">{t("helpCentre")}</p>
-                <h2 className="mt-4 text-5xl font-extrabold tracking-tight text-black sm:text-6xl">{t("covered")}</h2>
+                <h3 className="mt-4 text-4xl font-extrabold text-black md:text-5xl sm:text-6xl">{t("covered")}</h3>
                 <p className="mt-5 max-w-md text-base leading-7 text-black/80">
                   {t("faqIntro")}
                 </p>
@@ -526,7 +526,7 @@ export function LandingPage() {
             <div className="flex flex-col gap-3 lg:col-span-1">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-7 w-7 text-primary" aria-hidden="true" />
-                <span className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                <span className="text-xl font-extrabold text-slate-900 dark:text-white">
                   Donation Transparent
                 </span>
               </div>
