@@ -21,6 +21,7 @@ import image1 from "../assets/image1.jpg";
 import image2 from "../assets/image2.avif";
 import AppHeader from "../components/AppHeader";
 import CampaignCard from "../components/CampaignCard";
+import GiveraChatbot from "../components/GiveraChatbot";
 import { useLanguage } from "../i18n/LanguageContext";
 
 const currentYear = new Date().getFullYear();
@@ -622,6 +623,7 @@ export function LandingPage() {
           </div>
         </div>
       </footer>
+      <GiveraChatbot />
     </div>
   );
 }

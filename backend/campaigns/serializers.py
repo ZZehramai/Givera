@@ -131,6 +131,34 @@ class CampaignReviewSerializer(serializers.Serializer):
         return attrs
 
 
+class CampaignManagementSerializer(serializers.Serializer):
+    action = serializers.ChoiceField(
+        choices=["unpublish", "republish", "close", "archive"]
+    )
+
+    def validate(self, attrs):
+        campaign = self.context["campaign"]
+        allowed_statuses = {
+            "unpublish": {Campaign.Status.APPROVED},
+            "republish": {Campaign.Status.UNPUBLISHED},
+            "close": {Campaign.Status.APPROVED, Campaign.Status.UNPUBLISHED},
+            "archive": {
+                Campaign.Status.DRAFT,
+                Campaign.Status.PENDING,
+                Campaign.Status.APPROVED,
+                Campaign.Status.REJECTED,
+                Campaign.Status.COMPLETED,
+                Campaign.Status.UNPUBLISHED,
+            },
+        }
+        action = attrs["action"]
+        if campaign.status not in allowed_statuses[action]:
+            raise serializers.ValidationError(
+                {"action": "This action is not available for the campaign's current status."}
+            )
+        return attrs
+
+
 class AdminCampaignSerializer(CampaignSerializer):
     owner_phone_number = serializers.CharField(source="owner.phone_number", read_only=True)
     owner_country = serializers.CharField(source="owner.country", read_only=True)

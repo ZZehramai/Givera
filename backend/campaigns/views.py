@@ -11,7 +11,7 @@ from accounts.models import Notification
 from accounts.permissions import IsAdmin
 
 from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization
-from .serializers import AdminCampaignSerializer, CampaignMediaSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer, MAX_CAMPAIGN_MEDIA_FILES, validate_campaign_cover_upload, validate_campaign_media_upload
+from .serializers import AdminCampaignSerializer, CampaignManagementSerializer, CampaignMediaSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer, MAX_CAMPAIGN_MEDIA_FILES, validate_campaign_cover_upload, validate_campaign_media_upload
 from .services import complete_campaign_if_due, complete_due_campaigns
 
 
@@ -92,8 +92,12 @@ class CampaignDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         campaign = self.get_object()
-        if campaign.owner != self.request.user:
+        is_admin = self.request.user.is_admin_role or self.request.user.is_staff
+        if campaign.owner != self.request.user and not is_admin:
             raise PermissionDenied("Only the campaign owner can edit this campaign.")
+        if is_admin:
+            serializer.save()
+            return
         if campaign.status not in {Campaign.Status.DRAFT, Campaign.Status.PENDING, Campaign.Status.REJECTED}:
             raise ValidationError("Approved or completed campaigns cannot be edited.")
         serializer.save(status=Campaign.Status.PENDING, rejection_reason="")
@@ -207,6 +211,46 @@ class CampaignReviewView(APIView):
                 link=f"/campaigns/{campaign.pk}",
             )
         return Response(CampaignSerializer(campaign).data, status=status.HTTP_200_OK)
+
+
+class CampaignManagementView(APIView):
+    permission_classes = [IsAdmin]
+
+    def patch(self, request, pk):
+        campaign = get_object_or_404(Campaign, pk=pk)
+        serializer = CampaignManagementSerializer(
+            data=request.data,
+            context={"campaign": campaign},
+        )
+        serializer.is_valid(raise_exception=True)
+        action = serializer.validated_data["action"]
+        next_status = {
+            "unpublish": Campaign.Status.UNPUBLISHED,
+            "republish": Campaign.Status.APPROVED,
+            "close": Campaign.Status.COMPLETED,
+            "archive": Campaign.Status.ARCHIVED,
+        }[action]
+        campaign.status = next_status
+        if action == "republish":
+            campaign.approved_at = timezone.now()
+        campaign.save(update_fields=["status", "approved_at", "updated_at"])
+
+        if campaign.owner != request.user:
+            action_labels = {
+                "unpublish": "unpublished",
+                "republish": "republished",
+                "close": "closed",
+                "archive": "archived",
+            }
+            Notification.objects.create(
+                recipient=campaign.owner,
+                type=Notification.Type.CAMPAIGN_UPDATE,
+                title=f"Campaign {action_labels[action]}",
+                message=f'“{campaign.title}” was {action_labels[action]} by a Givera administrator.',
+                link=f"/campaigns/{campaign.pk}",
+            )
+
+        return Response(AdminCampaignSerializer(campaign).data, status=status.HTTP_200_OK)
 
 
 class CampaignUpdateListCreateView(generics.ListCreateAPIView):

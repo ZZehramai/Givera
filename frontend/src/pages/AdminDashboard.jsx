@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  Archive,
   ArrowUpRight,
   BarChart3,
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
+  CircleStop,
   ClipboardCheck,
   Download,
   FileBarChart,
   FileSpreadsheet,
   FileText,
   Heart,
+  EyeOff,
   LayoutDashboard,
   LockKeyhole,
   LogOut,
@@ -19,7 +22,9 @@ import {
   MapPin,
   Megaphone,
   Phone,
+  Pencil,
   Plus,
+  RotateCcw,
   Save,
   Search,
   Settings,
@@ -45,6 +50,8 @@ const campaignTone = {
   pending: "bg-amber-50 text-amber-700 ring-amber-200",
   rejected: "bg-rose-50 text-rose-700 ring-rose-200",
   completed: "bg-violet-50 text-violet-700 ring-violet-200",
+  unpublished: "bg-orange-50 text-orange-700 ring-orange-200",
+  archived: "bg-slate-100 text-slate-600 ring-slate-300",
   draft: "bg-slate-100 text-slate-600 ring-slate-200",
 };
 
@@ -150,7 +157,7 @@ function MetricCard({ icon: Icon, label, value, note, tone }) {
   );
 }
 
-function ReviewModal({ campaign, onClose, onReview }) {
+function ReviewModal({ campaign, onClose, onReview, onEdit, onManage }) {
   const { t, formatDate, formatKyat } = useLanguage();
   const [reason, setReason] = useState("");
   return (
@@ -159,7 +166,7 @@ function ReviewModal({ campaign, onClose, onReview }) {
         <div className="flex items-start justify-between bg-[#25194B] px-7 py-6 text-white">
           <div>
             <p className="text-xs font-bold uppercase tracking-[.18em] text-[#D9CBFF]">
-              {t("campaignVerification")}
+              {campaign.status === "pending" ? t("campaignVerification") : t("campaignManagement")}
             </p>
             <h2 className="mt-2 text-2xl font-extrabold">{campaign.title}</h2>
           </div>
@@ -210,43 +217,80 @@ function ReviewModal({ campaign, onClose, onReview }) {
           </div>
         </div>
         <div className="border-t border-slate-100 bg-slate-50/70 px-7 py-5">
-          <label className="text-sm font-bold text-slate-700">
-            {t("rejectionFeedback")}{" "}
-            <span className="font-normal text-slate-400">
-              ({t("requiredRejecting")})
-            </span>
-            <textarea
-              rows={2}
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              placeholder={t("feedbackPlaceholder")}
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#7A5BE6]"
-            />
-          </label>
-          <div className="mt-4 flex flex-wrap justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500"
-            >
-              {t("cancel")}
-            </button>
-            <button
-              type="button"
-              disabled={!reason.trim()}
-              onClick={() => onReview(campaign, "rejected", reason)}
-              className="rounded-xl bg-rose-100 px-4 py-2.5 text-sm font-bold text-rose-700 disabled:opacity-40"
-            >
-              {t("requestChanges")}
-            </button>
-            <button
-              type="button"
-              onClick={() => onReview(campaign, "approved")}
-              className="rounded-xl bg-[#6F52D9] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/20"
-            >
-              {t("approveCampaign")}
-            </button>
-          </div>
+          {campaign.status === "pending" ? (
+            <>
+              <label className="text-sm font-bold text-slate-700">
+                {t("rejectionFeedback")}{" "}
+                <span className="font-normal text-slate-400">
+                  ({t("requiredRejecting")})
+                </span>
+                <textarea
+                  rows={2}
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                  placeholder={t("feedbackPlaceholder")}
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#7A5BE6]"
+                />
+              </label>
+              <div className="mt-4 flex flex-wrap justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500"
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="button"
+                  disabled={!reason.trim()}
+                  onClick={() => onReview(campaign, "rejected", reason)}
+                  className="rounded-xl bg-rose-100 px-4 py-2.5 text-sm font-bold text-rose-700 disabled:opacity-40"
+                >
+                  {t("requestChanges")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onReview(campaign, "approved")}
+                  className="rounded-xl bg-[#6F52D9] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/20"
+                >
+                  {t("approveCampaign")}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.14em] text-slate-400">
+                {t("campaignManagement")}
+              </p>
+              <div className="mt-3 flex flex-wrap justify-end gap-2">
+                {["approved", "unpublished"].includes(campaign.status) && (
+                  <button type="button" onClick={() => onEdit(campaign)} className="inline-flex items-center gap-2 rounded-xl border border-[#D9D0FA] bg-white px-4 py-2.5 text-sm font-bold text-[#6549C9]">
+                    <Pencil size={16} /> {t("editCampaign")}
+                  </button>
+                )}
+                {campaign.status === "approved" && (
+                  <button type="button" onClick={() => onManage(campaign, "unpublish")} className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-4 py-2.5 text-sm font-bold text-amber-800">
+                    <EyeOff size={16} /> {t("unpublish")}
+                  </button>
+                )}
+                {campaign.status === "unpublished" && (
+                  <button type="button" onClick={() => onManage(campaign, "republish")} className="inline-flex items-center gap-2 rounded-xl bg-emerald-100 px-4 py-2.5 text-sm font-bold text-emerald-700">
+                    <RotateCcw size={16} /> {t("republish")}
+                  </button>
+                )}
+                {["approved", "unpublished"].includes(campaign.status) && (
+                  <button type="button" onClick={() => onManage(campaign, "close")} className="inline-flex items-center gap-2 rounded-xl bg-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700">
+                    <CircleStop size={16} /> {t("closeCampaign")}
+                  </button>
+                )}
+                {campaign.status !== "archived" && (
+                  <button type="button" onClick={() => onManage(campaign, "archive")} className="inline-flex items-center gap-2 rounded-xl bg-rose-100 px-4 py-2.5 text-sm font-bold text-rose-700">
+                    <Archive size={16} /> {t("archive")}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -264,7 +308,7 @@ function Info({ label, value }) {
   );
 }
 
-function CreateCampaignModal({ onClose, onCreated }) {
+function CreateCampaignModal({ campaignId, onClose, onSaved }) {
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -301,7 +345,7 @@ function CreateCampaignModal({ onClose, onCreated }) {
           <X size={19} />
         </button>
         <div className="-mt-14">
-          <CreateCampaign embedded onSuccess={onCreated} />
+          <CreateCampaign embedded campaignId={campaignId} onSuccess={onSaved} />
         </div>
       </section>
     </div>
@@ -376,15 +420,13 @@ function Campaigns({ campaigns, page, onPageChange, onReview, onView }) {
                     >
                       {t("viewDetails")}
                     </button>
-                    {campaign.status === "pending" && (
-                      <button
-                        type="button"
-                        onClick={() => onReview(campaign)}
-                        className="rounded-xl bg-[#F0ECFF] px-3 py-2 text-xs font-bold text-[#6549C9] hover:bg-[#E3DBFF]"
-                      >
-                        {t("review")}
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => onReview(campaign)}
+                      className="rounded-xl bg-[#F0ECFF] px-3 py-2 text-xs font-bold text-[#6549C9] hover:bg-[#E3DBFF]"
+                    >
+                      {campaign.status === "pending" ? t("review") : t("manage")}
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -1924,6 +1966,7 @@ export default function AdminDashboard() {
   );
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [creatingCampaign, setCreatingCampaign] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -2023,9 +2066,11 @@ export default function AdminDashboard() {
       setNotice(t("reviewSaveError"));
     }
   };
-  const campaignCreated = async (campaign) => {
+  const campaignSaved = async (campaign) => {
+    const wasEditing = Boolean(editingCampaign);
     setCreatingCampaign(false);
-    setNotice(`${t("campaignPublished")}: “${campaign.title}”`);
+    setEditingCampaign(null);
+    setNotice(`${t(wasEditing ? "campaignUpdated" : "campaignPublished")}: “${campaign.title}”`);
     try {
       const [reportResponse, campaignResponse] = await Promise.all([
         api.get("/reports/dashboard/"),
@@ -2037,6 +2082,23 @@ export default function AdminDashboard() {
     } catch {
       setNotice(t("dashboardLoadError"));
     }
+  };
+  const manageCampaign = async (campaign, action) => {
+    if (!window.confirm(`${t("confirmCampaignAction")} “${campaign.title}”?`)) return;
+    try {
+      const { data } = await api.patch(`/campaigns/${campaign.id}/manage/`, { action });
+      setCampaigns((items) => items.map((item) => item.id === data.id ? data : item));
+      setSelectedCampaign(null);
+      setNotice(`${t("campaignActionSaved")}: “${campaign.title}”`);
+      const { data: refreshedReport } = await api.get("/reports/dashboard/");
+      setReport(refreshedReport);
+    } catch (requestError) {
+      setNotice(requestError.response?.data?.action?.[0] || t("campaignActionError"));
+    }
+  };
+  const editCampaign = (campaign) => {
+    setSelectedCampaign(null);
+    setEditingCampaign(campaign);
   };
   const viewUser = useCallback(async (item) => {
     try {
@@ -2207,6 +2269,8 @@ export default function AdminDashboard() {
           campaign={selectedCampaign}
           onClose={() => setSelectedCampaign(null)}
           onReview={review}
+          onEdit={editCampaign}
+          onManage={manageCampaign}
         />
       )}
       {selectedUser && (
@@ -2217,10 +2281,14 @@ export default function AdminDashboard() {
           onChange={changeUser}
         />
       )}
-      {creatingCampaign && (
+      {(creatingCampaign || editingCampaign) && (
         <CreateCampaignModal
-          onClose={() => setCreatingCampaign(false)}
-          onCreated={campaignCreated}
+          campaignId={editingCampaign?.id}
+          onClose={() => {
+            setCreatingCampaign(false);
+            setEditingCampaign(null);
+          }}
+          onSaved={campaignSaved}
         />
       )}
     </div>

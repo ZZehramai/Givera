@@ -20,6 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
+GROQ_WRITING_MODEL = os.getenv("GROQ_WRITING_MODEL", "openai/gpt-oss-20b").strip()
 
 
 # Quick-start development settings - unsuitable for production

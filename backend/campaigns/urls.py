@@ -15,4 +15,5 @@ urlpatterns = [
     path("<uuid:pk>/fund-utilization/", views.FundUtilizationListCreateView.as_view(), name="fund-utilization"),
     path("<uuid:pk>/fund-utilization/<uuid:utilization_pk>/review/", views.FundUtilizationReviewView.as_view(), name="fund-utilization-review"),
     path("<uuid:pk>/review/", views.CampaignReviewView.as_view(), name="campaign-review"),
+    path("<uuid:pk>/manage/", views.CampaignManagementView.as_view(), name="campaign-management"),
 ]

@@ -23,6 +23,8 @@ class Campaign(models.Model):
         APPROVED = "approved", "Approved"
         REJECTED = "rejected", "Rejected"
         COMPLETED = "completed", "Completed"
+        UNPUBLISHED = "unpublished", "Unpublished"
+        ARCHIVED = "archived", "Archived"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(
