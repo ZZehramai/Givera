@@ -1,5 +1,5 @@
 import { GoogleLogin } from "@react-oauth/google";
-import { ArrowLeft, Heart, LockKeyhole, Mail } from "lucide-react";
+import { ArrowLeft, LockKeyhole, Mail } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -105,7 +105,10 @@ export function Login() {
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm font-bold">{t("password")}</span>
+          <span className="mb-2 flex items-center justify-between gap-3">
+            <span className="text-sm font-bold">{t("password")}</span>
+            <Link to="/forgot-password" className="text-xs font-bold text-primary transition hover:underline">{t("forgotPassword")}</Link>
+          </span>
           <span className="relative block">
             <LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" size={19} aria-hidden="true" />
             <input

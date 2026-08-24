@@ -1,10 +1,15 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError
 from django.db.models import Count, DecimalField, IntegerField, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, status, permissions
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -19,10 +24,10 @@ from .serializers import (
     ResetPasswordSerializer, AdminUserDetailSerializer, AdminUserSerializer,
     AdminUserUpdateSerializer, tokens_for_user,
 )
-from .models import AdminUserAction, Notification, PasswordResetOTP
+from .models import AdminUserAction, Notification
 from .permissions import IsAdmin
 from .google_auth import verify_google_token
-from .utils import generate_otp, send_password_reset_email, send_welcome_email
+from .utils import send_password_reset_email, send_welcome_email
 
 User = get_user_model()
 
@@ -305,31 +310,32 @@ class ChangePasswordView(APIView):
 
 
 class ForgotPasswordView(APIView):
-    """Step 1: request an OTP code sent to the user's email."""
+    """Email a secure reset link without revealing whether an account exists."""
     permission_classes = [permissions.AllowAny]
-    throttle_scope = 'auth'
+    throttle_scope = 'password_reset'
 
     def post(self, request):
         serializer = ForgotPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
 
-        try:
-            user = User.objects.get(email__iexact=email)
-        except User.DoesNotExist:
-            # Don't reveal whether the email exists
-            return Response({'detail': 'If that email exists, a reset code has been sent.'})
+        user = User.objects.filter(email__iexact=email, is_active=True).first()
+        # Google-created accounts start without a local password. They should
+        # still be able to use account recovery to create one and then sign in
+        # with either Google or their verified email address.
+        if user:
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_url = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password?uid={uid}&token={token}"
+            send_password_reset_email(user, reset_url)
 
-        code = generate_otp()
-        PasswordResetOTP.objects.create(user=user, code=code)
-        send_password_reset_email(user, code)
-        return Response({'detail': 'If that email exists, a reset code has been sent.'})
+        return Response({'detail': 'If that email exists, a password reset link has been sent.'})
 
 
 class ResetPasswordView(APIView):
-    """Step 2: verify OTP and set a new password."""
+    """Validate the emailed reset token and set a new password."""
     permission_classes = [permissions.AllowAny]
-    throttle_scope = 'auth'
+    throttle_scope = 'password_reset'
 
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
@@ -337,16 +343,17 @@ class ResetPasswordView(APIView):
         data = serializer.validated_data
 
         try:
-            user = User.objects.get(email__iexact=data['email'])
-            otp = user.reset_otps.filter(code=data['code']).latest('created_at')
-        except (User.DoesNotExist, PasswordResetOTP.DoesNotExist):
-            return Response({'detail': 'Invalid code.'}, status=status.HTTP_400_BAD_REQUEST)
+            user_id = force_str(urlsafe_base64_decode(data['uid']))
+            user = User.objects.get(pk=user_id, is_active=True)
+        except (TypeError, ValueError, OverflowError, ValidationError, User.DoesNotExist):
+            user = None
 
-        if not otp.is_valid():
-            return Response({'detail': 'This code has expired or was already used.'}, status=status.HTTP_400_BAD_REQUEST)
+        if user is None or not default_token_generator.check_token(user, data['token']):
+            return Response(
+                {'detail': 'This password reset link is invalid or has expired.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         user.set_password(data['new_password'])
-        user.save()
-        otp.is_used = True
-        otp.save(update_fields=['is_used'])
+        user.save(update_fields=['password'])
         return Response({'detail': 'Password reset successfully. You can now log in.'})
