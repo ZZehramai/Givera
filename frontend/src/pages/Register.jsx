@@ -1,8 +1,9 @@
-import { ArrowLeft, AtSign, Heart, LockKeyhole, Mail, UserRound } from "lucide-react";
+import { ArrowLeft, AtSign, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import api from "../api/axios";
+import PasswordInput from "../components/PasswordInput";
 import { useLanguage } from "../i18n/LanguageContext";
 
 const inputClass =
@@ -18,13 +19,18 @@ const initialForm = {
 };
 
 function Field({ label, icon: Icon, ...inputProps }) {
+  const isPassword = inputProps.type === "password";
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-bold">{label}</span>
-      <span className="relative block">
-        <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" size={19} aria-hidden="true" />
-        <input {...inputProps} className={inputClass} />
-      </span>
+      {isPassword ? (
+        <PasswordInput {...inputProps} leadingIcon={Icon} className={inputClass} />
+      ) : (
+        <span className="relative block">
+          <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" size={19} aria-hidden="true" />
+          <input {...inputProps} className={inputClass} />
+        </span>
+      )}
     </label>
   );
 }

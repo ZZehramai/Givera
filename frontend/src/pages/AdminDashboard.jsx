@@ -39,6 +39,7 @@ import {
 import api from "../api/axios";
 import { logout } from "../services/authService";
 import LanguageSwitch from "../components/LanguageSwitch";
+import PasswordInput from "../components/PasswordInput";
 import { useLanguage } from "../i18n/LanguageContext";
 import CreateCampaign from "./CreateCampaign";
 
@@ -1879,10 +1880,10 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
             ].map(([label, name]) => (
               <label key={name} className="text-sm font-bold text-slate-700">
                 {label}
-                <input
+                <PasswordInput
                   required
-                  type="password"
                   minLength={8}
+                  leadingIcon={null}
                   autoComplete={
                     name === "old_password"
                       ? "current-password"

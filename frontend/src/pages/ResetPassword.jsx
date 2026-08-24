@@ -1,8 +1,9 @@
-import { ArrowLeft, LockKeyhole } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import api from "../api/axios";
+import PasswordInput from "../components/PasswordInput";
 import { useLanguage } from "../i18n/LanguageContext";
 
 const inputClass = "w-full rounded-2xl border border-outline-variant bg-white py-3.5 pl-12 pr-4 outline-none transition placeholder:text-on-surface-variant/55 focus:border-primary focus:ring-4 focus:ring-primary/10";
@@ -59,8 +60,8 @@ export default function ResetPassword() {
           </div>
         ) : (
           <form onSubmit={submit} className="mt-8 space-y-5">
-            <label className="block"><span className="mb-2 block text-sm font-bold">{t("newPassword")}</span><span className="relative block"><LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" size={19} aria-hidden="true" /><input required autoFocus autoComplete="new-password" type="password" minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t("createPassword")} className={inputClass} /></span></label>
-            <label className="block"><span className="mb-2 block text-sm font-bold">{t("confirmNewPassword")}</span><span className="relative block"><LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" size={19} aria-hidden="true" /><input required autoComplete="new-password" type="password" minLength={8} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder={t("repeatPassword")} className={inputClass} /></span></label>
+            <label className="block"><span className="mb-2 block text-sm font-bold">{t("newPassword")}</span><PasswordInput required autoFocus autoComplete="new-password" minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t("createPassword")} className={inputClass} /></label>
+            <label className="block"><span className="mb-2 block text-sm font-bold">{t("confirmNewPassword")}</span><PasswordInput required autoComplete="new-password" minLength={8} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder={t("repeatPassword")} className={inputClass} /></label>
             <p className="text-xs leading-5 text-on-surface-variant">{t("passwordHelp")}</p>
             {error && <div role="alert" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div>}
             <button disabled={loading} className="w-full rounded-2xl bg-primary px-6 py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-55">{loading ? t("resettingPassword") : t("resetPassword")}</button>
