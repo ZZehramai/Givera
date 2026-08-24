@@ -3,7 +3,7 @@ from pathlib import Path
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization
+from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization, Comment
 
 
 MAX_CAMPAIGN_MEDIA_SIZE = 25 * 1024 * 1024
@@ -218,3 +218,11 @@ class FundUtilizationReviewSerializer(serializers.Serializer):
         if attrs["status"] == FundUtilization.Status.REJECTED and not attrs.get("review_note", "").strip():
             raise serializers.ValidationError({"review_note": "Explain what needs to be changed."})
         return attrs
+
+class CommentSerializer(serializers.ModelSerializer):
+    author_name = serializers.ReadOnlyField(source='author.username')
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'campaign', 'author', 'author_name', 'content', 'created_at']
+        read_only_fields = ['author', 'campaign']
