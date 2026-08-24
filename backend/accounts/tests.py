@@ -229,6 +229,44 @@ class ProfileApiTests(APITestCase):
         self.assertEqual(staff_user.role, User.Role.ADMIN)
 
 
+class DonorChangePasswordApiTests(APITestCase):
+    def setUp(self):
+        self.donor = User.objects.create_user(
+            email="password-donor@example.com",
+            username="password-donor",
+            password="OriginalPassword123!",
+        )
+        self.client.force_authenticate(self.donor)
+
+    def test_donor_can_change_password(self):
+        response = self.client.post(
+            reverse("change-password"),
+            {
+                "old_password": "OriginalPassword123!",
+                "new_password": "NewStrongPassword456!",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.donor.refresh_from_db()
+        self.assertTrue(self.donor.check_password("NewStrongPassword456!"))
+
+    def test_donor_cannot_change_password_with_wrong_current_password(self):
+        response = self.client.post(
+            reverse("change-password"),
+            {
+                "old_password": "WrongPassword123!",
+                "new_password": "NewStrongPassword456!",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.donor.refresh_from_db()
+        self.assertTrue(self.donor.check_password("OriginalPassword123!"))
+
+
 class AdminUserManagementApiTests(APITestCase):
     def setUp(self):
         self.admin = User.objects.create_user(

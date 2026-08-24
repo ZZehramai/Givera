@@ -10,6 +10,7 @@ import {
   Heart,
   History,
   LayoutDashboard,
+  LockKeyhole,
   LogOut,
   Mail,
   MapPin,
@@ -35,6 +36,7 @@ import CampaignCard from "../components/CampaignCard";
 import { logout } from "../services/authService";
 import AdminDashboard from "./AdminDashboard";
 import LanguageSwitch from "../components/LanguageSwitch";
+import PasswordInput from "../components/PasswordInput";
 import { useLanguage } from "../i18n/LanguageContext";
 
 const money = (value) => {
@@ -649,12 +651,19 @@ function MyCampaignsPanel({
 }
 
 function ProfilePanel() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [user, setUser] = useState(null);
   const [form, setForm] = useState({ username: "", email: "", phone_number: "", country: "" });
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [passwords, setPasswords] = useState({
+    old_password: "",
+    new_password: "",
+    confirm_password: "",
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordNotice, setPasswordNotice] = useState({ text: "", success: false });
 
   useEffect(() => {
     api.get("/auth/profile/")
@@ -684,6 +693,34 @@ function ProfilePanel() {
       setMessage(t("profileUpdateError"));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const changePassword = async (event) => {
+    event.preventDefault();
+    setPasswordNotice({ text: "", success: false });
+    if (passwords.new_password !== passwords.confirm_password) {
+      setPasswordNotice({ text: t("passwordMismatch"), success: false });
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      await api.post("/auth/change-password/", {
+        old_password: passwords.old_password,
+        new_password: passwords.new_password,
+      });
+      setPasswords({ old_password: "", new_password: "", confirm_password: "" });
+      setPasswordNotice({ text: t("passwordUpdated"), success: true });
+    } catch (error) {
+      const data = error.response?.data;
+      const detail = data?.old_password || data?.detail || data?.new_password?.[0];
+      setPasswordNotice({
+        text: language === "en" && typeof detail === "string" ? detail : t("passwordUpdateError"),
+        success: false,
+      });
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -721,6 +758,7 @@ function ProfilePanel() {
           </div>
         </aside>
 
+        <div className="space-y-6">
         <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <div className="flex flex-col gap-3 border-b border-slate-100 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -760,6 +798,65 @@ function ProfilePanel() {
             </div>
           )}
         </section>
+        <form
+          onSubmit={changePassword}
+          className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.14em] text-[#6F52D9]">{t("security")}</p>
+              <h2 className="mt-2 text-xl font-extrabold text-slate-800">{t("changePassword")}</h2>
+              <p className="mt-1 text-sm text-slate-500">{t("strongPassword")}</p>
+            </div>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#FFF4C8] text-amber-700">
+              <LockKeyhole size={20} />
+            </span>
+          </div>
+
+          {user.auth_provider === "google" && (
+            <p className="mt-5 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {t("googlePasswordInfo")} {" "}
+              <Link to="/forgot-password" className="font-bold underline">{t("requestNewLink")}</Link>
+            </p>
+          )}
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {[
+              [t("currentPassword"), "old_password", "current-password"],
+              [t("newPassword"), "new_password", "new-password"],
+              [t("confirmNewPassword"), "confirm_password", "new-password"],
+            ].map(([label, name, autoComplete]) => (
+              <label key={name} className="block text-sm font-bold text-slate-700">
+                <span className="mb-2 block">{label}</span>
+                <PasswordInput
+                  required
+                  minLength={8}
+                  leadingIcon={null}
+                  autoComplete={autoComplete}
+                  value={passwords[name]}
+                  onChange={(event) => setPasswords((current) => ({ ...current, [name]: event.target.value }))}
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-normal outline-none focus:border-[#7A5BE6] focus:ring-2 focus:ring-violet-100"
+                />
+              </label>
+            ))}
+          </div>
+
+          {passwordNotice.text && (
+            <p role="status" className={`mt-4 rounded-xl px-4 py-3 text-sm font-bold ${passwordNotice.success ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+              {passwordNotice.text}
+            </p>
+          )}
+
+          <div className="mt-5 flex justify-end">
+            <button
+              disabled={changingPassword}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#6F52D9] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <LockKeyhole size={17} /> {changingPassword ? t("updating") : t("updatePassword")}
+            </button>
+          </div>
+        </form>
+        </div>
       </div>
     </motion.section>
   );

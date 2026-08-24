@@ -2,16 +2,15 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   FileImage,
   Heart,
-  ImagePlus,
   LockKeyhole,
   Paperclip,
   Send,
   Share2,
   Sparkles,
-  Trash2,
-  Upload,
   X,
 } from "lucide-react";
 import api from "../api/axios";
@@ -31,6 +30,7 @@ export default function CampaignDetailReference() {
   const [donors, setDonors] = useState([]);
   const [updates, setUpdates] = useState([]);
   const [reports, setReports] = useState([]);
+  const [reportIndex, setReportIndex] = useState(0);
   const [activeCover, setActiveCover] = useState("");
   const [amount, setAmount] = useState("");
   const [provider, setProvider] = useState("kbzpay");
@@ -45,11 +45,6 @@ export default function CampaignDetailReference() {
   const [updateMedia, setUpdateMedia] = useState([]);
   const [updateError, setUpdateError] = useState("");
   const [updateBusy, setUpdateBusy] = useState(false);
-  const [galleryFiles, setGalleryFiles] = useState([]);
-  const [galleryCaption, setGalleryCaption] = useState("");
-  const [galleryError, setGalleryError] = useState("");
-  const [galleryBusy, setGalleryBusy] = useState(false);
-  const [galleryInputKey, setGalleryInputKey] = useState(0);
   const [reportForm, setReportForm] = useState({
     title: "",
     description: "",
@@ -74,6 +69,7 @@ export default function CampaignDetailReference() {
     setDonors(b.data);
     setUpdates(c.data);
     setReports(d.data);
+    setReportIndex(0);
     setReportForm((current) => ({
       ...current,
       amount_spent:
@@ -152,47 +148,6 @@ export default function CampaignDetailReference() {
       setUpdateBusy(false);
     }
   };
-  const uploadGalleryMedia = async (event) => {
-    event.preventDefault();
-    if (!galleryFiles.length) return setGalleryError(t("chooseMedia"));
-    setGalleryBusy(true);
-    setGalleryError("");
-    const form = new FormData();
-    galleryFiles.forEach((file) => form.append("files", file));
-    if (galleryCaption.trim()) form.append("caption", galleryCaption.trim());
-    try {
-      const { data } = await api.post(`/campaigns/${id}/media/`, form);
-      setCampaign((current) => ({
-        ...current,
-        gallery_media: [...data, ...(current.gallery_media || [])],
-      }));
-      setGalleryFiles([]);
-      setGalleryCaption("");
-      setGalleryInputKey((value) => value + 1);
-    } catch (requestError) {
-      setGalleryError(
-        (language === "en" && (requestError.response?.data?.files?.[0] ||
-          requestError.response?.data?.detail)) ||
-          t("mediaUploadError"),
-      );
-    } finally {
-      setGalleryBusy(false);
-    }
-  };
-  const removeGalleryMedia = async (mediaId) => {
-    if (!window.confirm(t("removeMediaConfirm"))) return;
-    try {
-      await api.delete(`/campaigns/${id}/media/${mediaId}/`);
-      setCampaign((current) => ({
-        ...current,
-        gallery_media: (current.gallery_media || []).filter(
-          (item) => item.id !== mediaId,
-        ),
-      }));
-    } catch {
-      setGalleryError(t("removeMediaError"));
-    }
-  };
   const publishReport = async (event) => {
     event.preventDefault();
     setReportError("");
@@ -213,6 +168,7 @@ export default function CampaignDetailReference() {
         form,
       );
       setReports((items) => [data, ...items]);
+      setReportIndex(0);
       setReportForm({
         title: "",
         description: "",
@@ -280,21 +236,6 @@ export default function CampaignDetailReference() {
               setActiveCover={setActiveCover}
             />
 
-            <CampaignGallery
-              items={campaign.gallery_media || []}
-              reports={reports}
-              isOrganizer={isOrganizer}
-              files={galleryFiles}
-              setFiles={setGalleryFiles}
-              caption={galleryCaption}
-              setCaption={setGalleryCaption}
-              inputKey={galleryInputKey}
-              busy={galleryBusy}
-              error={galleryError}
-              onUpload={uploadGalleryMedia}
-              onRemove={removeGalleryMedia}
-            />
-
             <section className="mt-12">
               <h3 className="text-3xl font-extrabold">{t("mission")}</h3>
               <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">
@@ -311,23 +252,42 @@ export default function CampaignDetailReference() {
 
             <CampaignUpdates
               updates={updates}
-              isOrganizer={isOrganizer}
-              title={updateTitle}
-              setTitle={setUpdateTitle}
-              body={updateBody}
-              setBody={setUpdateBody}
-              media={updateMedia}
-              setMedia={setUpdateMedia}
-              busy={updateBusy}
-              error={updateError}
-              onSubmit={publishUpdate}
             />
 
             <section className="mt-10">
-              <h3 className="text-3xl font-extrabold">{t("fundsUsed")}</h3>
-              <p className="mt-2 text-sm text-slate-600">
-                {t("reportsTransparency")}
-              </p>
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <h3 className="text-3xl font-extrabold">{t("fundsUsed")}</h3>
+                  <p className="mt-2 text-sm text-slate-600">
+                    {t("reportsTransparency")}
+                  </p>
+                </div>
+                {reports.length > 1 && (
+                  <div className="flex items-center gap-2">
+                    <span className="mr-1 text-xs font-bold text-slate-500">
+                      {reportIndex + 1} / {reports.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setReportIndex((index) => Math.max(0, index - 1))}
+                      disabled={reportIndex === 0}
+                      aria-label={t("previousReport")}
+                      className="grid h-10 w-10 place-items-center rounded-full border border-[#D9CEFF] bg-white text-[#6549C9] shadow-sm transition hover:bg-[#F1EDFF] disabled:cursor-not-allowed disabled:opacity-35"
+                    >
+                      <ChevronLeft size={19} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReportIndex((index) => Math.min(reports.length - 1, index + 1))}
+                      disabled={reportIndex === reports.length - 1}
+                      aria-label={t("nextReport")}
+                      className="grid h-10 w-10 place-items-center rounded-full border border-[#D9CEFF] bg-white text-[#6549C9] shadow-sm transition hover:bg-[#F1EDFF] disabled:cursor-not-allowed disabled:opacity-35"
+                    >
+                      <ChevronRight size={19} />
+                    </button>
+                  </div>
+                )}
+              </div>
               {isAdmin && (
                 <AdminReportForm
                   form={reportForm}
@@ -337,33 +297,11 @@ export default function CampaignDetailReference() {
                 />
               )}
               {reports.length ? (
-                <div className="mt-5 space-y-3">
-                  {reports.map((report) => (
-                    <article
-                      key={report.id}
-                      className="rounded-xl bg-white p-5 shadow-sm"
-                    >
-                      <h3 className="font-extrabold">{report.title}</h3>
-                      <p className="mt-1 text-xs font-bold text-[#6F52D9]">
-                        {formatKyat(report.amount_spent)} ·{" "}
-                        {formatDate(report.spent_on)}
-                      </p>
-                      <p className="mt-3 text-sm leading-6 text-slate-600">
-                        {report.description}
-                      </p>
-                      {report.evidence && (
-                        <a
-                          href={mediaUrl(report.evidence)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#6F52D9]"
-                        >
-                          <FileImage size={16} /> {t("viewEvidence")}
-                        </a>
-                      )}
-                    </article>
-                  ))}
-                </div>
+                <SpendingReportCard
+                  report={reports[reportIndex]}
+                  formatKyat={formatKyat}
+                  formatDate={formatDate}
+                />
               ) : (
                 <p className="mt-5 rounded-xl bg-[#F1EDFF] p-5 text-sm text-slate-600">
                   {t("noReports")}
@@ -435,6 +373,19 @@ export default function CampaignDetailReference() {
                 </div>
               </div>
             </div>
+            {isOrganizer && (
+              <UpdateForm
+                title={updateTitle}
+                setTitle={setUpdateTitle}
+                body={updateBody}
+                setBody={setUpdateBody}
+                media={updateMedia}
+                setMedia={setUpdateMedia}
+                busy={updateBusy}
+                error={updateError}
+                onSubmit={publishUpdate}
+              />
+            )}
           </aside>
         </div>
       </main>
@@ -484,123 +435,7 @@ function CoverChoices({ campaign, activeCover, setActiveCover }) {
   );
 }
 
-function CampaignGallery({
-  items,
-  reports,
-  isOrganizer,
-  files,
-  setFiles,
-  caption,
-  setCaption,
-  inputKey,
-  busy,
-  error,
-  onUpload,
-  onRemove,
-}) {
-  const { t, formatNumber } = useLanguage();
-  const evidence = reports.filter((report) => report.evidence);
-  const hasContent = items.length > 0 || evidence.length > 0;
-
-  return (
-    <section className="mt-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-[#6F52D9]">
-            {t("photosEvidence")}
-          </p>
-          <h3 className="mt-1 text-3xl font-extrabold">
-            {t("campaignGallery")}
-          </h3>
-          <p className="mt-2 text-sm text-slate-600">
-            {t("galleryDescription")}
-          </p>
-        </div>
-        {hasContent && (
-          <span className="rounded-full bg-[#EEE9FF] px-3 py-1 text-xs font-extrabold text-[#6549C9]">
-            {formatNumber(items.length + evidence.length)} {t("galleryItems")}
-          </span>
-        )}
-      </div>
-      {hasContent ? (
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          {items.map((item) => (
-            <MediaTile
-              key={item.id}
-              item={item}
-              canRemove={isOrganizer}
-              onRemove={onRemove}
-            />
-          ))}
-          {evidence.map((report) => (
-            <EvidenceTile key={`evidence-${report.id}`} report={report} />
-          ))}
-        </div>
-      ) : (
-        <div className="mt-5 rounded-xl border border-dashed border-[#CFC4F7] bg-white/60 px-5 py-8 text-center">
-          <ImagePlus className="mx-auto text-[#8066DE]" size={28} />
-          <p className="mt-3 text-sm font-extrabold">{t("noGallery")}</p>
-          <p className="mt-1 text-xs text-slate-500">{t("noGalleryText")}</p>
-        </div>
-      )}
-      {isOrganizer && (
-        <form
-          onSubmit={onUpload}
-          className="mt-4 rounded-xl border border-[#DDD3FF] bg-[#F1EDFF] p-5"
-        >
-          <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white text-[#6F52D9]">
-              <Upload size={19} />
-            </span>
-            <div>
-              <p className="text-sm font-extrabold">{t("addGallery")}</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">
-                {t("galleryUploadHelp")}
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
-            <div>
-              <input
-                key={inputKey}
-                type="file"
-                multiple
-                accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime"
-                onChange={(event) =>
-                  setFiles(Array.from(event.target.files || []).slice(0, 6))
-                }
-                className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-[#E9E3FF] file:px-3 file:py-1.5 file:font-bold file:text-[#6549C9]"
-              />
-              {files.length > 0 && (
-                <p className="mt-1 text-[11px] font-bold text-[#6549C9]">
-                  {formatNumber(files.length)} {t("filesSelected")}
-                </p>
-              )}
-            </div>
-            <button
-              disabled={busy}
-              className="rounded-lg bg-[#6F52D9] px-5 py-2 text-sm font-extrabold text-white disabled:opacity-60"
-            >
-              {busy ? t("uploading") : t("uploadMedia")}
-            </button>
-          </div>
-          <input
-            value={caption}
-            onChange={(event) => setCaption(event.target.value)}
-            maxLength={200}
-            placeholder={t("optionalCaption")}
-            className="mt-3 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#6F52D9]"
-          />
-          {error && (
-            <p className="mt-2 text-xs font-bold text-rose-600">{error}</p>
-          )}
-        </form>
-      )}
-    </section>
-  );
-}
-
-function MediaTile({ item, canRemove, onRemove }) {
+function MediaTile({ item }) {
   const { t } = useLanguage();
   return (
     <article className="group relative overflow-hidden rounded-xl bg-slate-900 shadow-sm">
@@ -615,110 +450,101 @@ function MediaTile({ item, canRemove, onRemove }) {
         <a href={mediaUrl(item.file)} target="_blank" rel="noreferrer">
           <img
             src={mediaUrl(item.file)}
-            alt={item.caption || t("campaignGallery")}
+            alt={item.caption || t("campaignPhoto")}
             className="aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.02]"
           />
         </a>
       )}
-      {(item.caption || canRemove) && (
-        <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-slate-950/90 to-transparent px-4 pb-3 pt-10 text-white">
-          <p className="line-clamp-2 text-xs font-semibold">
-            {item.caption ||
-              (item.media_type === "video"
-                ? t("campaignVideo")
-                : t("campaignPhoto"))}
-          </p>
-          {canRemove && (
-            <button
-              type="button"
-              onClick={() => onRemove(item.id)}
-              aria-label={t("removeMediaLabel")}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15 hover:bg-rose-500"
-            >
-              <Trash2 size={15} />
-            </button>
-          )}
+      {item.caption && (
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 to-transparent px-4 pb-3 pt-10 text-white">
+          <p className="line-clamp-2 text-xs font-semibold">{item.caption}</p>
         </div>
       )}
     </article>
   );
 }
 
-function EvidenceTile({ report }) {
+function SpendingReportCard({ report, formatKyat, formatDate }) {
   const { t } = useLanguage();
-  const url = mediaUrl(report.evidence);
-  const cleanUrl = url.split("?")[0].toLowerCase();
+  const evidenceUrl = report.evidence ? mediaUrl(report.evidence) : "";
+  const cleanUrl = evidenceUrl.split("?")[0].toLowerCase();
   const isImage = /\.(jpe?g|png|gif|webp)$/.test(cleanUrl);
   const isVideo = /\.(mp4|webm|mov|m4v)$/.test(cleanUrl);
+
   return (
-    <article className="overflow-hidden rounded-xl border border-[#F1D780] bg-[#FFFAE9]">
-      {isImage ? (
-        <a href={url} target="_blank" rel="noreferrer">
-          <img
-            src={url}
-            alt={`${report.title} ${t("evidence")}`}
-            className="aspect-video w-full object-cover"
+    <article className="mt-5 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_12px_28px_rgba(75,54,140,.1)]">
+      <div className="relative overflow-hidden bg-[#EEE9FF]">
+        {isImage ? (
+          <a href={evidenceUrl} target="_blank" rel="noreferrer">
+            <img
+              src={evidenceUrl}
+              alt={`${report.title} ${t("evidence")}`}
+              className="aspect-video w-full object-cover transition duration-300 hover:scale-[1.015]"
+            />
+          </a>
+        ) : isVideo ? (
+          <video
+            controls
+            preload="metadata"
+            src={evidenceUrl}
+            className="aspect-video w-full bg-slate-900 object-cover"
           />
-        </a>
-      ) : isVideo ? (
-        <video
-          controls
-          preload="metadata"
-          src={url}
-          className="aspect-video w-full bg-slate-900 object-cover"
-        />
-      ) : (
-        <a
-          href={url}
-          target="_blank"
-          rel="noreferrer"
-          className="grid aspect-video place-items-center bg-[#FFF4C7] text-[#755A08]"
-        >
-          <FileImage size={34} />
-          <span className="sr-only">{t("openEvidence")}</span>
-        </a>
-      )}
-      <div className="flex items-center justify-between gap-3 px-4 py-3">
-        <div>
-          <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#8A6A08]">
-            {t("verifiedEvidence")}
-          </p>
-          <p className="mt-1 text-sm font-extrabold">{report.title}</p>
+        ) : (
+          <a
+            href={evidenceUrl || undefined}
+            target={evidenceUrl ? "_blank" : undefined}
+            rel={evidenceUrl ? "noreferrer" : undefined}
+            className={`grid aspect-[16/7] place-items-center bg-[#F1EDFF] text-[#6F52D9] ${evidenceUrl ? "hover:bg-[#E8E1FF]" : "pointer-events-none"}`}
+          >
+            <div className="text-center">
+              <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-white shadow-sm">
+                <FileImage size={27} />
+              </span>
+              <p className="mt-3 text-xs font-extrabold">
+                {evidenceUrl ? t("viewEvidence") : t("noEvidenceAttached")}
+              </p>
+            </div>
+          </a>
+        )}
+        <span className="absolute left-4 top-4 rounded-full bg-[#FFD66B] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#4C3910] shadow-sm">
+          {t("verifiedEvidence")}
+        </span>
+      </div>
+
+      <div className="p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-xl font-extrabold text-[#201A36]">{report.title}</h3>
+            <p className="mt-1 text-xs font-bold text-[#6F52D9]">
+              {formatKyat(report.amount_spent)} · {formatDate(report.spent_on)}
+            </p>
+          </div>
+          {evidenceUrl && (
+            <a
+              href={evidenceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-[#D9CEFF] px-4 py-2 text-xs font-extrabold text-[#6549C9] transition hover:bg-[#F1EDFF]"
+            >
+              <FileImage size={15} /> {t("viewEvidence")}
+            </a>
+          )}
         </div>
-        <a
-          href={url}
-          target="_blank"
-          rel="noreferrer"
-          className="shrink-0 text-xs font-extrabold text-[#6549C9]"
-        >
-          {t("open")}
-        </a>
+        <p className="mt-4 text-sm leading-6 text-slate-600">{report.description}</p>
       </div>
     </article>
   );
 }
 
-function CampaignUpdates({
-  updates,
-  isOrganizer,
-  title,
-  setTitle,
-  body,
-  setBody,
-  media,
-  setMedia,
-  busy,
-  error,
-  onSubmit,
-}) {
+function CampaignUpdates({ updates }) {
   const { t, formatDate, formatNumber } = useLanguage();
   return (
     <section className="mt-10">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-[#6F52D9]">
+          {/* <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-[#6F52D9]">
             {t("fromOrganizer")}
-          </p>
+          </p> */}
           <h3 className="mt-1 text-3xl font-extrabold">{t("latestUpdates")}</h3>
         </div>
         {updates.length > 0 && (
@@ -727,63 +553,6 @@ function CampaignUpdates({
           </span>
         )}
       </div>
-      {isOrganizer && (
-        <form
-          onSubmit={onSubmit}
-          className="mt-5 rounded-xl border border-[#DDD3FF] bg-white p-5 shadow-sm"
-        >
-          <p className="text-sm font-extrabold">{t("shareProgress")}</p>
-          <p className="mt-1 text-xs text-slate-500">{t("progressHelp")}</p>
-          <input
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            maxLength={160}
-            placeholder={t("updateTitle")}
-            className="mt-4 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6F52D9]"
-          />
-          <textarea
-            value={body}
-            onChange={(event) => setBody(event.target.value)}
-            maxLength={2000}
-            rows={4}
-            placeholder={t("progressPlaceholder")}
-            className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6F52D9]"
-          />
-          <label className="mt-3 flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[#CFC4F7] bg-[#F8F6FF] px-3 py-3 text-xs font-bold text-[#6549C9]">
-            <Paperclip size={16} /> {t("addMedia")}
-            <input
-              type="file"
-              multiple
-              accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime"
-              onChange={(event) =>
-                setMedia(Array.from(event.target.files || []).slice(0, 6))
-              }
-              className="sr-only"
-            />
-          </label>
-          {media.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {media.map((file) => (
-                <span
-                  key={`${file.name}-${file.size}`}
-                  className="rounded-full bg-[#EEE9FF] px-3 py-1 text-[11px] font-bold text-[#6549C9]"
-                >
-                  {file.name}
-                </span>
-              ))}
-            </div>
-          )}
-          {error && (
-            <p className="mt-2 text-xs font-bold text-rose-600">{error}</p>
-          )}
-          <button
-            disabled={busy}
-            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#6F52D9] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-60"
-          >
-            <Send size={15} /> {busy ? t("publishing") : t("publishUpdate")}
-          </button>
-        </form>
-      )}
       {updates.length ? (
         <div className="mt-5 space-y-4">
           {updates.map((update) => (
@@ -814,13 +583,76 @@ function CampaignUpdates({
           ))}
         </div>
       ) : (
-        !isOrganizer && (
-          <p className="mt-5 rounded-xl bg-[#F1EDFF] p-5 text-sm text-slate-600">
-            {t("noUpdates")}
-          </p>
-        )
+        <p className="mt-5 rounded-xl bg-[#F1EDFF] p-5 text-sm text-slate-600">
+          {t("noUpdates")}
+        </p>
       )}
     </section>
+  );
+}
+
+function UpdateForm({
+  title,
+  setTitle,
+  body,
+  setBody,
+  media,
+  setMedia,
+  busy,
+  error,
+  onSubmit,
+}) {
+  const { t, formatNumber } = useLanguage();
+  return (
+    <form
+      onSubmit={onSubmit}
+      className="rounded-xl border border-white bg-white p-5 shadow-md"
+    >
+      <p className="text-xs font-bold uppercase tracking-widest text-[#6F52D9]">
+        {t("fromOrganizer")}
+      </p>
+      <h3 className="mt-1 text-xl font-extrabold">{t("shareProgress")}</h3>
+      <p className="mt-1 text-xs leading-5 text-slate-500">{t("progressHelp")}</p>
+      <input
+        value={title}
+        onChange={(event) => setTitle(event.target.value)}
+        maxLength={160}
+        placeholder={t("updateTitle")}
+        className="mt-4 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6F52D9]"
+      />
+      <textarea
+        value={body}
+        onChange={(event) => setBody(event.target.value)}
+        maxLength={2000}
+        rows={4}
+        placeholder={t("progressPlaceholder")}
+        className="mt-3 w-full resize-y rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6F52D9]"
+      />
+      <label className="mt-3 flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[#CFC4F7] bg-[#F8F6FF] px-3 py-3 text-xs font-bold text-[#6549C9]">
+        <Paperclip size={16} className="shrink-0" /> {t("addMedia")}
+        <input
+          type="file"
+          multiple
+          accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime"
+          onChange={(event) =>
+            setMedia(Array.from(event.target.files || []).slice(0, 6))
+          }
+          className="sr-only"
+        />
+      </label>
+      {media.length > 0 && (
+        <p className="mt-2 text-[11px] font-bold text-[#6549C9]">
+          {formatNumber(media.length)} {t("filesSelected")}
+        </p>
+      )}
+      {error && <p className="mt-2 text-xs font-bold text-rose-600">{error}</p>}
+      <button
+        disabled={busy}
+        className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#6F52D9] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-60"
+      >
+        <Send size={15} /> {busy ? t("publishing") : t("publishUpdate")}
+      </button>
+    </form>
   );
 }
 
