@@ -19,7 +19,6 @@ import {
   Search,
   Settings,
   ShieldCheck,
-  Sparkles,
   Target,
   UserRound,
   Check,
@@ -123,11 +122,7 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts, us
               <p className="truncate text-sm font-bold text-slate-800">{user?.username || t("user")}</p>
               <p className="text-xs text-slate-400">{t("userWorkspace")}</p>
             </div>
-          </div>
-
-          {/* MOVED LANGUAGE SWITCH HERE */}
-          <div className="px-1">
-            <LanguageSwitch />
+            <LanguageSwitch sidebar />
           </div>
 
           <button
