@@ -3,7 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import AdminUserAction, Notification, User
+from .models import AdminUserAction, NewsletterSubscriber, Notification, User
 
 
 def tokens_for_user(user):
@@ -73,6 +73,27 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = ["id", "type", "title", "message", "link", "is_read", "created_at"]
         read_only_fields = fields
+
+
+class NewsletterSubscriptionSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254)
+    language = serializers.ChoiceField(choices=["en", "my"], default="en")
+
+    def validate_email(self, value):
+        return value.strip().lower()
+
+    def create(self, validated_data):
+        subscriber = NewsletterSubscriber.objects.filter(
+            email__iexact=validated_data["email"],
+        ).first()
+        if subscriber:
+            subscriber.language = validated_data["language"]
+            subscriber.is_active = True
+            subscriber.save(update_fields=["language", "is_active"])
+            self.already_subscribed = True
+            return subscriber
+        self.already_subscribed = False
+        return NewsletterSubscriber.objects.create(**validated_data)
 
 
 class RegisterSerializer(serializers.ModelSerializer):

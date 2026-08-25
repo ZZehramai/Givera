@@ -53,13 +53,15 @@ const trustItems = [
 const faqKeys = [1, 2, 3, 4];
 
 export function LandingPage() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [featured, setFeatured] = useState([]);
   const [openFaq, setOpenFaq] = useState(null);
 
   // Newsletter state
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [newsletterError, setNewsletterError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -73,18 +75,24 @@ export function LandingPage() {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
-    if (!newsletterEmail) return;
-
-    // Set state to subscribed
-    setIsSubscribed(true);
-    setNewsletterEmail("");
-
-    // Optional: Reset button back to 'Subscribe' after 5 seconds
-    setTimeout(() => {
-      setIsSubscribed(false);
-    }, 5000);
+    if (!newsletterEmail || isSubscribing) return;
+    setIsSubscribing(true);
+    setNewsletterError("");
+    try {
+      await api.post("/auth/newsletter/subscribe/", {
+        email: newsletterEmail,
+        language,
+      });
+      setIsSubscribed(true);
+      setNewsletterEmail("");
+    } catch (error) {
+      const emailError = error.response?.data?.email?.[0];
+      setNewsletterError(emailError || t("newsletterError"));
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   const mainCampaign = featured[0];
@@ -459,9 +467,6 @@ export function LandingPage() {
                 <p className="mt-5 max-w-md text-base leading-7 text-black/80">
                   {t("faqIntro")}
                 </p>
-                <p className="mt-7 text-sm text-black/65">
-                  {t("faqMoreQuestions")} <a href="#footer" className="font-bold text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">{t("learnGiveraWorks")}</a>.
-                </p>
               </div>
 
               <div className="space-y-3">
@@ -515,6 +520,7 @@ export function LandingPage() {
             </div>
           </div>
         </section>
+
       </main>
 
       {/* FOOTER */}
@@ -526,7 +532,7 @@ export function LandingPage() {
             <div className="flex flex-col gap-3 lg:col-span-1">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-7 w-7 text-primary" aria-hidden="true" />
-                <span className="text-xl font-extrabold text-slate-900 dark:text-white">
+                <span className="text-xl font-extrabold text-[#6F52D9] dark:text-white">
                   {t("donationTransparent")}
                 </span>
               </div>
@@ -540,7 +546,7 @@ export function LandingPage() {
 
             {/* Navigation Links */}
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-[#6F52D9] dark:text-slate-400">
                 {t("platform")}
               </h4>
               <nav className="flex flex-col gap-2.5 text-sm font-medium">
@@ -573,7 +579,7 @@ export function LandingPage() {
 
             {/* Newsletter */}
             <div className="flex flex-col gap-3 sm:col-span-2 lg:col-span-2">
-              <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-[#6F52D9] dark:text-slate-400">
                 {t("stayInformed")}
               </h4>
               <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -589,7 +595,7 @@ export function LandingPage() {
                   type="email"
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
-                  disabled={isSubscribed}
+                  disabled={isSubscribed || isSubscribing}
                   required
                 />
                 <button
@@ -599,17 +605,20 @@ export function LandingPage() {
                       : "bg-primary hover:bg-primary/90 hover:shadow-lg"
                   }`}
                   type="submit"
-                  disabled={isSubscribed}
+                  disabled={isSubscribed || isSubscribing}
                 >
                   {isSubscribed ? (
                     <>
                       <Check size={16} strokeWidth={3} /> {t("subscribed")}
                     </>
+                  ) : isSubscribing ? (
+                    t("subscribing")
                   ) : (
                     t("subscribe")
                   )}
                 </button>
               </form>
+              {newsletterError && <p role="alert" className="text-xs font-semibold text-rose-600">{newsletterError}</p>}
             </div>
 
           </div>

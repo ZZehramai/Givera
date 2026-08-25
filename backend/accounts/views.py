@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from django.db.models import Count, DecimalField, IntegerField, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
@@ -22,7 +23,7 @@ from .serializers import (
     RegisterSerializer, LoginSerializer, GoogleLoginSerializer,
     NotificationSerializer, UserSerializer, ChangePasswordSerializer, ForgotPasswordSerializer,
     ResetPasswordSerializer, AdminUserDetailSerializer, AdminUserSerializer,
-    AdminUserUpdateSerializer, tokens_for_user,
+    AdminUserUpdateSerializer, NewsletterSubscriptionSerializer, tokens_for_user,
 )
 from .models import AdminUserAction, Notification
 from .permissions import IsAdmin
@@ -138,6 +139,37 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class NewsletterSubscriptionView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "newsletter"
+
+    def post(self, request):
+        serializer = NewsletterSubscriptionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        subscriber = serializer.save()
+        already_subscribed = serializer.already_subscribed
+        if not already_subscribed:
+            myanmar = subscriber.language == "my"
+            send_mail(
+                subject="Givera သတင်းများ ရယူရန် စာရင်းသွင်းပြီးပါပြီ" if myanmar else "You are subscribed to Givera updates",
+                message=(
+                    "Givera သတင်းများနှင့် ပွင့်လင်းမြင်သာမှုဆိုင်ရာ အပ်ဒိတ်များကို ရယူရန် စာရင်းသွင်းပေးသည့်အတွက် ကျေးဇူးတင်ပါသည်။"
+                    if myanmar else
+                    "Thank you for subscribing. You will receive important Givera news and transparency updates."
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[subscriber.email],
+                fail_silently=True,
+            )
+        return Response(
+            {
+                "detail": "Already subscribed" if already_subscribed else "Subscription successful",
+                "already_subscribed": already_subscribed,
+            },
+            status=status.HTTP_200_OK if already_subscribed else status.HTTP_201_CREATED,
+        )
 
 
 def admin_user_queryset():
