@@ -20,7 +20,8 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name', 'role',
             'auth_provider', 'phone_number', 'profile_picture', 'country',
-            'bio', 'is_email_verified', 'is_staff', 'created_at'
+            'bio', 'campaign_notifications_enabled', 'is_email_verified',
+            'is_staff', 'created_at'
         ]
         read_only_fields = [
             'id', 'role', 'auth_provider', 'is_email_verified', 'is_staff', 'created_at'
@@ -72,9 +73,6 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = ["id", "type", "title", "message", "link", "is_read", "created_at"]
         read_only_fields = fields
-        read_only_fields = [
-            'id', 'role', 'auth_provider', 'is_email_verified', 'is_staff', 'created_at'
-        ]
 
 
 class RegisterSerializer(serializers.ModelSerializer):

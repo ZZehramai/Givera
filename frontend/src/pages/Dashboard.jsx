@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   BarChart3,
+  Bell,
   ArrowUpRight,
   CircleDollarSign,
   Compass,
@@ -23,6 +24,7 @@ import {
   Target,
   UserRound,
   Check,
+  CheckCheck,
   X,
   Bookmark,
   CreditCard,
@@ -664,6 +666,8 @@ function ProfilePanel() {
   });
   const [changingPassword, setChangingPassword] = useState(false);
   const [passwordNotice, setPasswordNotice] = useState({ text: "", success: false });
+  const [notificationSaving, setNotificationSaving] = useState(false);
+  const [notificationNotice, setNotificationNotice] = useState("");
 
   useEffect(() => {
     api.get("/auth/profile/")
@@ -721,6 +725,24 @@ function ProfilePanel() {
       });
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const toggleCampaignNotifications = async () => {
+    const enabled = !user.campaign_notifications_enabled;
+    setNotificationSaving(true);
+    setNotificationNotice("");
+    try {
+      const response = await api.patch("/auth/profile/", {
+        campaign_notifications_enabled: enabled,
+      });
+      setUser(response.data);
+      localStorage.setItem("user", JSON.stringify(response.data));
+      setNotificationNotice(t("notificationPreferenceSaved"));
+    } catch {
+      setNotificationNotice(t("notificationPreferenceError"));
+    } finally {
+      setNotificationSaving(false);
     }
   };
 
@@ -798,6 +820,35 @@ function ProfilePanel() {
             </div>
           )}
         </section>
+        <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+          <div className="flex items-center justify-between gap-5">
+            <div className="flex min-w-0 items-start gap-4">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#F1EDFF] text-[#6F52D9]">
+                <Bell size={20} />
+              </span>
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-800">{t("campaignNotifications")}</h2>
+                <p className="mt-1 text-sm leading-6 text-slate-500">{t("campaignNotificationsHelp")}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={user.campaign_notifications_enabled}
+              aria-label={t("campaignNotifications")}
+              disabled={notificationSaving}
+              onClick={toggleCampaignNotifications}
+              className={`relative h-8 w-14 shrink-0 rounded-full transition disabled:opacity-50 ${user.campaign_notifications_enabled ? "bg-[#6F52D9]" : "bg-slate-300"}`}
+            >
+              <span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-sm transition ${user.campaign_notifications_enabled ? "left-7" : "left-1"}`} />
+            </button>
+          </div>
+          {notificationNotice && (
+            <p role="status" className="mt-4 rounded-xl bg-[#F8F6FF] px-4 py-3 text-sm font-bold text-[#6549C9]">
+              {notificationNotice}
+            </p>
+          )}
+        </section>
         <form
           onSubmit={changePassword}
           className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]"
@@ -859,6 +910,118 @@ function ProfilePanel() {
         </div>
       </div>
     </motion.section>
+  );
+}
+
+function DashboardNotifications() {
+  const { t, formatDate } = useLanguage();
+  const [notifications, setNotifications] = useState([]);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    api.get("/auth/notifications/")
+      .then(({ data }) => {
+        if (active) setNotifications(data);
+      })
+      .catch(() => {
+        if (active) setNotifications([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const unreadCount = notifications.filter((item) => !item.is_read).length;
+
+  const markRead = async (notification) => {
+    if (!notification.is_read) {
+      try {
+        await api.patch(`/auth/notifications/${notification.id}/read/`);
+        setNotifications((current) => current.map((item) => (
+          item.id === notification.id ? { ...item, is_read: true } : item
+        )));
+      } catch {
+        // Navigation should still work if the read-status request fails.
+      }
+    }
+    setOpen(false);
+  };
+
+  const markAllRead = async () => {
+    try {
+      await api.post("/auth/notifications/read-all/");
+      setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
+    } catch {
+      // Keep the current state so the donor can retry.
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-label={t("notifications")}
+        aria-expanded={open}
+        className="relative grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-[#6549C9] shadow-sm transition hover:border-[#D9CEFF] hover:bg-[#F8F6FF]"
+      >
+        <Bell size={20} aria-hidden="true" />
+        {unreadCount > 0 && (
+          <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-extrabold text-white ring-2 ring-[#F6F6FB]">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-14 z-50 w-[min(23rem,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_22px_55px_rgba(41,35,80,.18)]">
+          <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+            <div>
+              <h2 className="font-extrabold text-slate-900">{t("notifications")}</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                {unreadCount ? `${unreadCount} ${t("unread")}` : t("caughtUp")}
+              </p>
+            </div>
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={markAllRead}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#6549C9] hover:underline"
+              >
+                <CheckCheck size={15} /> {t("markAllRead")}
+              </button>
+            )}
+          </div>
+          <div className="max-h-96 overflow-y-auto">
+            {notifications.length ? notifications.map((notification) => (
+              <Link
+                key={notification.id}
+                to={notification.link || "/dashboard"}
+                onClick={() => markRead(notification)}
+                className={`block border-b border-slate-100 px-5 py-4 transition last:border-0 hover:bg-[#F8F6FF] ${notification.is_read ? "bg-white" : "bg-[#F1EDFF]/70"}`}
+              >
+                <div className="flex gap-3">
+                  <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${notification.is_read ? "bg-slate-200" : "bg-[#6F52D9]"}`} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-extrabold text-slate-900">{notification.title}</p>
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600">{notification.message}</p>
+                    <p className="mt-2 text-[11px] font-semibold text-slate-400">{formatDate(notification.created_at)}</p>
+                  </div>
+                </div>
+              </Link>
+            )) : (
+              <div className="px-6 py-12 text-center">
+                <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#F1EDFF] text-[#6F52D9]">
+                  <Bell size={21} />
+                </span>
+                <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-500">{t("notificationEmpty")}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -983,18 +1146,21 @@ function UserDashboard() {
               <h1 className="mt-2 text-3xl font-extrabold text-[#7A5BE6] md:text-4xl">{pageTitle}</h1>
               <p className="mt-2 max-w-2xl text-sm text-slate-500">{pageSubtitle}</p>
             </div>
-            {(activeSection === "overview" || activeSection === "my-campaigns") && (
-              <div className="flex flex-wrap gap-2">
-                {activeSection === "overview" && (
-                  <button type="button" onClick={() => setActiveSection("browse")} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-[#6549C9] shadow-sm">
-                    <Compass size={17} /> {t("browse")}
-                  </button>
-                )}
-                <Link to="/campaigns/create" className="inline-flex items-center gap-2 rounded-2xl bg-[#FFD66B] px-4 py-2.5 text-sm font-extrabold text-[#2b1d52] shadow-sm">
-                  <Plus size={17} /> {t("requestCampaignShort")}
-                </Link>
-              </div>
-            )}
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <DashboardNotifications />
+              {(activeSection === "overview" || activeSection === "my-campaigns") && (
+                <div className="flex flex-wrap gap-2">
+                  {activeSection === "overview" && (
+                    <button type="button" onClick={() => setActiveSection("browse")} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-[#6549C9] shadow-sm">
+                      <Compass size={17} /> {t("browse")}
+                    </button>
+                  )}
+                  <Link to="/campaigns/create" className="inline-flex items-center gap-2 rounded-2xl bg-[#FFD66B] px-4 py-2.5 text-sm font-extrabold text-[#2b1d52] shadow-sm">
+                    <Plus size={17} /> {t("requestCampaignShort")}
+                  </Link>
+                </div>
+              )}
+            </div>
           </header>
           {activeSection === "browse" ? (
             <BrowseCampaigns campaigns={discover} loading={loading} />

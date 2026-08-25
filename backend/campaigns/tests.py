@@ -397,7 +397,31 @@ class CampaignApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         notification = Notification.objects.get(recipient=donor)
         self.assertEqual(notification.type, Notification.Type.CAMPAIGN_UPDATE)
-        self.assertEqual(notification.link, f"/campaigns/{campaign.pk}")
+        self.assertEqual(notification.link, f"/campaigns/{campaign.pk}#latest-updates")
+
+    def test_organizer_update_respects_donor_notification_preference(self):
+        donor = User.objects.create_user(
+            email="quiet-donor@example.com",
+            username="quiet-donor",
+            password="StrongPassword123!",
+            campaign_notifications_enabled=False,
+        )
+        campaign = Campaign.objects.create(
+            owner=self.owner,
+            status=Campaign.Status.APPROVED,
+            **self.payload,
+        )
+        Donation.objects.create(donor=donor, campaign=campaign, amount="25.00")
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.post(
+            reverse("campaign-updates", kwargs={"pk": campaign.pk}),
+            {"title": "Books have arrived", "body": "The first set of books is now in the library."},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertFalse(Notification.objects.filter(recipient=donor).exists())
 
     def test_organizer_can_upload_multiple_gallery_items(self):
         campaign = Campaign.objects.create(owner=self.owner, status=Campaign.Status.APPROVED, **self.payload)
@@ -510,3 +534,38 @@ class CampaignApiTests(APITestCase):
         public = self.client.get(reverse("fund-utilization", kwargs={"pk": campaign.pk}))
         self.assertEqual(len(public.data), 1)
         self.assertEqual(public.data[0]["title"], "Bought books")
+
+    def test_admin_spending_report_notifies_each_campaign_donor_once(self):
+        donor = User.objects.create_user(
+            email="report-donor@example.com",
+            username="report-donor",
+            password="StrongPassword123!",
+        )
+        opted_out = User.objects.create_user(
+            email="quiet-report-donor@example.com",
+            username="quiet-report-donor",
+            password="StrongPassword123!",
+            campaign_notifications_enabled=False,
+        )
+        campaign = Campaign.objects.create(owner=self.owner, status=Campaign.Status.APPROVED, **self.payload)
+        Donation.objects.create(donor=donor, campaign=campaign, amount="25.00")
+        Donation.objects.create(donor=donor, campaign=campaign, amount="40.00")
+        Donation.objects.create(donor=opted_out, campaign=campaign, amount="15.00")
+        self.client.force_authenticate(self.admin)
+
+        response = self.client.post(
+            reverse("fund-utilization", kwargs={"pk": campaign.pk}),
+            {
+                "title": "Bought books",
+                "description": "Books for the library shelves.",
+                "amount_spent": "2000.00",
+                "spent_on": str(timezone.localdate()),
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        notification = Notification.objects.get(recipient=donor)
+        self.assertEqual(notification.type, Notification.Type.FUND_UTILIZATION)
+        self.assertEqual(notification.link, f"/campaigns/{campaign.pk}#fund-utilization")
+        self.assertFalse(Notification.objects.filter(recipient=opted_out).exists())

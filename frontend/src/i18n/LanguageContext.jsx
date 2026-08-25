@@ -4,7 +4,7 @@ const messages = {
   en: {
     home: "Home", campaigns: "Campaigns", campaignRequests: "Campaign Requests", howItWorks: "How it works", faq: "FAQ",
     notifications: "Notifications", unread: "unread", caughtUp: "You’re all caught up", markAllRead: "Mark all read", close: "Close",
-    notificationEmpty: "Updates about your campaigns and donations will appear here.", logout: "Log out", signIn: "Sign In", donateNow: "Donate Now",
+    notificationEmpty: "Updates about your campaigns and donations will appear here.", campaignNotifications: "Campaign notifications", campaignNotificationsHelp: "Receive an alert when a campaign you supported publishes an update or a new spending report.", notificationPreferenceSaved: "Notification preference saved.", notificationPreferenceError: "The notification preference could not be updated.", logout: "Log out", signIn: "Sign In", donateNow: "Donate Now",
     english: "English", myanmar: "မြန်မာ", overview: "Overview", browseCampaigns: "Browse campaigns", myCampaigns: "My campaigns",
     history: "History", savedCampaigns: "Saved campaigns", profileSettings: "Profile & settings", userWorkspace: "User workspace", adminWorkspace: "Admin workspace",
     campaignReview: "Campaign review", transactions: "Transactions", userManagement: "User management", signOut: "Sign out",
@@ -82,7 +82,7 @@ const messages = {
   my: {
     home: "ပင်မစာမျက်နှာ", campaigns: "ကမ်ပိန်းများ", campaignRequests: "ကမ်ပိန်းတောင်းဆိုမှုများ", howItWorks: "လုပ်ဆောင်ပုံ", faq: "မေးလေ့ရှိသော မေးခွန်းများ",
     notifications: "အသိပေးချက်များ", unread: "မဖတ်ရသေး", caughtUp: "အသိပေးချက်အားလုံး ဖတ်ပြီးပါပြီ", markAllRead: "အားလုံးဖတ်ပြီးဟု သတ်မှတ်ရန်", close: "ပိတ်ရန်",
-    notificationEmpty: "သင့်ကမ်ပိန်းနှင့် လှူဒါန်းမှုဆိုင်ရာ အသိပေးချက်များကို ဤနေရာတွင် ပြသပါမည်။", logout: "ထွက်ရန်", signIn: "ဝင်ရောက်ရန်", donateNow: "ယခုလှူဒါန်းရန်",
+    notificationEmpty: "သင့်ကမ်ပိန်းနှင့် လှူဒါန်းမှုဆိုင်ရာ အသိပေးချက်များကို ဤနေရာတွင် ပြသပါမည်။", campaignNotifications: "ကမ်ပိန်းအသိပေးချက်များ", campaignNotificationsHelp: "သင်လှူဒါန်းထားသော ကမ်ပိန်းတွင် အပ်ဒိတ် သို့မဟုတ် ငွေသုံးစွဲမှုအစီရင်ခံစာအသစ် ထုတ်ပြန်သည့်အခါ အသိပေးချက်ရယူပါ။", notificationPreferenceSaved: "အသိပေးချက်ဆက်တင်ကို သိမ်းပြီးပါပြီ။", notificationPreferenceError: "အသိပေးချက်ဆက်တင်ကို ပြင်ဆင်၍မရပါ။", logout: "ထွက်ရန်", signIn: "ဝင်ရောက်ရန်", donateNow: "ယခုလှူဒါန်းရန်",
     english: "English", myanmar: "မြန်မာ", overview: "ခြုံငုံသုံးသပ်ချက်", browseCampaigns: "ကမ်ပိန်းများရှာဖွေရန်", myCampaigns: "ကျွန်ုပ်၏ကမ်ပိန်းများ",
     history: "မှတ်တမ်း", savedCampaigns: "သိမ်းထားသော ကမ်ပိန်းများ", profileSettings: "ကိုယ်ရေးအချက်အလက်နှင့် ဆက်တင်များ", userWorkspace: "အသုံးပြုသူနေရာ", adminWorkspace: "စီမံခန့်ခွဲသူနေရာ",
     campaignReview: "ကမ်ပိန်းစစ်ဆေးခြင်း", transactions: "ငွေလွှဲမှတ်တမ်းများ", userManagement: "အသုံးပြုသူစီမံခန့်ခွဲမှု", signOut: "ထွက်ရန်",

@@ -82,6 +82,16 @@ export default function CampaignDetailReference() {
   useEffect(() => {
     load().catch(() => setError(t("campaignNotFound")));
   }, [id, t]);
+  useEffect(() => {
+    if (!campaign || !window.location.hash) return;
+    const sectionId = window.location.hash.slice(1);
+    window.requestAnimationFrame(() => {
+      document.getElementById(sectionId)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }, [campaign, updates.length, reports.length]);
   /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
   const startPayment = async (event) => {
     event.preventDefault();
@@ -254,7 +264,7 @@ export default function CampaignDetailReference() {
               updates={updates}
             />
 
-            <section className="mt-10">
+            <section id="fund-utilization" className="mt-10 scroll-mt-6">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <h3 className="text-3xl font-extrabold">{t("fundsUsed")}</h3>
@@ -539,7 +549,7 @@ function SpendingReportCard({ report, formatKyat, formatDate }) {
 function CampaignUpdates({ updates }) {
   const { t, formatDate, formatNumber } = useLanguage();
   return (
-    <section className="mt-10">
+    <section id="latest-updates" className="mt-10 scroll-mt-6">
       <div className="flex items-end justify-between gap-3">
         <div>
           {/* <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-[#6F52D9]">

@@ -27,6 +27,7 @@ class User(AbstractUser):
     profile_picture = models.URLField(blank=True, null=True)
     country = models.CharField(max_length=100, blank=True)
     bio = models.TextField(blank=True)
+    campaign_notifications_enabled = models.BooleanField(default=True)
     
 
     is_email_verified = models.BooleanField(default=False)
@@ -72,6 +73,7 @@ class PasswordResetOTP(models.Model):
 class Notification(models.Model):
     class Type(models.TextChoices):
         CAMPAIGN_UPDATE = "campaign_update", "Campaign update"
+        FUND_UTILIZATION = "fund_utilization", "Fund utilization report"
         CAMPAIGN_APPROVED = "campaign_approved", "Campaign approved"
         CAMPAIGN_REJECTED = "campaign_rejected", "Campaign rejected"
 
