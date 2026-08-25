@@ -1,3 +1,5 @@
+import logging
+
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -14,6 +16,20 @@ from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization, Co
 from .serializers import AdminCampaignSerializer, CampaignManagementSerializer, CampaignMediaSerializer, CampaignRecommendationRequestSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer, MAX_CAMPAIGN_MEDIA_FILES, validate_campaign_cover_upload, validate_campaign_media_upload, CommentSerializer
 from .recommendations import recommend_campaigns
 from .services import complete_campaign_if_due, complete_due_campaigns
+
+
+logger = logging.getLogger(__name__)
+
+
+def create_campaign_trust_assessment(campaign):
+    """Create an advisory assessment without ever blocking campaign submission."""
+    try:
+        from ai.services import assess_campaign_trust
+        # Keep submission fast and reliable. Admins can refresh with Groq from
+        # the review modal when an external provider is configured.
+        assess_campaign_trust(campaign, force=True, use_provider=False)
+    except Exception:
+        logger.exception("Could not create trust assessment for campaign %s", campaign.pk)
 
 
 class CampaignListCreateView(generics.ListCreateAPIView):
@@ -68,6 +84,8 @@ class CampaignListCreateView(generics.ListCreateAPIView):
                 )
                 for upload, media_type in zip(files, media_types)
             ])
+        if campaign.status == Campaign.Status.PENDING:
+            create_campaign_trust_assessment(campaign)
         return Response(self.get_serializer(campaign).data, status=status.HTTP_201_CREATED)
 
 
@@ -124,6 +142,8 @@ class CampaignDetailView(generics.RetrieveUpdateDestroyAPIView):
                 )
                 for upload, media_type in zip(files, media_types)
             ])
+        if instance.status == Campaign.Status.PENDING:
+            create_campaign_trust_assessment(instance)
         return Response(self.get_serializer(instance).data)
 
     def perform_destroy(self, instance):

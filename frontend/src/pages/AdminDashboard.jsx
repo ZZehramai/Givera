@@ -4,6 +4,7 @@ import {
   Archive,
   ArrowUpRight,
   BarChart3,
+  Brain,
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
@@ -161,6 +162,49 @@ function MetricCard({ icon: Icon, label, value, note, tone }) {
 function ReviewModal({ campaign, onClose, onReview, onEdit, onManage }) {
   const { t, formatDate, formatKyat } = useLanguage();
   const [reason, setReason] = useState("");
+  const [assessment, setAssessment] = useState(null);
+  const [assessmentLoading, setAssessmentLoading] = useState(campaign.status === "pending");
+  const [assessmentError, setAssessmentError] = useState("");
+
+  const loadAssessment = useCallback(async (refresh = false) => {
+    if (campaign.status !== "pending") return;
+    setAssessmentLoading(true);
+    setAssessmentError("");
+    try {
+      const { data } = refresh
+        ? await api.post(`/ai/campaign-trust/${campaign.id}/`)
+        : await api.get(`/ai/campaign-trust/${campaign.id}/`);
+      setAssessment(data);
+    } catch {
+      setAssessmentError(t("trustAssessmentError"));
+    } finally {
+      setAssessmentLoading(false);
+    }
+  }, [campaign.id, campaign.status, t]);
+
+  useEffect(() => {
+    if (campaign.status !== "pending") return undefined;
+    let active = true;
+    api.get(`/ai/campaign-trust/${campaign.id}/`)
+      .then(({ data }) => {
+        if (active) setAssessment(data);
+      })
+      .catch(() => {
+        if (active) setAssessmentError(t("trustAssessmentError"));
+      })
+      .finally(() => {
+        if (active) setAssessmentLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [campaign.id, campaign.status, t]);
+
+  const riskTone = {
+    low: "bg-emerald-100 text-emerald-700",
+    medium: "bg-amber-100 text-amber-800",
+    high: "bg-rose-100 text-rose-700",
+  };
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[#17112e]/55 p-4 backdrop-blur-sm">
       <div className="mx-auto my-8 max-w-3xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
@@ -217,6 +261,55 @@ function ReviewModal({ campaign, onClose, onReview, onEdit, onManage }) {
             </div>
           </div>
         </div>
+        {campaign.status === "pending" && (
+          <section className="mx-7 mb-7 overflow-hidden rounded-2xl border border-[#DDD4FB] bg-[#F8F6FF]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E7E0FC] px-5 py-4">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#6F52D9] text-white">
+                  <Brain size={20} />
+                </span>
+                <div>
+                  <h3 className="font-extrabold text-[#24184A]">{t("aiTrustReview")}</h3>
+                  <p className="mt-0.5 text-xs text-slate-500">{t("aiTrustAdvisory")}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {assessment && (
+                  <span className={`rounded-full px-3 py-1.5 text-xs font-extrabold ${riskTone[assessment.risk_level]}`}>
+                    {t(`${assessment.risk_level}Risk`)}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  disabled={assessmentLoading}
+                  onClick={() => loadAssessment(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#D7CCFA] bg-white px-3 py-2 text-xs font-bold text-[#6549C9] disabled:opacity-50"
+                >
+                  <RotateCcw size={14} className={assessmentLoading ? "animate-spin" : ""} />
+                  {t("refreshAssessment")}
+                </button>
+              </div>
+            </div>
+
+            {assessmentLoading ? (
+              <p className="px-5 py-8 text-center text-sm font-semibold text-slate-500">{t("analyzingCampaign")}</p>
+            ) : assessmentError ? (
+              <p className="m-5 rounded-xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{assessmentError}</p>
+            ) : assessment && (
+              <div className="p-5">
+                <p className="text-sm leading-6 text-slate-700">{assessment.summary}</p>
+                <div className="mt-5 grid gap-4 md:grid-cols-3">
+                  <AssessmentList title={t("assessmentFlags")} items={assessment.flags} empty={t("noAssessmentFlags")} tone="rose" />
+                  <AssessmentList title={t("missingInformation")} items={assessment.missing_information} empty={t("noMissingInformation")} tone="amber" />
+                  <AssessmentList title={t("suggestedChecks")} items={assessment.suggested_checks} empty={t("standardReviewApplies")} tone="violet" />
+                </div>
+                <p className="mt-4 text-[11px] font-semibold text-slate-400">
+                  {t("assessmentProvider")}: {assessment.provider === "groq" ? "Groq AI" : t("localSafetyCheck")} · {formatDate(assessment.analyzed_at)}
+                </p>
+              </div>
+            )}
+          </section>
+        )}
         <div className="border-t border-slate-100 bg-slate-50/70 px-7 py-5">
           {campaign.status === "pending" ? (
             <>
@@ -294,6 +387,29 @@ function ReviewModal({ campaign, onClose, onReview, onEdit, onManage }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function AssessmentList({ title, items, empty, tone }) {
+  const dotTone = {
+    rose: "bg-rose-400",
+    amber: "bg-amber-400",
+    violet: "bg-[#7A5BE6]",
+  }[tone];
+  return (
+    <div className="rounded-xl bg-white p-4 shadow-sm">
+      <h4 className="text-xs font-extrabold uppercase tracking-wide text-slate-500">{title}</h4>
+      <ul className="mt-3 space-y-2.5">
+        {items?.length ? items.map((item) => (
+          <li key={item} className="flex gap-2 text-xs leading-5 text-slate-600">
+            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotTone}`} />
+            <span>{item}</span>
+          </li>
+        )) : (
+          <li className="text-xs leading-5 text-slate-400">{empty}</li>
+        )}
+      </ul>
     </div>
   );
 }

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from .models import CampaignTrustAssessment
+
 
 class CampaignWritingRequestSerializer(serializers.Serializer):
     field = serializers.ChoiceField(
@@ -45,3 +47,18 @@ class GiveraHelpRequestSerializer(serializers.Serializer):
 
     def validate_history(self, value):
         return value[-8:]
+
+
+class CampaignTrustAssessmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CampaignTrustAssessment
+        fields = [
+            "risk_level",
+            "summary",
+            "flags",
+            "missing_information",
+            "suggested_checks",
+            "provider",
+            "analyzed_at",
+        ]
+        read_only_fields = fields

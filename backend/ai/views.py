@@ -3,8 +3,11 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import CampaignWritingRequestSerializer, GiveraHelpRequestSerializer
-from .services import answer_givera_question, improve_campaign_writing
+from accounts.permissions import IsAdmin
+from campaigns.models import Campaign
+
+from .serializers import CampaignTrustAssessmentSerializer, CampaignWritingRequestSerializer, GiveraHelpRequestSerializer
+from .services import answer_givera_question, assess_campaign_trust, improve_campaign_writing
 
 
 class CampaignWritingAssistantView(APIView):
@@ -37,3 +40,19 @@ class GiveraHelpView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         return Response({"answer": answer, "provider": provider})
+
+
+class CampaignTrustAssessmentView(APIView):
+    permission_classes = [IsAdmin]
+
+    def get_campaign(self, pk):
+        from django.shortcuts import get_object_or_404
+        return get_object_or_404(Campaign.objects.select_related("owner"), pk=pk)
+
+    def get(self, request, pk):
+        assessment = assess_campaign_trust(self.get_campaign(pk))
+        return Response(CampaignTrustAssessmentSerializer(assessment).data)
+
+    def post(self, request, pk):
+        assessment = assess_campaign_trust(self.get_campaign(pk), force=True)
+        return Response(CampaignTrustAssessmentSerializer(assessment).data)

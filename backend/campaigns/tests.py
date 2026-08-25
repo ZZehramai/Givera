@@ -13,6 +13,7 @@ from rest_framework.test import APITestCase
 
 from .models import Campaign, CampaignMedia, FundUtilization
 from accounts.models import Notification
+from ai.models import CampaignTrustAssessment
 from donations.models import Donation
 
 User = get_user_model()
@@ -55,6 +56,9 @@ class CampaignApiTests(APITestCase):
         campaign = Campaign.objects.get()
         self.assertEqual(campaign.owner, self.owner)
         self.assertEqual(campaign.status, Campaign.Status.PENDING)
+        assessment = CampaignTrustAssessment.objects.get(campaign=campaign)
+        self.assertIn(assessment.risk_level, CampaignTrustAssessment.RiskLevel.values)
+        self.assertEqual(assessment.provider, "demo")
 
     def test_admin_created_campaign_is_published_immediately(self):
         self.client.force_authenticate(self.admin)

@@ -1,7 +1,10 @@
+import json
 import re
 
 import requests
 from django.conf import settings
+
+from .models import CampaignTrustAssessment
 
 
 FIELD_LIMITS = {
@@ -202,3 +205,148 @@ def answer_givera_question(data):
     provider = "groq" if settings.GROQ_API_KEY else "demo"
     answer = _groq_help_answer(data) if settings.GROQ_API_KEY else _local_help_answer(data)
     return answer[:1200].strip(), provider
+
+
+def _campaign_review_context(campaign):
+    cover_count = int(bool(campaign.cover_image)) + campaign.media_items.filter(
+        update__isnull=True,
+        purpose="cover",
+    ).count()
+    return {
+        "title": _clean(campaign.title),
+        "summary": _clean(campaign.summary),
+        "story": _clean(campaign.story),
+        "category": campaign.get_category_display(),
+        "beneficiary": _clean(campaign.beneficiary),
+        "location": _clean(campaign.location),
+        "goal_amount": str(campaign.goal_amount),
+        "deadline": str(campaign.deadline),
+        "organizer_name": campaign.owner.get_full_name() or campaign.owner.username,
+        "organizer_phone_provided": bool(campaign.owner.phone_number),
+        "organizer_location_provided": bool(campaign.owner.country),
+        "cover_image_count": cover_count,
+    }
+
+
+def _local_trust_assessment(campaign):
+    context = _campaign_review_context(campaign)
+    combined = " ".join([context["title"], context["summary"], context["story"]])
+    flags = []
+    missing = []
+    checks = [
+        "Confirm the organizer's identity and relationship to the beneficiary.",
+        "Verify important claims and the planned use of funds before approval.",
+    ]
+    score = 0
+
+    if len(context["title"]) < 12:
+        flags.append("The campaign title is very short or vague.")
+        score += 1
+    if len(context["summary"]) < 60:
+        missing.append("A clearer summary of the need and expected outcome.")
+        score += 1
+    if len(context["story"]) < 200:
+        missing.append("More detail about the situation, plan, and expected impact.")
+        score += 1
+    fund_terms = ("fund", "cost", "budget", "spend", "purchase", "buy", "ရန်ပုံငွေ", "အသုံး", "ကုန်ကျ")
+    if not any(term in combined.lower() for term in fund_terms):
+        missing.append("A specific explanation of how the requested funds will be used.")
+        score += 2
+    if len(context["beneficiary"]) < 4:
+        missing.append("A clearly identified beneficiary.")
+        score += 1
+    if len(context["location"]) < 3:
+        missing.append("A specific campaign location.")
+        score += 1
+    if context["cover_image_count"] == 0:
+        missing.append("Supporting cover images for administrator verification.")
+        score += 1
+    if not context["organizer_phone_provided"]:
+        checks.append("Request a contact number if additional organizer verification is needed.")
+    if re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", combined) or re.search(r"(?<!\d)(?:\+?95)?(?:9\d{7,9})(?!\d)", combined):
+        flags.append("The public campaign text may contain personal contact information.")
+        checks.append("Review the story for personal information that should be removed before publishing.")
+        score += 2
+    urgency_terms = ("guaranteed", "act now", "immediately", "urgent", "အရေးပေါ်", "ချက်ချင်း")
+    if any(term in combined.lower() for term in urgency_terms):
+        flags.append("Urgency or certainty language should be supported by verifiable evidence.")
+        checks.append("Confirm any urgent deadlines or guaranteed-outcome claims.")
+        score += 1
+
+    risk_level = "high" if score >= 5 else "medium" if score >= 2 else "low"
+    summary = {
+        "low": "No major text-based concerns were detected, but normal administrator verification is still required.",
+        "medium": "Some campaign details need clarification or manual verification before approval.",
+        "high": "Several trust or completeness concerns require careful administrator review before approval.",
+    }[risk_level]
+    return {
+        "risk_level": risk_level,
+        "summary": summary,
+        "flags": flags,
+        "missing_information": missing,
+        "suggested_checks": checks,
+    }
+
+
+def _groq_trust_assessment(campaign):
+    context = _campaign_review_context(campaign)
+    response = requests.post(
+        "https://api.groq.com/openai/v1/responses",
+        headers={
+            "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": settings.GROQ_WRITING_MODEL,
+            "instructions": (
+                "You are Givera's advisory campaign trust-and-safety reviewer. Evaluate only the supplied text and "
+                "media metadata. Never approve or reject a campaign, never treat uploaded media as verified proof, "
+                "and never make accusations. Identify missing details, inconsistencies, privacy exposure, unsafe "
+                "content, unsupported urgency, and claims requiring manual verification. Return valid JSON only with "
+                "keys risk_level (low, medium, or high), summary (under 300 characters), flags (array), "
+                "missing_information (array), and suggested_checks (array). Use concise English sentences."
+            ),
+            "input": json.dumps(context, ensure_ascii=False),
+            "max_output_tokens": 900,
+        },
+        timeout=35,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    output_text = ""
+    for output in payload.get("output", []):
+        for item in output.get("content", []):
+            if item.get("type") == "output_text" and item.get("text"):
+                output_text = item["text"].strip()
+                break
+    if output_text.startswith("```"):
+        output_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", output_text, flags=re.IGNORECASE)
+    result = json.loads(output_text)
+    if result.get("risk_level") not in {"low", "medium", "high"}:
+        raise ValueError("The AI provider returned an invalid risk level.")
+    return {
+        "risk_level": result["risk_level"],
+        "summary": _clean(result.get("summary"))[:500],
+        "flags": [_clean(item)[:300] for item in result.get("flags", []) if _clean(item)][:8],
+        "missing_information": [_clean(item)[:300] for item in result.get("missing_information", []) if _clean(item)][:8],
+        "suggested_checks": [_clean(item)[:300] for item in result.get("suggested_checks", []) if _clean(item)][:8],
+    }
+
+
+def assess_campaign_trust(campaign, force=False, use_provider=True):
+    if not force:
+        existing = CampaignTrustAssessment.objects.filter(campaign=campaign).first()
+        if existing:
+            return existing
+
+    provider = "groq" if use_provider and settings.GROQ_API_KEY else "demo"
+    try:
+        result = _groq_trust_assessment(campaign) if provider == "groq" else _local_trust_assessment(campaign)
+    except (requests.RequestException, ValueError, json.JSONDecodeError):
+        result = _local_trust_assessment(campaign)
+        provider = "demo"
+    assessment, _ = CampaignTrustAssessment.objects.update_or_create(
+        campaign=campaign,
+        defaults={**result, "provider": provider},
+    )
+    return assessment
