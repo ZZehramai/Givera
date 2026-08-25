@@ -309,17 +309,20 @@ class CampaignUpdateListCreateView(generics.ListCreateAPIView):
             raise ValidationError("Updates can only be published for approved or completed campaigns.")
 
         update = serializer.save(campaign=campaign, author=self.request.user)
-        recipient_ids = campaign.donations.values_list("donor_id", flat=True).distinct()
+        recipient_ids = campaign.donations.filter(
+            donor__campaign_notifications_enabled=True,
+        ).exclude(
+            donor_id=campaign.owner_id,
+        ).order_by().values_list("donor_id", flat=True).distinct()
         notifications = [
             Notification(
                 recipient_id=recipient_id,
                 type=Notification.Type.CAMPAIGN_UPDATE,
                 title=f"New update: {campaign.title}",
                 message=update.title,
-                link=f"/campaigns/{campaign.pk}",
+                link=f"/campaigns/{campaign.pk}#latest-updates",
             )
             for recipient_id in recipient_ids
-            if recipient_id != campaign.owner_id
         ]
         Notification.objects.bulk_create(notifications)
 
@@ -465,12 +468,25 @@ class FundUtilizationListCreateView(generics.ListCreateAPIView):
         campaign = self.get_campaign()
         if campaign.status not in {Campaign.Status.APPROVED, Campaign.Status.COMPLETED}:
             raise ValidationError("Spending reports can only be added to an approved or completed campaign.")
-        serializer.save(
+        report = serializer.save(
             campaign=campaign,
             submitted_by=self.request.user,
             status=FundUtilization.Status.APPROVED,
             reviewed_at=timezone.now(),
         )
+        recipient_ids = campaign.donations.filter(
+            donor__campaign_notifications_enabled=True,
+        ).order_by().values_list("donor_id", flat=True).distinct()
+        Notification.objects.bulk_create([
+            Notification(
+                recipient_id=recipient_id,
+                type=Notification.Type.FUND_UTILIZATION,
+                title=f"New spending report: {campaign.title}",
+                message=report.title,
+                link=f"/campaigns/{campaign.pk}#fund-utilization",
+            )
+            for recipient_id in recipient_ids
+        ])
 
 
 class FundUtilizationReviewView(APIView):
