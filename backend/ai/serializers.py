@@ -21,16 +21,12 @@ class CampaignWritingRequestSerializer(serializers.Serializer):
     language = serializers.ChoiceField(choices=["en", "my"], default="en")
 
     def validate(self, attrs):
-        if attrs["field"] != "fund_usage" and not attrs["content"].strip():
-            raise serializers.ValidationError(
-                {"content": "Add some text before asking for an improvement."}
-            )
-        if attrs["field"] == "fund_usage" and not any(
+        if not attrs["content"].strip() and not any(
             str(attrs.get(key, "")).strip()
-            for key in ["content", "title", "summary", "beneficiary"]
+            for key in ["title", "summary", "beneficiary", "location"]
         ):
             raise serializers.ValidationError(
-                {"content": "Add campaign details before drafting fund usage."}
+                {"content": "Add some campaign details before asking for a draft."}
             )
         return attrs
 

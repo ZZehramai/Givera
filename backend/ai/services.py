@@ -53,10 +53,25 @@ def _local_suggestion(data):
             if beneficiary:
                 parts.insert(1, f"ဤရန်ပုံငွေသည် {beneficiary} အတွက် အကျိုးရှိစေရန် ရည်ရွယ်ပါသည်။")
             return " ".join(parts)
+        if field == "title" and not content:
+            subject = beneficiary or summary or "အသိုင်းအဝိုင်း"
+            return f"{subject} အတွက် အတူတကွ ကူညီကြစို့"
+        if field == "summary" and not content:
+            subject = beneficiary or title or "လိုအပ်နေသူများ"
+            place = f" {location} တွင်" if location else ""
+            return f"{subject} ကို{place} လိုအပ်သောအကူအညီများ ပေးနိုင်ရန် ဤကမ်ပိန်းဖြင့် အတူတကွ ပါဝင်ကူညီကြပါစို့။"
+        if field == "story" and not content:
+            subject = beneficiary or "အကူအညီလိုအပ်နေသူများ"
+            place = f" {location} တွင်" if location else ""
+            return f"ဤကမ်ပိန်းသည်{place} {subject} အတွက် လက်တွေ့ကျပြီး ရေရှည်အကျိုးရှိသော အကူအညီပေးရန် ရည်ရွယ်ပါသည်။ ကမ်ပိန်းတိုးတက်မှုနှင့် ရန်ပုံငွေအသုံးပြုပုံကို ထောက်ပံ့သူများ သိရှိနိုင်ရန် ပုံမှန်မျှဝေပေးပါမည်။"
         return content
 
     if field == "title":
-        suggestion = content.rstrip(".!?")
+        suggestion = content.rstrip(".!?") or (
+            f"Support {beneficiary}{f' in {location}' if location else ''}"
+            if beneficiary else
+            summary[:80].rstrip(".!?")
+        )
         return suggestion[:1].upper() + suggestion[1:]
     if field == "summary":
         context = []
@@ -64,15 +79,15 @@ def _local_suggestion(data):
             context.append(f"support {beneficiary}")
         if location:
             context.append(f"in {location}")
-        addition = f" Together, we can {' '.join(context)}." if context else " Together, we can turn this plan into meaningful progress."
-        return f"{content.rstrip()} {addition}".strip()
+        addition = f"Together, we can {' '.join(context)}." if context else "Together, we can turn this plan into meaningful progress."
+        return f"{content.rstrip()} {addition}".strip() if content else f"{title or 'This campaign'} aims to create practical, lasting change. {addition}"
     if field == "story":
         context = f" for {beneficiary}" if beneficiary else ""
         place = f" in {location}" if location else ""
         lead = title or "This campaign"
+        opening = f"{content.rstrip()}\n\n" if content else ""
         return (
-            f"{content.rstrip()}\n\n"
-            f"Through {lead}, we aim to create practical, lasting support{context}{place}. "
+            opening + f"Through {lead}, we aim to create practical, lasting support{context}{place}. "
             "We will share progress updates so supporters can follow the impact of every contribution."
         )
     details = summary or content or title

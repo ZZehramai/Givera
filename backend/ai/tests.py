@@ -70,11 +70,23 @@ class CampaignWritingAssistantTests(APITestCase):
         self.assertEqual(request_options["headers"]["Authorization"], "Bearer test-groq-key")
 
     @override_settings(GROQ_API_KEY="")
-    def test_empty_title_is_rejected_without_modifying_campaign_data(self):
+    def test_empty_title_can_be_drafted_from_campaign_context(self):
         self.client.force_authenticate(self.user)
         response = self.client.post(
             reverse("campaign-writing"),
             {**self.payload, "field": "title", "content": ""},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["suggestion"])
+
+    @override_settings(GROQ_API_KEY="")
+    def test_empty_field_without_campaign_context_is_rejected(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.post(
+            reverse("campaign-writing"),
+            {"field": "title", "content": "", "language": "en"},
             format="json",
         )
 

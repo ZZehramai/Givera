@@ -17,7 +17,6 @@ import {
   MapPin,
   Megaphone,
   Phone,
-  Plus,
   Search,
   Settings,
   ShieldCheck,
@@ -557,59 +556,65 @@ function BrowseCampaigns({ campaigns, loading }) {
   );
 }
 
-function MyCampaignsPanel({
-  campaigns,
-  loading,
-  submittedId,
-  submissionMessage,
-  campaignTitle,
-  onDismissSubmission,
-}) {
+function SubmissionSuccessModal({ title, message, onClose }) {
+  const { t } = useLanguage();
+  return (
+    <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="submission-success-title"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/45 px-5 py-8 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 24 }}
+        className="relative w-full max-w-lg rounded-[2rem] bg-white p-7 text-center shadow-2xl sm:p-9"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t("dismissConfirmation")}
+          className="absolute right-5 top-5 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+        >
+          <X size={19} />
+        </button>
+        <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+          <Check size={30} strokeWidth={3} />
+        </span>
+        <p className="mt-6 text-sm font-bold uppercase tracking-[0.14em] text-emerald-700">{t("requestReceived")}</p>
+        <h2 id="submission-success-title" className="mt-2 text-2xl font-extrabold text-slate-950 sm:text-3xl">
+          {message || t("submittedSuccess")}
+        </h2>
+        <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-slate-600">
+          <strong className="text-slate-900">{title || t("yourCampaign")}</strong> {t("pendingReviewMessage")}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-7 w-full rounded-full bg-[#6F52D9] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#6044C8]"
+        >
+          {t("done")}
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function MyCampaignsPanel({ campaigns, loading }) {
   const { t } = useLanguage();
   const [page, setPage] = useState(1);
-  const submittedCampaign = campaigns.find(
-    (campaign) => String(campaign.id) === String(submittedId)
-  );
   const pages = Math.max(1, Math.ceil(campaigns.length / CAMPAIGNS_PER_PAGE));
   const safePage = Math.min(page, pages);
   const visibleCampaigns = campaigns.slice((safePage - 1) * CAMPAIGNS_PER_PAGE, safePage * CAMPAIGNS_PER_PAGE);
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      {submittedId && (
-        <motion.section
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-3xl border border-emerald-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7"
-        >
-          <button
-            type="button"
-            onClick={onDismissSubmission}
-            aria-label={t("dismissConfirmation")}
-            className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-          >
-            <X size={18} />
-          </button>
-          <div className="flex gap-4 pr-10">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700">
-              <Check size={24} strokeWidth={3} />
-            </span>
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-700">
-                {t("requestReceived")}
-              </p>
-              <h2 className="mt-1 text-2xl font-extrabold text-slate-900">
-                {submissionMessage || t("submittedSuccess")}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                <strong>{submittedCampaign?.title || campaignTitle || t("yourCampaign")}</strong> {t("pendingReviewMessage")}
-              </p>
-            </div>
-          </div>
-        </motion.section>
-      )}
-
-      <div className={submittedId ? "mt-6" : ""}>
+      <div>
         {loading ? (
           <p className="py-20 text-center text-slate-500">{t("loadingCampaigns")}</p>
         ) : campaigns.length ? (
@@ -1147,16 +1152,11 @@ function UserDashboard() {
               <p className="mt-2 max-w-2xl text-sm text-slate-500">{pageSubtitle}</p>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <DashboardNotifications />
+              {activeSection === "overview" && <DashboardNotifications />}
               {(activeSection === "overview" || activeSection === "my-campaigns") && (
                 <div className="flex flex-wrap gap-2">
-                  {activeSection === "overview" && (
-                    <button type="button" onClick={() => setActiveSection("browse")} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-[#6549C9] shadow-sm">
-                      <Compass size={17} /> {t("browse")}
-                    </button>
-                  )}
-                  <Link to="/campaigns/create" className="inline-flex items-center gap-2 rounded-2xl bg-[#FFD66B] px-4 py-2.5 text-sm font-extrabold text-[#2b1d52] shadow-sm">
-                    <Plus size={17} /> {t("requestCampaignShort")}
+                  <Link to="/campaigns/create" className="inline-flex items-center gap-2 rounded-2xl bg-[#FFD66B] px-4 py-2.5 text-sm font-extrabold text-black-800 shadow-sm">
+                     {t("requestCampaignShort")}
                   </Link>
                 </div>
               )}
@@ -1168,10 +1168,6 @@ function UserDashboard() {
             <MyCampaignsPanel
               campaigns={owned}
               loading={loading}
-              submittedId={showSubmissionSuccess ? submittedId : null}
-              submissionMessage={location.state?.submissionMessage}
-              campaignTitle={location.state?.campaignTitle}
-              onDismissSubmission={clearSubmissionConfirmation}
             />
           ) : activeSection === "saved-campaigns" ? (
             <SavedCampaignsPanel />
@@ -1312,6 +1308,13 @@ function UserDashboard() {
           )}
         </main>
       </div>
+      {showSubmissionSuccess && submittedId && (
+        <SubmissionSuccessModal
+          title={owned.find((campaign) => String(campaign.id) === String(submittedId))?.title || location.state?.campaignTitle}
+          message={location.state?.submissionMessage}
+          onClose={clearSubmissionConfirmation}
+        />
+      )}
     </div>
   );
 }
