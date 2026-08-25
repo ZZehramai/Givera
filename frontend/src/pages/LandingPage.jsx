@@ -15,9 +15,10 @@ import {
 
 import api from "../api/axios";
 import communityHeroImage from "../assets/community-hero.jpg";
+import campaignRequest from "../assets/campaignrequest.jpg";
 import image from "../assets/image.jpg";
 import image1 from "../assets/image1.jpg";
-import image2 from "../assets/image2.avif";
+import image2 from "../assets/image2.jpg";
 import AppHeader from "../components/AppHeader";
 import CampaignCard from "../components/CampaignCard";
 import GiveraChatbot from "../components/GiveraChatbot";
@@ -177,8 +178,8 @@ export function LandingPage() {
         <img src={image1} alt={t("impactImageThree")} className="aspect-[16/11] w-full object-cover" />
       </div>
       <div className="mt-3.5 text-left">
-        <p className="font-bold text-slate-900 text-base md:text-lg">{t("reviewedCare")}</p>
-        <p className="text-xs md:text-sm text-slate-500 mt-0.5">{t("reviewedCareText")}</p>
+        <p className="font-bold text-slate-900 text-base md:text-lg">{t("reviewedwithCare")}</p>
+        <p className="text-xs md:text-sm text-slate-500 mt-0.5">{t("reviewedwithCareText")}</p>
       </div>
     </div>
 
@@ -189,8 +190,8 @@ export function LandingPage() {
         <img src={image2} alt={t("impactImageFour")} className="aspect-[4/3] w-full object-cover filter contrast-105" />
       </div>
       <div className="mt-3 text-left">
-        <p className="font-bold text-slate-900 text-sm md:text-base">{t("communityPowered")}</p>
-        <p className="text-xs text-slate-500 mt-0.5">{t("communityPoweredText")}</p>
+        <p className="font-bold text-slate-900 text-sm md:text-base">{t("lastingImpact")}</p>
+        <p className="text-xs text-slate-500 mt-0.5">{t("lastingImpactText")}</p>
       </div>
     </div>
   </div>
@@ -336,7 +337,7 @@ export function LandingPage() {
                 <div className="relative mx-auto w-full max-w-lg lg:order-1 lg:max-w-none">
                   <div className="relative overflow-hidden rounded-[2rem] border-4 border-white bg-surface-container-low">
                     <img
-                      src={communityHeroImage}
+                      src={campaignRequest}
                       alt={t("frontlineInitiative")}
                       className="aspect-[4/3] w-full object-cover transition-transform duration-700 hover:scale-105"
                     />
