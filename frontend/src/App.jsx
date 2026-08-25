@@ -4,6 +4,8 @@ import { LandingPage } from "./pages/LandingPage";
 import Profile from "./pages/Profile";
 import { Register } from "./pages/Register";
 import { Login } from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import AdminCampaigns from "./pages/AdminCampaigns";
 import CampaignDetail from "./pages/CampaignDetailReference";
 import Campaigns from "./pages/Campaigns";
@@ -20,6 +22,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/campaigns/:id" element={<CampaignDetail />} />
           <Route

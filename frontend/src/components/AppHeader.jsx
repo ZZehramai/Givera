@@ -8,7 +8,6 @@ import {
 import { useState, useEffect } from "react";
 import { logout } from "../services/authService";
 import api from "../api/axios";
-import LanguageSwitch from "./LanguageSwitch";
 import { useLanguage } from "../i18n/LanguageContext";
 
 export default function AppHeader({ minimal = false }) {
@@ -101,7 +100,6 @@ export default function AppHeader({ minimal = false }) {
 
         {/* RIGHT SIDE: Notifications & User Menu */}
         <div className="flex shrink-0 items-center justify-end gap-3 sm:gap-4">
-          <LanguageSwitch compact />
           {user ? (
             <>
               {/* Notifications */}

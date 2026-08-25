@@ -39,6 +39,7 @@ import {
 import api from "../api/axios";
 import { logout } from "../services/authService";
 import LanguageSwitch from "../components/LanguageSwitch";
+import PasswordInput from "../components/PasswordInput";
 import { useLanguage } from "../i18n/LanguageContext";
 import CreateCampaign from "./CreateCampaign";
 
@@ -91,7 +92,6 @@ function Sidebar({ section, onSection, user, onLogout, pending }) {
             </p>
           </div>
         </Link>
-        <div className="mt-4"><LanguageSwitch /></div>
       </div>
       <nav className="space-y-1 px-3 py-4">
         {items.map(([key, label, Icon]) => (
@@ -124,6 +124,7 @@ function Sidebar({ section, onSection, user, onLogout, pending }) {
             </p>
             <p className="text-xs text-slate-400">{t("platformAdmin")}</p>
           </div>
+          <LanguageSwitch sidebar />
         </div>
         <button
           type="button"
@@ -1879,10 +1880,10 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
             ].map(([label, name]) => (
               <label key={name} className="text-sm font-bold text-slate-700">
                 {label}
-                <input
+                <PasswordInput
                   required
-                  type="password"
                   minLength={8}
+                  leadingIcon={null}
                   autoComplete={
                     name === "old_password"
                       ? "current-password"

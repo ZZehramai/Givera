@@ -21,6 +21,7 @@ import image2 from "../assets/image2.avif";
 import AppHeader from "../components/AppHeader";
 import CampaignCard from "../components/CampaignCard";
 import GiveraChatbot from "../components/GiveraChatbot";
+import LanguageSwitch from "../components/LanguageSwitch";
 import { useLanguage } from "../i18n/LanguageContext";
 
 const currentYear = new Date().getFullYear();
@@ -108,9 +109,9 @@ export function LandingPage() {
                 {t("heroBadgeLong")}
               </div>
 
-               <h3 className="mt-7 text-4xl font-black uppercase text-slate-900 sm:text-6xl md:text-7xl xl:text-6xl leading-[0.95]">
+               <h3 className="mt-7 text-4xl font-black tracking-wide uppercase sm:text-5xl md:text-5xl xl:text-6xl leading-[0.95]">
                 {t("heroHeadline")} <br />
-                <span className="text-primary">{t("byGiving")}</span>
+                <span className="text-primary mt-2">{t("byGiving")}</span>
               </h3>
               <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-on-surface-variant md:text-xl">
                 {t("heroDescription")}
@@ -454,7 +455,7 @@ export function LandingPage() {
             <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:gap-16">
               <div className="lg:sticky lg:top-28">
                 <p className="text-sm font-bold uppercase tracking-[0.11em] text-primary">{t("helpCentre")}</p>
-                <h3 className="mt-4 text-4xl font-extrabold text-black md:text-5xl sm:text-6xl">{t("covered")}</h3>
+                <h3 className="mt-4 text-4xl font-extrabold text-black md:text-6xl sm:text-6xl">{t("covered")}</h3>
                 <p className="mt-5 max-w-md text-base leading-7 text-black/80">
                   {t("faqIntro")}
                 </p>
@@ -517,7 +518,7 @@ export function LandingPage() {
       </main>
 
       {/* FOOTER */}
-      <footer className="mt-auto w-full border-t border-slate-200 bg-white text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
+      <footer id="footer" className="mt-auto w-full border-t border-slate-200 bg-white text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
         <div className="mx-auto max-w-container-max px-6 py-12">
           <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
             
@@ -532,11 +533,8 @@ export function LandingPage() {
               <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
                 {t("accountabilityText")}
               </p>
-              <div className="mt-2 flex items-center">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                  <ShieldCheck className="h-4 w-4" />
-                  <span>{t("verifiedTransparent")}</span>
-                </div>
+              <div className="mt-2">
+                <LanguageSwitch footer />
               </div>
             </div>
 
@@ -617,8 +615,10 @@ export function LandingPage() {
           </div>
 
           {/* Bottom Copyright Bar */}
-          <div className="mt-10 pt-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
-            © {currentYear} Givera. {t("rightsReserved")}
+          <div className="mt-4 pt-6 text-center dark:border-slate-800">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              © {currentYear} Givera. {t("rightsReserved")}
+            </p>
           </div>
         </div>
       </footer>

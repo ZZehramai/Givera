@@ -1,10 +1,11 @@
 import { GoogleLogin } from "@react-oauth/google";
-import { ArrowLeft, Heart, LockKeyhole, Mail } from "lucide-react";
+import { ArrowLeft, Mail } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { login, loginWithGoogle } from "../services/authService";
 import { useLanguage } from "../i18n/LanguageContext";
+import PasswordInput from "../components/PasswordInput";
 
 const inputClass =
   "w-full rounded-2xl border border-outline-variant bg-white py-3.5 pl-12 pr-4 text-on-surface outline-none transition placeholder:text-on-surface-variant/55 focus:border-primary focus:ring-4 focus:ring-primary/10";
@@ -105,19 +106,18 @@ export function Login() {
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm font-bold">{t("password")}</span>
-          <span className="relative block">
-            <LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" size={19} aria-hidden="true" />
-            <input
-              required
-              autoComplete="current-password"
-              type="password"
-              placeholder={t("enterPassword")}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className={inputClass}
-            />
+          <span className="mb-2 flex items-center justify-between gap-3">
+            <span className="text-sm font-bold">{t("password")}</span>
+            <Link to="/forgot-password" className="text-xs font-bold text-primary transition hover:underline">{t("forgotPassword")}</Link>
           </span>
+          <PasswordInput
+            required
+            autoComplete="current-password"
+            placeholder={t("enterPassword")}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className={inputClass}
+          />
         </label>
 
         {error && (
