@@ -1143,7 +1143,7 @@ function UserDashboard() {
         <main className="min-w-0 py-6 lg:py-4">
           <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="mt-2 text-3xl font-extrabold text-[#7A5BE6] md:text-4xl">{pageTitle}</h1>
+              <h3 className="mt-2 text-3xl font-extrabold text-[#7A5BE6] md:text-4xl">{pageTitle}</h3>
               <p className="mt-2 max-w-2xl text-sm text-slate-500">{pageSubtitle}</p>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
