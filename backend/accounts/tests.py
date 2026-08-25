@@ -7,7 +7,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import AdminUserAction, User
+from .models import AdminUserAction, NewsletterSubscriber, User
 
 
 @override_settings(
@@ -327,3 +327,44 @@ class AdminUserManagementApiTests(APITestCase):
         response = self.client.get(reverse("admin-user-list"))
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+class NewsletterSubscriptionApiTests(APITestCase):
+    def test_visitor_can_subscribe_and_receives_confirmation(self):
+        response = self.client.post(
+            reverse("newsletter-subscribe"),
+            {"email": "Reader@Example.com", "language": "en"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        subscriber = NewsletterSubscriber.objects.get()
+        self.assertEqual(subscriber.email, "reader@example.com")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [subscriber.email])
+
+    def test_duplicate_subscription_is_successful_without_duplicate_email(self):
+        NewsletterSubscriber.objects.create(email="reader@example.com")
+
+        response = self.client.post(
+            reverse("newsletter-subscribe"),
+            {"email": "READER@example.com", "language": "my"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["already_subscribed"])
+        self.assertEqual(NewsletterSubscriber.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(NewsletterSubscriber.objects.get().language, "my")
+
+    def test_invalid_email_is_rejected(self):
+        response = self.client.post(
+            reverse("newsletter-subscribe"),
+            {"email": "not-an-email"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(NewsletterSubscriber.objects.count(), 0)
