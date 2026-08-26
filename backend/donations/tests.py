@@ -86,6 +86,11 @@ class DonationApiTests(APITestCase):
         )
         self.assertEqual(submitted.status_code, 200)
         self.assertEqual(submitted.data["status"], "submitted")
+        notification = Notification.objects.get(
+            recipient=self.admin,
+            type=Notification.Type.PAYMENT_PENDING_REVIEW,
+        )
+        self.assertEqual(notification.link, "/dashboard?section=transactions")
         return submitted.data
 
     def test_wallet_transfer_only_records_donation_after_admin_verification(self):

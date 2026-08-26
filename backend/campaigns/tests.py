@@ -59,6 +59,11 @@ class CampaignApiTests(APITestCase):
         assessment = CampaignTrustAssessment.objects.get(campaign=campaign)
         self.assertIn(assessment.risk_level, CampaignTrustAssessment.RiskLevel.values)
         self.assertEqual(assessment.provider, "demo")
+        notification = Notification.objects.get(
+            recipient=self.admin,
+            type=Notification.Type.CAMPAIGN_PENDING_REVIEW,
+        )
+        self.assertEqual(notification.link, "/dashboard?section=campaigns")
 
     def test_admin_created_campaign_is_published_immediately(self):
         self.client.force_authenticate(self.admin)
@@ -114,6 +119,11 @@ class CampaignApiTests(APITestCase):
         self.assertEqual(campaign.status, Campaign.Status.PENDING)
         self.assertEqual(len(response.data["cover_media"]), 1)
         self.assertEqual(response.data["gallery_media"], [])
+        notification = Notification.objects.get(
+            recipient=self.admin,
+            type=Notification.Type.CAMPAIGN_PENDING_REVIEW,
+        )
+        self.assertIn("resubmitted", notification.title.lower())
 
     def test_public_list_only_shows_approved_campaigns(self):
         Campaign.objects.create(owner=self.owner, status=Campaign.Status.PENDING, **self.payload)

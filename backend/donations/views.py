@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from accounts.permissions import IsAdmin
 from accounts.models import Notification
+from accounts.notifications import notify_active_admins
 from campaigns.models import Campaign
 from campaigns.services import campaign_is_due, complete_campaign_if_due
 
@@ -117,6 +118,15 @@ class DemoPaymentProofView(APIView):
         payment.reviewed_by = None
         payment.reviewed_at = None
         payment.save(update_fields=["receipt", "wallet_transaction_id", "status", "proof_submitted_at", "failure_reason", "reviewed_by", "reviewed_at"])
+        notify_active_admins(
+            notification_type=Notification.Type.PAYMENT_PENDING_REVIEW,
+            title="Payment proof submitted",
+            message=(
+                f"{payment.donor.username} submitted a {payment.get_provider_display()} transfer "
+                f"of {payment.amount:,.0f} MMK for {payment.campaign.title}."
+            ),
+            link="/dashboard?section=transactions",
+        )
         return Response(DemoPaymentSerializer(payment, context={"request": request}).data)
 
 

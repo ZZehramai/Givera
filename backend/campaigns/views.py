@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import Notification
+from accounts.notifications import notify_active_admins
 from accounts.permissions import IsAdmin
 
 from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization, Comment
@@ -86,6 +87,12 @@ class CampaignListCreateView(generics.ListCreateAPIView):
             ])
         if campaign.status == Campaign.Status.PENDING:
             create_campaign_trust_assessment(campaign)
+            notify_active_admins(
+                notification_type=Notification.Type.CAMPAIGN_PENDING_REVIEW,
+                title="New campaign request",
+                message=f'{campaign.owner.username} submitted “{campaign.title}” for review.',
+                link="/dashboard?section=campaigns",
+            )
         return Response(self.get_serializer(campaign).data, status=status.HTTP_201_CREATED)
 
 
@@ -128,6 +135,7 @@ class CampaignDetailView(generics.RetrieveUpdateDestroyAPIView):
         media_types = [validate_campaign_cover_upload(upload) for upload in files]
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
+        previous_status = instance.status
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
@@ -144,6 +152,13 @@ class CampaignDetailView(generics.RetrieveUpdateDestroyAPIView):
             ])
         if instance.status == Campaign.Status.PENDING:
             create_campaign_trust_assessment(instance)
+            if previous_status != Campaign.Status.PENDING:
+                notify_active_admins(
+                    notification_type=Notification.Type.CAMPAIGN_PENDING_REVIEW,
+                    title="Campaign resubmitted",
+                    message=f'{instance.owner.username} resubmitted “{instance.title}” for review.',
+                    link="/dashboard?section=campaigns",
+                )
         return Response(self.get_serializer(instance).data)
 
     def perform_destroy(self, instance):
