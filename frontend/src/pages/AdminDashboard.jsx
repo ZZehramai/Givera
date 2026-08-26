@@ -2267,7 +2267,12 @@ export default function AdminDashboard() {
           page={campaignPage}
           onPageChange={setCampaignPage}
           onReview={setSelectedCampaign}
-          onView={(campaign) => navigate(`/campaigns/${campaign.id}`)}
+          onView={(campaign) => navigate(`/campaigns/${campaign.id}`, {
+            state: {
+              campaignReturnTo: "/dashboard?section=campaigns",
+              campaignReturnLabelKey: "backToAdminCampaigns",
+            },
+          })}
         />
       ),
       donations: (

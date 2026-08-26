@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { CalendarDays, MapPin, Bookmark } from "lucide-react";
 import { mediaUrl } from "../utils/mediaUrl";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -7,8 +7,9 @@ import { useLanguage } from "../i18n/LanguageContext";
 const fallbackImage =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80";
 
-export default function CampaignCard({ campaign }) {
+export default function CampaignCard({ campaign, returnTo, returnLabelKey }) {
   const { t, formatKyat, formatNumber } = useLanguage();
+  const location = useLocation();
   const [isSaved, setIsSaved] = useState(() => {
     const savedCampaigns = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
     return savedCampaigns.some((item) => item.id === campaign.id);
@@ -44,6 +45,10 @@ export default function CampaignCard({ campaign }) {
   return (
     <Link
       to={`/campaigns/${campaign.id}`}
+      state={{
+        campaignReturnTo: returnTo || `${location.pathname}${location.search}`,
+        campaignReturnLabelKey: returnLabelKey,
+      }}
       className="group flex flex-col transition duration-200 hover:-translate-y-1"
     >
       <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-slate-100">

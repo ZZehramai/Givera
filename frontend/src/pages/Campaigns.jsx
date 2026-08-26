@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 import api from "../api/axios";
 import AppHeader from "../components/AppHeader";
@@ -50,9 +51,11 @@ function EmptyState({ searching }) {
 
 export default function Campaigns() {
   const { t } = useLanguage();
+  const location = useLocation();
+  const initialParams = new URLSearchParams(location.search);
   const [campaigns, setCampaigns] = useState([]);
-  const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [query, setQuery] = useState(initialParams.get("q") || "");
+  const [selectedCategory, setSelectedCategory] = useState(initialParams.get("category") || "all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -80,6 +83,10 @@ export default function Campaigns() {
     if (selectedCategory === "all") return campaigns;
     return campaigns.filter((c) => c.category === selectedCategory);
   }, [campaigns, selectedCategory]);
+  const campaignReturnTo = `/campaigns${query || selectedCategory !== "all" ? `?${new URLSearchParams({
+    ...(query ? { q: query } : {}),
+    ...(selectedCategory !== "all" ? { category: selectedCategory } : {}),
+  }).toString()}` : ""}`;
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -153,7 +160,7 @@ export default function Campaigns() {
           ) : filteredCampaigns.length > 0 ? (
             <div className="grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
               {filteredCampaigns.map((campaign) => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
+                <CampaignCard key={campaign.id} campaign={campaign} returnTo={campaignReturnTo} returnLabelKey="backToCampaigns" />
               ))}
             </div>
           ) : (

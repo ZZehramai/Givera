@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import {
   ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, CircleDollarSign, FileImage,
   Heart, MapPin, MessageCircleHeart, ReceiptText, Send, ShieldCheck, Smartphone,
@@ -9,6 +9,7 @@ import {
 import api from "../api/axios";
 import { mediaUrl } from "../utils/mediaUrl";
 import CommentsSection from '../components/CommentsSection';
+import { useLanguage } from "../i18n/LanguageContext";
 
 const fallbackImage = "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80";
 const kyat = (value) => `${Number(value || 0).toLocaleString()} Ks`;
@@ -32,6 +33,8 @@ function SectionTitle({ eyebrow, title, description, icon: Icon }) {
 
 export default function CampaignDetail() {
   const { id } = useParams();
+  const location = useLocation();
+  const { t } = useLanguage();
   const [campaign, setCampaign] = useState(null);
   const [updates, setUpdates] = useState([]);
   const [donors, setDonors] = useState([]);
@@ -159,12 +162,14 @@ export default function CampaignDetail() {
   const isOrganizer = user?.id === campaign.owner;
   const isAdmin = user?.role === "admin" || user?.is_staff;
   const days = Math.max(0, Math.ceil((new Date(campaign.deadline).getTime() - Date.now()) / 86400000));
+  const returnTo = location.state?.campaignReturnTo || "/campaigns";
+  const returnLabelKey = location.state?.campaignReturnLabelKey || "backToCampaigns";
 
   return (
     <div className="min-h-screen bg-[#F8F7FC] text-slate-900">
       <main className="mx-auto max-w-[1280px] px-4 py-7 sm:px-6 lg:py-10">
-        <Link to="/campaigns" className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-[#7451E8]">
-          <ArrowLeft size={17} /> Back to campaigns
+        <Link to={returnTo} className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-[#7451E8]">
+          <ArrowLeft size={17} /> {t(returnLabelKey)}
         </Link>
         
         {/* Banner Section */}
