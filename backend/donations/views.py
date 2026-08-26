@@ -13,13 +13,13 @@ from campaigns.models import Campaign
 from campaigns.services import campaign_is_due, complete_campaign_if_due
 
 from .models import DemoPayment, Donation
-from .serializers import AdminDonationSerializer, DemoPaymentCreateSerializer, DemoPaymentSerializer, DonationSerializer
+from .serializers import AdminDonationSerializer, AdminPaymentSerializer, DemoPaymentCreateSerializer, DemoPaymentSerializer, DonationSerializer
 from .certificates import donation_certificate_response
 
 
 class DonationCreateView(generics.CreateAPIView):
     serializer_class = DonationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdmin]
 
     @transaction.atomic
     def perform_create(self, serializer):
@@ -73,7 +73,7 @@ class AdminDonationListView(generics.ListAPIView):
 
 
 class DemoPaymentCreateView(generics.CreateAPIView):
-    """Starts a visual-only local-wallet checkout. No money leaves a wallet."""
+    """Creates a wallet transfer reference before the donor scans the QR."""
 
     serializer_class = DemoPaymentCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -84,9 +84,106 @@ class DemoPaymentCreateView(generics.CreateAPIView):
         payment = serializer.save(
             donor=self.request.user,
             transaction_reference=f"GIV-{timezone.now():%Y%m%d}-{uuid4().hex[:6].upper()}",
-            expires_at=timezone.now() + timedelta(minutes=5),
+            expires_at=timezone.now() + timedelta(hours=24),
         )
-        return Response(DemoPaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
+        return Response(DemoPaymentSerializer(payment, context={"request": request}).data, status=status.HTTP_201_CREATED)
+
+
+class DemoPaymentProofView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        payment = get_object_or_404(DemoPayment, pk=pk, donor=request.user)
+        if payment.status not in {DemoPayment.Status.PENDING, DemoPayment.Status.FAILED}:
+            return Response({"detail": "This transfer can no longer accept payment proof."}, status=status.HTTP_400_BAD_REQUEST)
+        receipt = request.FILES.get("receipt")
+        wallet_transaction_id = request.data.get("wallet_transaction_id", "").strip()
+        if not receipt and not wallet_transaction_id:
+            return Response({"detail": "Upload a receipt or enter the wallet transaction number."}, status=status.HTTP_400_BAD_REQUEST)
+        if receipt:
+            if not getattr(receipt, "content_type", "").startswith("image/"):
+                return Response({"detail": "The receipt must be an image."}, status=status.HTTP_400_BAD_REQUEST)
+            if receipt.size > 5 * 1024 * 1024:
+                return Response({"detail": "The receipt image must be 5 MB or smaller."}, status=status.HTTP_400_BAD_REQUEST)
+        if wallet_transaction_id and DemoPayment.objects.exclude(pk=payment.pk).filter(wallet_transaction_id__iexact=wallet_transaction_id).exists():
+            return Response({"detail": "This wallet transaction number has already been submitted."}, status=status.HTTP_400_BAD_REQUEST)
+        if receipt:
+            payment.receipt = receipt
+        payment.wallet_transaction_id = wallet_transaction_id or None
+        payment.status = DemoPayment.Status.SUBMITTED
+        payment.proof_submitted_at = timezone.now()
+        payment.failure_reason = ""
+        payment.reviewed_by = None
+        payment.reviewed_at = None
+        payment.save(update_fields=["receipt", "wallet_transaction_id", "status", "proof_submitted_at", "failure_reason", "reviewed_by", "reviewed_at"])
+        return Response(DemoPaymentSerializer(payment, context={"request": request}).data)
+
+
+class AdminPaymentListView(generics.ListAPIView):
+    serializer_class = AdminPaymentSerializer
+    permission_classes = [IsAdmin]
+    pagination_class = AdminDonationPagination
+
+    def get_queryset(self):
+        queryset = DemoPayment.objects.select_related("donor", "campaign", "campaign__owner", "donation", "reviewed_by")
+        query = self.request.query_params.get("q", "").strip()
+        if query:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(donor__email__icontains=query)
+                | Q(donor__username__icontains=query)
+                | Q(campaign__title__icontains=query)
+                | Q(transaction_reference__icontains=query)
+                | Q(wallet_transaction_id__icontains=query)
+            )
+        return queryset
+
+
+class AdminPaymentReviewView(APIView):
+    permission_classes = [IsAdmin]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        payment = get_object_or_404(
+            DemoPayment.objects.select_for_update().select_related("campaign", "donation"),
+            pk=pk,
+        )
+        decision = request.data.get("decision")
+        reason = request.data.get("reason", "").strip()
+        if decision not in {"verify", "reject"}:
+            return Response({"detail": "Choose verify or reject."}, status=status.HTTP_400_BAD_REQUEST)
+        if payment.status != DemoPayment.Status.SUBMITTED:
+            return Response({"detail": "Only transfers pending verification can be reviewed."}, status=status.HTTP_400_BAD_REQUEST)
+        if decision == "reject":
+            if not reason:
+                return Response({"detail": "Add a rejection reason."}, status=status.HTTP_400_BAD_REQUEST)
+            payment.status = DemoPayment.Status.FAILED
+            payment.failure_reason = reason
+            payment.reviewed_by = request.user
+            payment.reviewed_at = timezone.now()
+            payment.save(update_fields=["status", "failure_reason", "reviewed_by", "reviewed_at"])
+            return Response(AdminPaymentSerializer(payment, context={"request": request}).data)
+
+        campaign = Campaign.objects.select_for_update().get(pk=payment.campaign_id)
+        donation = Donation.objects.create(
+            donor=payment.donor,
+            campaign=campaign,
+            amount=payment.amount,
+            message=payment.message,
+            is_anonymous=payment.is_anonymous,
+        )
+        campaign.amount_raised += payment.amount
+        if campaign_is_due(campaign):
+            campaign.status = Campaign.Status.COMPLETED
+        campaign.save(update_fields=["amount_raised", "status", "updated_at"])
+        payment.status = DemoPayment.Status.PAID
+        payment.donation = donation
+        payment.completed_at = timezone.now()
+        payment.reviewed_by = request.user
+        payment.reviewed_at = timezone.now()
+        payment.failure_reason = ""
+        payment.save(update_fields=["status", "donation", "completed_at", "reviewed_by", "reviewed_at", "failure_reason"])
+        return Response(AdminPaymentSerializer(payment, context={"request": request}).data)
 
 
 class DemoPaymentConfirmView(APIView):
@@ -166,7 +263,7 @@ class MyDemoPaymentListView(generics.ListAPIView):
 
 
 class DemoPaymentCertificateView(APIView):
-    """Downloads a certificate for the authenticated donor's completed demo payment."""
+    """Downloads a certificate for the authenticated donor's verified transfer."""
 
     permission_classes = [permissions.IsAuthenticated]
 
@@ -178,7 +275,7 @@ class DemoPaymentCertificateView(APIView):
         )
         if payment.status != DemoPayment.Status.PAID or not payment.donation_id:
             return Response(
-                {"detail": "A certificate is available only after the demo donation is completed."},
+                {"detail": "A certificate is available only after an administrator verifies the transfer."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return donation_certificate_response(payment)

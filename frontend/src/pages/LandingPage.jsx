@@ -270,14 +270,14 @@ export function LandingPage() {
                 {/* Main Large Card (Left side) */}
                 {mainCampaign && (
                   <div className="lg:col-span-6 flex flex-col">
-                    <CampaignCard campaign={mainCampaign} isFeatured={true} />
+                    <CampaignCard campaign={mainCampaign} isFeatured={true} returnTo="/" returnLabelKey="backToHome" />
                   </div>
                 )}
 
                 {/* 2x2 Grid of Cards (Right side) */}
                 <div className="lg:col-span-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
                   {sideCampaigns.map((campaign) => (
-                    <CampaignCard key={campaign.id} campaign={campaign} />
+                    <CampaignCard key={campaign.id} campaign={campaign} returnTo="/" returnLabelKey="backToHome" />
                   ))}
                 </div>
               </div>

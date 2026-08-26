@@ -101,8 +101,51 @@ class DemoPaymentSerializer(serializers.ModelSerializer):
     campaign_id = serializers.UUIDField(source="campaign.id", read_only=True)
     campaign_title = serializers.CharField(source="campaign.title", read_only=True)
     donation = DonationSerializer(read_only=True)
+    receipt_url = serializers.SerializerMethodField()
+    qr_code_url = serializers.SerializerMethodField()
 
     class Meta:
         model = DemoPayment
-        fields = ["id", "campaign_id", "campaign_title", "provider", "provider_label", "amount", "status", "transaction_reference", "failure_reason", "donation", "created_at", "completed_at", "expires_at"]
+        fields = ["id", "campaign_id", "campaign_title", "provider", "provider_label", "amount", "status", "transaction_reference", "wallet_transaction_id", "receipt_url", "qr_code_url", "failure_reason", "donation", "created_at", "proof_submitted_at", "completed_at", "reviewed_at", "expires_at"]
         read_only_fields = fields
+
+    def get_receipt_url(self, obj):
+        if not obj.receipt:
+            return None
+        request = self.context.get("request")
+        return request.build_absolute_uri(obj.receipt.url) if request else obj.receipt.url
+
+    def get_qr_code_url(self, obj):
+        request = self.context.get("request")
+        path = f"/payment-qr/{'kbzpay' if obj.provider == DemoPayment.Provider.KBZPAY else 'wavepay'}-qr.png"
+        return request.build_absolute_uri(path) if request else path
+
+
+class AdminPaymentSerializer(DemoPaymentSerializer):
+    donor_name = serializers.SerializerMethodField()
+    donor_email = serializers.EmailField(source="donor.email", read_only=True)
+    donor_phone_number = serializers.CharField(source="donor.phone_number", read_only=True)
+    campaign_owner_name = serializers.SerializerMethodField()
+    payment_method = serializers.CharField(source="get_provider_display", read_only=True)
+    payment_reference = serializers.CharField(source="transaction_reference", read_only=True)
+    payment_status = serializers.CharField(source="status", read_only=True)
+    payment_status_label = serializers.CharField(source="get_status_display", read_only=True)
+    reviewer_name = serializers.SerializerMethodField()
+
+    class Meta(DemoPaymentSerializer.Meta):
+        fields = DemoPaymentSerializer.Meta.fields + [
+            "donor_name", "donor_email", "donor_phone_number", "campaign_owner_name",
+            "payment_method", "payment_reference", "payment_status", "payment_status_label",
+            "reviewer_name",
+        ]
+
+    def get_donor_name(self, obj):
+        return obj.donor.get_full_name() or obj.donor.username
+
+    def get_campaign_owner_name(self, obj):
+        return obj.campaign.owner.get_full_name() or obj.campaign.owner.username
+
+    def get_reviewer_name(self, obj):
+        if not obj.reviewed_by:
+            return None
+        return obj.reviewed_by.get_full_name() or obj.reviewed_by.username

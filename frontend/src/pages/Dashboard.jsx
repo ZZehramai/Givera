@@ -195,7 +195,7 @@ function RecommendationsPanel({ recommendations, loading, onBrowse }) {
                   {t(reasonLabels[campaign.recommendation_reason] || "recommendActiveReason")}
                 </span>
               </div>
-              <CampaignCard campaign={campaign} />
+              <CampaignCard campaign={campaign} returnTo="/dashboard?section=overview" returnLabelKey="backToOverview" />
             </div>
           ))}
         </div>
@@ -257,19 +257,21 @@ function DonutChart({ value, label }) {
 
 function SavedCampaignsPanel() {
   const { t } = useLanguage();
+  const location = useLocation();
+  const initialPage = Math.max(1, Number(new URLSearchParams(location.search).get("page")) || 1);
   const [savedCampaigns, setSavedCampaigns] = useState([]);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
 
   useEffect(() => {
     const loadSaved = () => {
       const items = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
       setSavedCampaigns(items);
-      setPage(1);
+      setPage(initialPage);
     };
     loadSaved();
     window.addEventListener("savedCampaignsUpdated", loadSaved);
     return () => window.removeEventListener("savedCampaignsUpdated", loadSaved);
-  }, []);
+  }, [initialPage]);
   const pages = Math.max(1, Math.ceil(savedCampaigns.length / CAMPAIGNS_PER_PAGE));
   const safePage = Math.min(page, pages);
   const visibleCampaigns = savedCampaigns.slice((safePage - 1) * CAMPAIGNS_PER_PAGE, safePage * CAMPAIGNS_PER_PAGE);
@@ -282,7 +284,7 @@ function SavedCampaignsPanel() {
             <CampaignPagination page={safePage} pages={pages} onPageChange={setPage} className="mb-4" />
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {visibleCampaigns.map((campaign) => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
+                <CampaignCard key={campaign.id} campaign={campaign} returnTo={`/dashboard?section=saved-campaigns${safePage > 1 ? `&page=${safePage}` : ""}`} returnLabelKey="backToSavedCampaigns" />
               ))}
             </div>
           </>
@@ -314,6 +316,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
   const paymentStatus = {
     paid: [t("paymentPaid"), "bg-emerald-100 text-emerald-700"],
     pending: [t("paymentPending"), "bg-amber-100 text-amber-800"],
+    submitted: [t("paymentSubmitted"), "bg-sky-100 text-sky-700"],
     failed: [t("paymentFailed"), "bg-rose-100 text-rose-700"],
     cancelled: [t("paymentCancelled"), "bg-slate-100 text-slate-700"],
     expired: [t("paymentExpired"), "bg-orange-100 text-orange-700"],
@@ -445,7 +448,11 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
                     </td>
                     <td className="min-w-56 px-5 py-4">
                       {payment.campaign_id ? (
-                        <Link to={`/campaigns/${payment.campaign_id}`} className="line-clamp-2 font-bold text-slate-900 hover:text-[#6549C9]">
+                        <Link
+                          to={`/campaigns/${payment.campaign_id}`}
+                          state={{ campaignReturnTo: "/dashboard?section=history", campaignReturnLabelKey: "backToHistory" }}
+                          className="line-clamp-2 font-bold text-slate-900 hover:text-[#6549C9]"
+                        >
                           {payment.campaign_title || payment.donation?.campaign?.title || t("supportedCampaign")}
                         </Link>
                       ) : (
@@ -494,9 +501,11 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
 
 function BrowseCampaigns({ campaigns, loading }) {
   const { t } = useLanguage();
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("");
-  const [page, setPage] = useState(1);
+  const location = useLocation();
+  const browseParams = new URLSearchParams(location.search);
+  const [query, setQuery] = useState(browseParams.get("q") || "");
+  const [category, setCategory] = useState(browseParams.get("category") || "");
+  const [page, setPage] = useState(Math.max(1, Number(browseParams.get("page")) || 1));
 
   const filteredCampaigns = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -511,6 +520,12 @@ function BrowseCampaigns({ campaigns, loading }) {
   const pages = Math.max(1, Math.ceil(filteredCampaigns.length / CAMPAIGNS_PER_PAGE));
   const safePage = Math.min(page, pages);
   const visibleCampaigns = filteredCampaigns.slice((safePage - 1) * CAMPAIGNS_PER_PAGE, safePage * CAMPAIGNS_PER_PAGE);
+  const browseReturnTo = `/dashboard?${new URLSearchParams({
+    section: "browse",
+    ...(query ? { q: query } : {}),
+    ...(category ? { category } : {}),
+    ...(safePage > 1 ? { page: String(safePage) } : {}),
+  }).toString()}`;
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -541,7 +556,7 @@ function BrowseCampaigns({ campaigns, loading }) {
             <CampaignPagination page={safePage} pages={pages} onPageChange={setPage} className="mb-4" />
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {visibleCampaigns.map((campaign) => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
+                <CampaignCard key={campaign.id} campaign={campaign} returnTo={browseReturnTo} returnLabelKey="backToBrowseCampaigns" />
               ))}
             </div>
           </>
@@ -607,7 +622,8 @@ function SubmissionSuccessModal({ title, message, onClose }) {
 
 function MyCampaignsPanel({ campaigns, loading }) {
   const { t } = useLanguage();
-  const [page, setPage] = useState(1);
+  const location = useLocation();
+  const [page, setPage] = useState(Math.max(1, Number(new URLSearchParams(location.search).get("page")) || 1));
   const pages = Math.max(1, Math.ceil(campaigns.length / CAMPAIGNS_PER_PAGE));
   const safePage = Math.min(page, pages);
   const visibleCampaigns = campaigns.slice((safePage - 1) * CAMPAIGNS_PER_PAGE, safePage * CAMPAIGNS_PER_PAGE);
@@ -623,7 +639,7 @@ function MyCampaignsPanel({ campaigns, loading }) {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {visibleCampaigns.map((campaign) => (
                 <div key={campaign.id} className="relative">
-                  <CampaignCard campaign={campaign} />
+                  <CampaignCard campaign={campaign} returnTo={`/dashboard?section=my-campaigns${safePage > 1 ? `&page=${safePage}` : ""}`} returnLabelKey="backToMyCampaigns" />
 
                   {campaign.rejection_reason && (
                     <div className="mt-3 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
@@ -1113,6 +1129,7 @@ function UserDashboard() {
 
   const handleSectionChange = (section) => {
     setActiveSection(section);
+    navigate(`/dashboard?section=${section}`, { replace: true });
     if (section !== "my-campaigns") setShowSubmissionSuccess(false);
   };
 
@@ -1198,7 +1215,7 @@ function UserDashboard() {
               <RecommendationsPanel
                 recommendations={recommendations}
                 loading={recommendationsLoading}
-                onBrowse={() => setActiveSection("browse")}
+                onBrowse={() => handleSectionChange("browse")}
               />
 
               <section className="mt-6 grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
