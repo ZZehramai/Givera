@@ -174,7 +174,7 @@ function RecommendationsPanel({ recommendations, loading, onBrowse }) {
         <div className="flex items-start gap-3">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[.16em] text-[#6F52D9]">{t("pickedForYou")}</p>
-            <h2 className="mt-1 text-xl font-extrabold text-slate-900">{t("recommendedCampaigns")}</h2>
+            <h3 className="mt-2 text-2xl font-extrabold text-slate-900">{t("recommendedCampaigns")}</h3>
           </div>
         </div>
         <button type="button" onClick={onBrowse} className="rounded-full border border-[#D8CFFA] bg-[#F7F4FF] px-4 py-2 text-sm font-extrabold text-[#6549C9] transition hover:bg-[#EEE9FF]">
@@ -290,7 +290,7 @@ function SavedCampaignsPanel() {
           </>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-            <h2 className="text-2xl font-bold text-slate-800">{t("noSaved")}</h2>
+            <h3 className="text-2xl font-bold text-slate-900">{t("noSaved")}</h3>
             <p className="mt-2 text-slate-500">{t("noSavedText")}</p>
           </div>
         )}
@@ -383,9 +383,9 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+          <h3 className="flex items-center gap-2 text-2xl font-extrabold text-slate-900">
             <Megaphone size={18} className="text-[#6F52D9]" /> {t("createdCampaigns")}
-          </h2>
+          </h3>
           {campaigns.length > 0 && <CampaignPagination page={safeCampaignPage} pages={campaignPages} onPageChange={setCampaignPage} />}
         </div>
           {campaigns.length ? (
@@ -420,9 +420,9 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+          <h3 className="flex items-center gap-2 text-2xl font-extrabold text-slate-900">
             <CreditCard size={18} className="text-[#6F52D9]" /> {t("paymentActivity")}
-          </h2>
+          </h3>
           {demoPayments.length > 0 && <CampaignPagination page={safePaymentPage} pages={paymentPages} onPageChange={setPaymentPage} />}
         </div>
         {demoPayments.length ? (
@@ -562,7 +562,7 @@ function BrowseCampaigns({ campaigns, loading }) {
           </>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-            <h2 className="text-2xl font-bold text-slate-800">{t("noCampaigns")}</h2>
+            <h3 className="text-2xl font-extrabold text-slate-900">{t("noCampaigns")}</h3>
             <p className="mt-2 text-slate-500">{t("tryAnother")}</p>
           </div>
         )}
@@ -602,9 +602,9 @@ function SubmissionSuccessModal({ title, message, onClose }) {
           <Check size={30} strokeWidth={3} />
         </span>
         <p className="mt-6 text-sm font-bold uppercase tracking-[0.14em] text-emerald-700">{t("requestReceived")}</p>
-        <h2 id="submission-success-title" className="mt-2 text-2xl font-extrabold text-slate-950 sm:text-3xl">
+        <h3 id="submission-success-title" className="mt-2 text-2xl font-extrabold text-slate-950 sm:text-3xl">
           {message || t("submittedSuccess")}
-        </h2>
+        </h3>
         <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-slate-600">
           <strong className="text-slate-900">{title || t("yourCampaign")}</strong> {t("pendingReviewMessage")}
         </p>
@@ -660,9 +660,9 @@ function MyCampaignsPanel({ campaigns, loading }) {
           </>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-            <h2 className="text-2xl font-bold text-slate-800">
+            <h3 className="text-2xl font-extrabold text-slate-900">
               {t("noSubmittedCampaign")}
-            </h2>
+            </h3>
             <p className="mt-2 text-slate-500">
               {t("tellStory")}
             </p>
@@ -796,7 +796,7 @@ function ProfilePanel() {
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#6F52D9] text-2xl font-extrabold text-white">
               {initial}
             </div>
-            <h2 className="mt-4 truncate text-lg font-extrabold text-slate-900">{user.username}</h2>
+            <h3 className="mt-4 truncate text-2xl font-extrabold text-slate-900">{user.username}</h3>
             <p className="mt-1 truncate text-sm text-slate-500">{user.email}</p>
           </div>
         </aside>
@@ -805,7 +805,7 @@ function ProfilePanel() {
         <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <div className="flex flex-col gap-3 border-b border-slate-100 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-extrabold text-slate-800">{t("personalInformation")}</h2>
+              <h3 className="text-2xl font-extrabold text-slate-900">{t("personalInformation")}</h3>
             </div>
             <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
               <ShieldCheck size={15} /> {t("accountVerified")}
@@ -848,7 +848,7 @@ function ProfilePanel() {
                 <Bell size={20} />
               </span>
               <div>
-                <h2 className="text-xl font-extrabold text-slate-800">{t("campaignNotifications")}</h2>
+                <h3 className="text-2xl font-extrabold text-slate-900">{t("campaignNotifications")}</h3>
                 <p className="mt-1 text-sm leading-6 text-slate-500">{t("campaignNotificationsHelp")}</p>
               </div>
             </div>
@@ -877,7 +877,7 @@ function ProfilePanel() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[.14em] text-[#6F52D9]">{t("security")}</p>
-              <h2 className="mt-2 text-xl font-extrabold text-slate-800">{t("changePassword")}</h2>
+              <h3 className="mt-2 text-2xl font-extrabold text-slate-900">{t("changePassword")}</h3>
               <p className="mt-1 text-sm text-slate-500">{t("strongPassword")}</p>
             </div>
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#FFF4C8] text-amber-700">
@@ -1111,7 +1111,7 @@ function UserDashboard() {
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">{t("campaignPerformance")}</p>
-                      <h2 className="mt-2 text-xl font-extrabold text-slate-900">{t("fundsRaised")}</h2>
+                      <h3 className="mt-2 text-2xl font-extrabold text-slate-900">{t("fundsRaised")}</h3>
                     </div>
                     <div className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]">
                       <BarChart3 size={20} />
@@ -1145,7 +1145,7 @@ function UserDashboard() {
                 </article>
                 <article className="flex flex-col items-center justify-center rounded-3xl border border-slate-200/80 bg-white p-6 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
                   <DonutChart value={metrics.progress} label={t("ofGoal")} />
-                  <h2 className="mt-5 text-xl font-extrabold text-slate-900">{t("overallProgress")}</h2>
+                  <h3 className="mt-5 text-2xl font-extrabold text-slate-900">{t("overallProgress")}</h3>
                   <p className="mt-2 text-sm leading-6 text-slate-500">
                     {money(metrics.raised)} {t("raisedAcross")} {formatNumber(owned.length)} {t("campaignWord")}.
                   </p>
@@ -1156,7 +1156,7 @@ function UserDashboard() {
                 <article className="rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
                   <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-6 py-5">
                     <div>
-                      <h2 className="text-xl font-extrabold text-slate-900">{t("recentDonations")}</h2>
+                      <h3 className="text-2xl font-extrabold text-slate-900">{t("recentDonations")}</h3>
                       <p className="mt-1 text-sm text-slate-500">{t("recentDonationsOverview")}</p>
                     </div>
                     <button type="button" onClick={() => setActiveSection("history")} className="text-sm font-bold text-[#6F52D9]">
@@ -1186,7 +1186,7 @@ function UserDashboard() {
                 <article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-xl font-extrabold text-slate-900">{t("campaignStatusOverview")}</h2>
+                      <h3 className="text-2xl font-extrabold text-slate-900">{t("campaignStatusOverview")}</h3>
                       <p className="mt-1 text-sm leading-6 text-slate-500">{t("campaignStatusOverviewText")}</p>
                     </div>
                     <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-100 text-amber-700"><Megaphone size={20} /></span>
