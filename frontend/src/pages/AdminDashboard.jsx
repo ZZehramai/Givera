@@ -42,6 +42,7 @@ import api from "../api/axios";
 import { logout } from "../services/authService";
 import LanguageSwitch from "../components/LanguageSwitch";
 import PasswordInput from "../components/PasswordInput";
+import DashboardNotifications from "../components/DashboardNotifications";
 import { useLanguage } from "../i18n/LanguageContext";
 import CreateCampaign from "./CreateCampaign";
 
@@ -82,13 +83,13 @@ function Sidebar({ section, onSection, user, onLogout, pending }) {
     <aside className="flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_18px_45px_rgba(41,35,80,.09)] lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:self-start">
       <div className="border-b border-slate-100 px-6 py-6">
         <Link to="/" aria-label={t("goGiveraHome")} className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F52D9]/30">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">
+          {/* <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">
             G
-          </div>
+          </div> */}
           <div>
-            <p className="text-xl font-extrabold tracking-tight text-[#24184a]">
+            <h3 className="text-3xl font-extrabold text-[#6F52D9]">
               Givera
-            </p>
+            </h3>
             <p className="text-xs font-medium text-slate-400">
               {t("adminWorkspace")}
             </p>
@@ -2405,15 +2406,18 @@ export default function AdminDashboard() {
               </h3>
               <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
             </div>
-            {section === "campaigns" && (
-              <button
-                type="button"
-                onClick={() => setCreatingCampaign(true)}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#6F52D9] px-5 py-3 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(111,82,217,.22)] transition hover:bg-[#6045C4]"
-              >
-                <Plus size={18} /> {t("createCampaign")}
-              </button>
-            )}
+            <div className="flex items-center justify-end gap-2">
+              <DashboardNotifications />
+              {section === "campaigns" && (
+                <button
+                  type="button"
+                  onClick={() => setCreatingCampaign(true)}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#6F52D9] px-5 py-3 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(111,82,217,.22)] transition hover:bg-[#6045C4]"
+                >
+                  <Plus size={18} /> {t("createCampaign")}
+                </button>
+              )}
+            </div>
             {/* <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               <span className="text-sm font-bold text-slate-600">
