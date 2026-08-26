@@ -2,25 +2,25 @@ import { useRef } from "react";
 import { Check, Globe2, Languages } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 
-export default function LanguageSwitch({ compact = false, inverse = false, footer = false, sidebar = false }) {
+export default function LanguageSwitch({ compact = false, inverse = false, footer = false, sidebar = false, icon = false }) {
   const { language, setLanguage, t } = useLanguage();
   const detailsRef = useRef(null);
 
-  if (sidebar) {
+  if (sidebar || icon) {
     const chooseLanguage = (value) => {
       setLanguage(value);
       detailsRef.current?.removeAttribute("open");
     };
 
     return (
-      <details ref={detailsRef} className="group relative ml-auto shrink-0">
+      <details ref={detailsRef} className={`group relative shrink-0 ${sidebar ? "ml-auto" : ""}`}>
         <summary
           aria-label={t("languageLabel")}
-          className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 transition hover:border-primary/30 hover:bg-primary-fixed hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/10 [&::-webkit-details-marker]:hidden"
+          className={`grid cursor-pointer list-none place-items-center text-[#6549C9] transition hover:text-[#5138B5] focus:outline-none [&::-webkit-details-marker]:hidden ${sidebar ? "h-9 w-9" : "h-11 w-11"}`}
         >
           <Globe2 size={17} aria-hidden="true" />
         </summary>
-        <div className="absolute bottom-11 right-0 z-30 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_14px_35px_rgba(41,35,80,.18)]">
+        <div className={`absolute right-0 z-30 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_14px_35px_rgba(41,35,80,.18)] ${sidebar ? "bottom-11" : "top-14"}`}>
           {[["en", "English"], ["my", "မြန်မာ"]].map(([value, label]) => (
             <button
               key={value}

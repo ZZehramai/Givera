@@ -92,6 +92,10 @@ class Notification(models.Model):
         FUND_UTILIZATION = "fund_utilization", "Fund utilization report"
         CAMPAIGN_APPROVED = "campaign_approved", "Campaign approved"
         CAMPAIGN_REJECTED = "campaign_rejected", "Campaign rejected"
+        PAYMENT_VERIFIED = "payment_verified", "Payment verified"
+        PAYMENT_REJECTED = "payment_rejected", "Payment rejected"
+        CAMPAIGN_PENDING_REVIEW = "campaign_pending_review", "Campaign pending review"
+        PAYMENT_PENDING_REVIEW = "payment_pending_review", "Payment pending review"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     recipient = models.ForeignKey(

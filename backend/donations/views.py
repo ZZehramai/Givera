@@ -9,6 +9,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import IsAdmin
+from accounts.models import Notification
+from accounts.notifications import notify_active_admins
 from campaigns.models import Campaign
 from campaigns.services import campaign_is_due, complete_campaign_if_due
 
@@ -116,6 +118,15 @@ class DemoPaymentProofView(APIView):
         payment.reviewed_by = None
         payment.reviewed_at = None
         payment.save(update_fields=["receipt", "wallet_transaction_id", "status", "proof_submitted_at", "failure_reason", "reviewed_by", "reviewed_at"])
+        notify_active_admins(
+            notification_type=Notification.Type.PAYMENT_PENDING_REVIEW,
+            title="Payment proof submitted",
+            message=(
+                f"{payment.donor.username} submitted a {payment.get_provider_display()} transfer "
+                f"of {payment.amount:,.0f} MMK for {payment.campaign.title}."
+            ),
+            link="/dashboard?section=transactions",
+        )
         return Response(DemoPaymentSerializer(payment, context={"request": request}).data)
 
 
@@ -162,6 +173,16 @@ class AdminPaymentReviewView(APIView):
             payment.reviewed_by = request.user
             payment.reviewed_at = timezone.now()
             payment.save(update_fields=["status", "failure_reason", "reviewed_by", "reviewed_at"])
+            Notification.objects.create(
+                recipient=payment.donor,
+                type=Notification.Type.PAYMENT_REJECTED,
+                title="Payment verification unsuccessful",
+                message=(
+                    f"Your {payment.get_provider_display()} transfer of {payment.amount:,.0f} MMK "
+                    f"for {payment.campaign.title} was rejected. Reason: {reason}"
+                ),
+                link="/dashboard?section=history",
+            )
             return Response(AdminPaymentSerializer(payment, context={"request": request}).data)
 
         campaign = Campaign.objects.select_for_update().get(pk=payment.campaign_id)
@@ -183,6 +204,16 @@ class AdminPaymentReviewView(APIView):
         payment.reviewed_at = timezone.now()
         payment.failure_reason = ""
         payment.save(update_fields=["status", "donation", "completed_at", "reviewed_by", "reviewed_at", "failure_reason"])
+        Notification.objects.create(
+            recipient=payment.donor,
+            type=Notification.Type.PAYMENT_VERIFIED,
+            title="Payment verified",
+            message=(
+                f"Your {payment.get_provider_display()} transfer of {payment.amount:,.0f} MMK "
+                f"for {payment.campaign.title} was verified. Your donation certificate is ready."
+            ),
+            link="/dashboard?section=history",
+        )
         return Response(AdminPaymentSerializer(payment, context={"request": request}).data)
 
 

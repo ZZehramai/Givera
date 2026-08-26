@@ -4,8 +4,6 @@ import { motion } from "framer-motion";
 import {
   BarChart3,
   Bell,
-  ArrowUpRight,
-  CircleDollarSign,
   Compass,
   Edit3,
   Heart,
@@ -20,14 +18,15 @@ import {
   Search,
   Settings,
   ShieldCheck,
-  Target,
   UserRound,
   Check,
-  CheckCheck,
   X,
   Bookmark,
   CreditCard,
   Download,
+  Flag,
+  Gift,
+  Wallet,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -38,11 +37,12 @@ import { logout } from "../services/authService";
 import AdminDashboard from "./AdminDashboard";
 import LanguageSwitch from "../components/LanguageSwitch";
 import PasswordInput from "../components/PasswordInput";
+import DashboardNotifications from "../components/DashboardNotifications";
 import { useLanguage } from "../i18n/LanguageContext";
 
 const money = (value) => {
   const myanmar = localStorage.getItem("givera-language") === "my";
-  return `${new Intl.NumberFormat(myanmar ? "my-MM" : "en-US", { maximumFractionDigits: 0 }).format(Number(value || 0))} ${myanmar ? "ကျပ်" : "Ks"}`;
+  return `${new Intl.NumberFormat(myanmar ? "my-MM" : "en-US", { maximumFractionDigits: 0 }).format(Number(value || 0))} ${myanmar ? "ကျပ်" : "MMK"}`;
 };
 const CAMPAIGNS_PER_PAGE = 6;
 
@@ -64,9 +64,9 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts, us
         {/* LOGO */}
         <div className="border-b border-slate-100 px-6 py-6">
           <Link to="/" aria-label={t("goGiveraHome")} className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F52D9]/30">
-            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">G</div>
+            {/* <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">G</div> */}
             <div>
-              <p className="text-xl font-extrabold tracking-tight text-[#24184a]">Givera</p>
+              <h3 className="text-3xl font-extrabold text-[#6F52D9]">Givera</h3>
               <p className="text-xs font-medium text-slate-400">{t("userWorkspace")}</p>
             </div>
           </Link>
@@ -141,18 +141,14 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts, us
   );
 }
 
-function DashboardMetricCard({ icon: Icon, label, value, note, tone, loading }) {
+function DashboardMetricCard({ icon: Icon, label, value, tone, loading }) {
   return (
     <article className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-      <div className="flex items-start justify-between">
-        <span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}>
-          <Icon size={21} />
-        </span>
-        <ArrowUpRight size={18} className="text-slate-300" />
-      </div>
-      <p className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">{loading ? "—" : value}</p>
-      <p className="mt-1 text-sm font-bold text-slate-700">{label}</p>
-      <p className="mt-1 text-xs text-slate-400">{note}</p>
+      <span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}>
+        <Icon size={21} />
+      </span>
+      <p className="mt-5 text-sm text-slate-500 pb-1">{label}</p>
+      <p className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">{loading ? "—" : value}</p>
     </article>
   );
 }
@@ -174,7 +170,7 @@ function RecommendationsPanel({ recommendations, loading, onBrowse }) {
         <div className="flex items-start gap-3">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[.16em] text-[#6F52D9]">{t("pickedForYou")}</p>
-            <h2 className="mt-1 text-xl font-extrabold text-slate-900">{t("recommendedCampaigns")}</h2>
+            <h3 className="mt-2 text-2xl font-extrabold text-slate-900">{t("recommendedCampaigns")}</h3>
           </div>
         </div>
         <button type="button" onClick={onBrowse} className="rounded-full border border-[#D8CFFA] bg-[#F7F4FF] px-4 py-2 text-sm font-extrabold text-[#6549C9] transition hover:bg-[#EEE9FF]">
@@ -290,7 +286,7 @@ function SavedCampaignsPanel() {
           </>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-            <h2 className="text-2xl font-bold text-slate-800">{t("noSaved")}</h2>
+            <h3 className="text-2xl font-bold text-slate-900">{t("noSaved")}</h3>
             <p className="mt-2 text-slate-500">{t("noSavedText")}</p>
           </div>
         )}
@@ -383,9 +379,9 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+          <h3 className="flex items-center gap-2 text-2xl font-extrabold text-slate-900">
             <Megaphone size={18} className="text-[#6F52D9]" /> {t("createdCampaigns")}
-          </h2>
+          </h3>
           {campaigns.length > 0 && <CampaignPagination page={safeCampaignPage} pages={campaignPages} onPageChange={setCampaignPage} />}
         </div>
           {campaigns.length ? (
@@ -420,9 +416,9 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+          <h3 className="flex items-center gap-2 text-2xl font-extrabold text-slate-900">
             <CreditCard size={18} className="text-[#6F52D9]" /> {t("paymentActivity")}
-          </h2>
+          </h3>
           {demoPayments.length > 0 && <CampaignPagination page={safePaymentPage} pages={paymentPages} onPageChange={setPaymentPage} />}
         </div>
         {demoPayments.length ? (
@@ -562,7 +558,7 @@ function BrowseCampaigns({ campaigns, loading }) {
           </>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-            <h2 className="text-2xl font-bold text-slate-800">{t("noCampaigns")}</h2>
+            <h3 className="text-2xl font-extrabold text-slate-900">{t("noCampaigns")}</h3>
             <p className="mt-2 text-slate-500">{t("tryAnother")}</p>
           </div>
         )}
@@ -602,9 +598,9 @@ function SubmissionSuccessModal({ title, message, onClose }) {
           <Check size={30} strokeWidth={3} />
         </span>
         <p className="mt-6 text-sm font-bold uppercase tracking-[0.14em] text-emerald-700">{t("requestReceived")}</p>
-        <h2 id="submission-success-title" className="mt-2 text-2xl font-extrabold text-slate-950 sm:text-3xl">
+        <h3 id="submission-success-title" className="mt-2 text-2xl font-extrabold text-slate-950 sm:text-3xl">
           {message || t("submittedSuccess")}
-        </h2>
+        </h3>
         <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-slate-600">
           <strong className="text-slate-900">{title || t("yourCampaign")}</strong> {t("pendingReviewMessage")}
         </p>
@@ -660,9 +656,9 @@ function MyCampaignsPanel({ campaigns, loading }) {
           </>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-            <h2 className="text-2xl font-bold text-slate-800">
+            <h3 className="text-2xl font-extrabold text-slate-900">
               {t("noSubmittedCampaign")}
-            </h2>
+            </h3>
             <p className="mt-2 text-slate-500">
               {t("tellStory")}
             </p>
@@ -796,7 +792,7 @@ function ProfilePanel() {
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#6F52D9] text-2xl font-extrabold text-white">
               {initial}
             </div>
-            <h2 className="mt-4 truncate text-lg font-extrabold text-slate-900">{user.username}</h2>
+            <h3 className="mt-4 truncate text-2xl font-extrabold text-slate-900">{user.username}</h3>
             <p className="mt-1 truncate text-sm text-slate-500">{user.email}</p>
           </div>
         </aside>
@@ -805,7 +801,7 @@ function ProfilePanel() {
         <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <div className="flex flex-col gap-3 border-b border-slate-100 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-extrabold text-slate-800">{t("personalInformation")}</h2>
+              <h3 className="text-2xl font-extrabold text-slate-900">{t("personalInformation")}</h3>
             </div>
             <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
               <ShieldCheck size={15} /> {t("accountVerified")}
@@ -848,7 +844,7 @@ function ProfilePanel() {
                 <Bell size={20} />
               </span>
               <div>
-                <h2 className="text-xl font-extrabold text-slate-800">{t("campaignNotifications")}</h2>
+                <h3 className="text-2xl font-extrabold text-slate-900">{t("campaignNotifications")}</h3>
                 <p className="mt-1 text-sm leading-6 text-slate-500">{t("campaignNotificationsHelp")}</p>
               </div>
             </div>
@@ -877,7 +873,7 @@ function ProfilePanel() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[.14em] text-[#6F52D9]">{t("security")}</p>
-              <h2 className="mt-2 text-xl font-extrabold text-slate-800">{t("changePassword")}</h2>
+              <h3 className="mt-2 text-2xl font-extrabold text-slate-900">{t("changePassword")}</h3>
               <p className="mt-1 text-sm text-slate-500">{t("strongPassword")}</p>
             </div>
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#FFF4C8] text-amber-700">
@@ -931,118 +927,6 @@ function ProfilePanel() {
         </div>
       </div>
     </motion.section>
-  );
-}
-
-function DashboardNotifications() {
-  const { t, formatDate } = useLanguage();
-  const [notifications, setNotifications] = useState([]);
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    api.get("/auth/notifications/")
-      .then(({ data }) => {
-        if (active) setNotifications(data);
-      })
-      .catch(() => {
-        if (active) setNotifications([]);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const unreadCount = notifications.filter((item) => !item.is_read).length;
-
-  const markRead = async (notification) => {
-    if (!notification.is_read) {
-      try {
-        await api.patch(`/auth/notifications/${notification.id}/read/`);
-        setNotifications((current) => current.map((item) => (
-          item.id === notification.id ? { ...item, is_read: true } : item
-        )));
-      } catch {
-        // Navigation should still work if the read-status request fails.
-      }
-    }
-    setOpen(false);
-  };
-
-  const markAllRead = async () => {
-    try {
-      await api.post("/auth/notifications/read-all/");
-      setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
-    } catch {
-      // Keep the current state so the donor can retry.
-    }
-  };
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        aria-label={t("notifications")}
-        aria-expanded={open}
-        className="relative grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-[#6549C9] shadow-sm transition hover:border-[#D9CEFF] hover:bg-[#F8F6FF]"
-      >
-        <Bell size={20} aria-hidden="true" />
-        {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-extrabold text-white ring-2 ring-[#F6F6FB]">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-14 z-50 w-[min(23rem,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_22px_55px_rgba(41,35,80,.18)]">
-          <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
-            <div>
-              <h2 className="font-extrabold text-slate-900">{t("notifications")}</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                {unreadCount ? `${unreadCount} ${t("unread")}` : t("caughtUp")}
-              </p>
-            </div>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={markAllRead}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#6549C9] hover:underline"
-              >
-                <CheckCheck size={15} /> {t("markAllRead")}
-              </button>
-            )}
-          </div>
-          <div className="max-h-96 overflow-y-auto">
-            {notifications.length ? notifications.map((notification) => (
-              <Link
-                key={notification.id}
-                to={notification.link || "/dashboard"}
-                onClick={() => markRead(notification)}
-                className={`block border-b border-slate-100 px-5 py-4 transition last:border-0 hover:bg-[#F8F6FF] ${notification.is_read ? "bg-white" : "bg-[#F1EDFF]/70"}`}
-              >
-                <div className="flex gap-3">
-                  <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${notification.is_read ? "bg-slate-200" : "bg-[#6F52D9]"}`} />
-                  <div className="min-w-0">
-                    <p className="text-sm font-extrabold text-slate-900">{notification.title}</p>
-                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600">{notification.message}</p>
-                    <p className="mt-2 text-[11px] font-semibold text-slate-400">{formatDate(notification.created_at)}</p>
-                  </div>
-                </div>
-              </Link>
-            )) : (
-              <div className="px-6 py-12 text-center">
-                <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#F1EDFF] text-[#6F52D9]">
-                  <Bell size={21} />
-                </span>
-                <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-500">{t("notificationEmpty")}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -1196,18 +1080,18 @@ function UserDashboard() {
             <>
               <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  { Icon: CircleDollarSign, label: t("raisedByCampaigns"), value: money(metrics.raised), note: t("campaignPerformance"), tone: "bg-violet-100 text-[#6549C9]" },
-                  { Icon: Target, label: t("combinedGoals"), value: money(metrics.goal), note: t("overallProgress"), tone: "bg-emerald-100 text-emerald-700" },
-                  { Icon: BarChart3, label: t("activeCampaigns"), value: formatNumber(metrics.active), note: t("acceptingSupport"), tone: "bg-amber-100 text-amber-700" },
-                  { Icon: Heart, label: t("yourDonations"), value: money(metrics.donatedAmount), note: t("activityHistoryText"), tone: "bg-sky-100 text-sky-700" },
-                ].map(({ Icon, label, value, note, tone }, index) => (
+                  { Icon: Wallet, label: t("fundsYourCampaignsRaised"), value: money(metrics.raised), tone: "bg-violet-100 text-[#6549C9]" },
+                  { Icon: Flag, label: t("totalFundraisingTarget"), value: money(metrics.goal), tone: "bg-emerald-100 text-emerald-700" },
+                  { Icon: Megaphone, label: t("campaignsAcceptingDonations"), value: formatNumber(metrics.active), tone: "bg-amber-100 text-amber-700" },
+                  { Icon: Gift, label: t("amountYouDonated"), value: money(metrics.donatedAmount), tone: "bg-sky-100 text-sky-700" },
+                ].map(({ Icon, label, value, tone }, index) => (
                   <motion.div
                     key={label}
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.08 * index }}
                   >
-                    <DashboardMetricCard icon={Icon} label={label} value={value} note={note} tone={tone} loading={loading} />
+                    <DashboardMetricCard icon={Icon} label={label} value={value} tone={tone} loading={loading} />
                   </motion.div>
                 ))}
               </section>
@@ -1223,7 +1107,7 @@ function UserDashboard() {
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">{t("campaignPerformance")}</p>
-                      <h2 className="mt-2 text-xl font-extrabold text-slate-900">{t("fundsRaised")}</h2>
+                      <h3 className="mt-2 text-2xl font-extrabold text-slate-900">{t("fundsRaised")}</h3>
                     </div>
                     <div className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]">
                       <BarChart3 size={20} />
@@ -1257,7 +1141,7 @@ function UserDashboard() {
                 </article>
                 <article className="flex flex-col items-center justify-center rounded-3xl border border-slate-200/80 bg-white p-6 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
                   <DonutChart value={metrics.progress} label={t("ofGoal")} />
-                  <h2 className="mt-5 text-xl font-extrabold text-slate-900">{t("overallProgress")}</h2>
+                  <h3 className="mt-5 text-2xl font-extrabold text-slate-900">{t("overallProgress")}</h3>
                   <p className="mt-2 text-sm leading-6 text-slate-500">
                     {money(metrics.raised)} {t("raisedAcross")} {formatNumber(owned.length)} {t("campaignWord")}.
                   </p>
@@ -1268,7 +1152,7 @@ function UserDashboard() {
                 <article className="rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
                   <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-6 py-5">
                     <div>
-                      <h2 className="text-xl font-extrabold text-slate-900">{t("recentDonations")}</h2>
+                      <h3 className="text-2xl font-extrabold text-slate-900">{t("recentDonations")}</h3>
                       <p className="mt-1 text-sm text-slate-500">{t("recentDonationsOverview")}</p>
                     </div>
                     <button type="button" onClick={() => setActiveSection("history")} className="text-sm font-bold text-[#6F52D9]">
@@ -1298,7 +1182,7 @@ function UserDashboard() {
                 <article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-xl font-extrabold text-slate-900">{t("campaignStatusOverview")}</h2>
+                      <h3 className="text-2xl font-extrabold text-slate-900">{t("campaignStatusOverview")}</h3>
                       <p className="mt-1 text-sm leading-6 text-slate-500">{t("campaignStatusOverviewText")}</p>
                     </div>
                     <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-100 text-amber-700"><Megaphone size={20} /></span>

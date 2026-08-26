@@ -759,7 +759,7 @@ function DonationCard({
           </div>
           <div className="mt-3 flex rounded-xl border border-slate-200 focus-within:border-[#6F52D9]">
             <span className="grid w-12 place-items-center border-r border-slate-200 bg-slate-50 text-xs font-extrabold text-[#6549C9]">
-              {language === "my" ? "ကျပ်" : "Ks"}
+              {language === "my" ? "ကျပ်" : "MMK"}
             </span>
             <input
               type="number"
