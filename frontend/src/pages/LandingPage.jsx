@@ -186,8 +186,8 @@ export function LandingPage() {
         <img src={image1} alt={t("impactImageThree")} className="aspect-[16/11] w-full object-cover" />
       </div>
       <div className="mt-3.5 text-left">
-        <p className="font-bold text-slate-900 text-base md:text-lg">{t("reviewedwithCare")}</p>
-        <p className="text-xs md:text-sm text-slate-500 mt-0.5">{t("reviewedwithCareText")}</p>
+        <p className="font-bold text-slate-900 text-sm md:text-base">{t("reviewedwithCare")}</p>
+        <p className="text-xs text-slate-500 mt-0.5">{t("reviewedwithCareText")}</p>
       </div>
     </div>
 
@@ -243,7 +243,7 @@ export function LandingPage() {
           <div className="mx-auto max-w-container-max px-6">
 
             {/* STYLISH SECTION HEADER */}
-            <div className="mb-10 flex flex-wrap items-end justify-between gap-6 border-b border-slate-200/60 pb-8 dark:border-slate-800">
+            <div className="mb-10 flex flex-wrap items-end justify-between gap-6 pb-4 dark:border-slate-800">
               <div className="max-w-2xl">
                 <h3 className="text-4xl font-bold text-slate-900 sm:text-5xl md:text-5xl">
                    <span className="text-slate-900">{t("featuredCampaigns")}</span>
@@ -257,7 +257,7 @@ export function LandingPage() {
               {/* Browse All Button */}
               <Link 
                 to="/campaigns" 
-                className="group inline-flex items-center gap-2.5 rounded-full border border-slate-300 bg-white px-6 py-3.5 text-sm font-bold text-slate-800 shadow-sm transition-all duration-300 hover:border-primary hover:bg-[#6F52D9] hover:shadow-md hover:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                className="group inline-flex items-center gap-2.5 rounded-full px-6 py-3.5 transition-all duration-300 border-primary bg-[#6F52D9] shadow-md text-white font-bold hover:translate-y-1"
               >
                 <span>{t("browseAll")}</span>
                 {/* <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1 text-primary" aria-hidden="true" /> */}
