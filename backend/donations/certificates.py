@@ -152,7 +152,7 @@ def donation_certificate_response(payment):
         Paragraph("for supporting the campaign", body),
         Spacer(1, 2 * mm),
         Paragraph(escape(payment.campaign.title), campaign_style),
-        Paragraph(f"{payment.amount:,.2f} Ks", amount_style),
+        Paragraph(f"{payment.amount:,.2f} MMK", amount_style),
         details,
         Spacer(1, 6 * mm),
         Paragraph(

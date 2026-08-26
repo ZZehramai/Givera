@@ -12,7 +12,7 @@ import CommentsSection from '../components/CommentsSection';
 import { useLanguage } from "../i18n/LanguageContext";
 
 const fallbackImage = "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80";
-const kyat = (value) => `${Number(value || 0).toLocaleString()} Ks`;
+const kyat = (value) => `${Number(value || 0).toLocaleString()} MMK`;
 
 function SectionTitle({ eyebrow, title, description, icon: Icon }) {
   return (
@@ -100,7 +100,7 @@ export default function CampaignDetail() {
     event.preventDefault(); 
     setDonationMessage(""); 
     const numeric = Number(amount); 
-    if (!numeric || numeric < 1000) return setDonationMessage("Enter at least 1,000 Ks."); 
+    if (!numeric || numeric < 1000) return setDonationMessage("Enter at least 1,000 MMK."); 
     setDonating(true); 
     try { 
       const { data } = await api.post("/donations/demo-checkout/", { campaign_id: id, provider, amount: numeric, message, is_anonymous: anonymous }); 
@@ -258,7 +258,7 @@ export default function CampaignDetail() {
                   <p className="text-sm font-extrabold text-[#6549C9]">Publish a spending report</p>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <input value={utilizationForm.title} onChange={(event) => setUtilizationForm((form) => ({ ...form, title: event.target.value }))} placeholder="Purchase or expense" className="rounded-xl border border-[#DED4FF] bg-white px-3 py-3 text-sm outline-none" />
-                    <input type="number" min="1" value={utilizationForm.amount_spent} onChange={(event) => setUtilizationForm((form) => ({ ...form, amount_spent: event.target.value }))} placeholder="Amount (Ks)" className="rounded-xl border border-[#DED4FF] bg-white px-3 py-3 text-sm outline-none" />
+                    <input type="number" min="1" value={utilizationForm.amount_spent} onChange={(event) => setUtilizationForm((form) => ({ ...form, amount_spent: event.target.value }))} placeholder="Amount (MMK)" className="rounded-xl border border-[#DED4FF] bg-white px-3 py-3 text-sm outline-none" />
                     <input type="date" value={utilizationForm.spent_on} onChange={(event) => setUtilizationForm((form) => ({ ...form, spent_on: event.target.value }))} className="rounded-xl border border-[#DED4FF] bg-white px-3 py-3 text-sm outline-none" />
                     <input type="file" accept="image/*" onChange={(event) => setUtilizationForm((form) => ({ ...form, evidence: event.target.files?.[0] || null }))} className="rounded-xl border border-[#DED4FF] bg-white px-2 py-2 text-xs" />
                   </div>
@@ -304,7 +304,7 @@ export default function CampaignDetail() {
                 <form onSubmit={startDonation} className="mt-6">
                   <label className="text-sm font-bold">Donation amount</label>
                   <div className="mt-2 flex overflow-hidden rounded-xl border border-slate-200 focus-within:border-[#7451E8]">
-                    <span className="grid w-14 place-items-center border-r border-slate-200 bg-slate-50 text-xs font-extrabold text-[#7451E8]">Ks</span>
+                    <span className="grid w-14 place-items-center border-r border-slate-200 bg-slate-50 text-xs font-extrabold text-[#7451E8]">MMK</span>
                     <input type="number" min="1000" step="1000" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="10000" className="min-w-0 flex-1 px-4 py-3 font-bold outline-none" />
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2">

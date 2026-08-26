@@ -42,7 +42,7 @@ import { useLanguage } from "../i18n/LanguageContext";
 
 const money = (value) => {
   const myanmar = localStorage.getItem("givera-language") === "my";
-  return `${new Intl.NumberFormat(myanmar ? "my-MM" : "en-US", { maximumFractionDigits: 0 }).format(Number(value || 0))} ${myanmar ? "ကျပ်" : "Ks"}`;
+  return `${new Intl.NumberFormat(myanmar ? "my-MM" : "en-US", { maximumFractionDigits: 0 }).format(Number(value || 0))} ${myanmar ? "ကျပ်" : "MMK"}`;
 };
 const CAMPAIGNS_PER_PAGE = 6;
 

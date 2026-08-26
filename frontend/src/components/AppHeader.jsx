@@ -222,8 +222,8 @@ export default function AppHeader({ minimal = false }) {
                   to="/login"
                   className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90"
                 >
-                  {t("donateNow")}
-                  <ArrowUpRight size={16} aria-hidden="true" />
+                  {t("getStarted")}
+                  {/* <ArrowUpRight size={16} aria-hidden="true" /> */}
                 </Link>
               )}
             </>

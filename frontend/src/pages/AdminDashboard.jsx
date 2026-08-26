@@ -46,7 +46,7 @@ import { useLanguage } from "../i18n/LanguageContext";
 import CreateCampaign from "./CreateCampaign";
 
 const activeLocale = () => localStorage.getItem("givera-language") === "my" ? "my-MM" : "en-US";
-const kyat = (value) => `${Number(value || 0).toLocaleString(activeLocale())} ${activeLocale() === "my-MM" ? "ကျပ်" : "Ks"}`;
+const kyat = (value) => `${Number(value || 0).toLocaleString(activeLocale())} ${activeLocale() === "my-MM" ? "ကျပ်" : "MMK"}`;
 const dateTime = (value) => (value ? new Date(value).toLocaleString(activeLocale()) : "—");
 const campaignTone = {
   approved: "bg-emerald-50 text-emerald-700 ring-emerald-200",
