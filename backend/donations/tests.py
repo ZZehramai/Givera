@@ -5,6 +5,7 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from accounts.models import User
+from accounts.models import Notification
 from campaigns.models import Campaign
 
 from .models import DemoPayment, Donation
@@ -99,6 +100,12 @@ class DonationApiTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["status"], "paid")
         self.assertEqual(Donation.objects.count(), 1)
+        notification = Notification.objects.get(
+            recipient=self.donor,
+            type=Notification.Type.PAYMENT_VERIFIED,
+        )
+        self.assertIn("certificate is ready", notification.message)
+        self.assertEqual(notification.link, "/dashboard?section=history")
         self.campaign.refresh_from_db()
         self.assertEqual(self.campaign.amount_raised, Decimal("25.00"))
 
@@ -125,6 +132,12 @@ class DonationApiTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["status"], "failed")
         self.assertEqual(Donation.objects.count(), 0)
+        notification = Notification.objects.get(
+            recipient=self.donor,
+            type=Notification.Type.PAYMENT_REJECTED,
+        )
+        self.assertIn("Transfer was not found", notification.message)
+        self.assertEqual(notification.link, "/dashboard?section=history")
 
     def test_verified_transfer_certificate_is_private_pdf(self):
         transfer = self.create_and_submit_transfer(amount="25000.00", wallet_id="KBZ-CERT")
