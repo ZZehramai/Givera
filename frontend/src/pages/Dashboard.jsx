@@ -4,8 +4,6 @@ import { motion } from "framer-motion";
 import {
   BarChart3,
   Bell,
-  ArrowUpRight,
-  CircleDollarSign,
   Compass,
   Edit3,
   Heart,
@@ -20,13 +18,15 @@ import {
   Search,
   Settings,
   ShieldCheck,
-  Target,
   UserRound,
   Check,
   X,
   Bookmark,
   CreditCard,
   Download,
+  Flag,
+  Gift,
+  Wallet,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -141,18 +141,14 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts, us
   );
 }
 
-function DashboardMetricCard({ icon: Icon, label, value, note, tone, loading }) {
+function DashboardMetricCard({ icon: Icon, label, value, tone, loading }) {
   return (
     <article className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-      <div className="flex items-start justify-between">
-        <span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}>
-          <Icon size={21} />
-        </span>
-        <ArrowUpRight size={18} className="text-slate-300" />
-      </div>
-      <p className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">{loading ? "—" : value}</p>
-      <p className="mt-1 text-sm font-bold text-slate-700">{label}</p>
-      <p className="mt-1 text-xs text-slate-400">{note}</p>
+      <span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}>
+        <Icon size={21} />
+      </span>
+      <p className="mt-5 text-sm text-slate-500 pb-1">{label}</p>
+      <p className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">{loading ? "—" : value}</p>
     </article>
   );
 }
@@ -1084,18 +1080,18 @@ function UserDashboard() {
             <>
               <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  { Icon: CircleDollarSign, label: t("raisedByCampaigns"), value: money(metrics.raised), note: t("campaignPerformance"), tone: "bg-violet-100 text-[#6549C9]" },
-                  { Icon: Target, label: t("combinedGoals"), value: money(metrics.goal), note: t("overallProgress"), tone: "bg-emerald-100 text-emerald-700" },
-                  { Icon: BarChart3, label: t("activeCampaigns"), value: formatNumber(metrics.active), note: t("acceptingSupport"), tone: "bg-amber-100 text-amber-700" },
-                  { Icon: Heart, label: t("yourDonations"), value: money(metrics.donatedAmount), note: t("activityHistoryText"), tone: "bg-sky-100 text-sky-700" },
-                ].map(({ Icon, label, value, note, tone }, index) => (
+                  { Icon: Wallet, label: t("fundsYourCampaignsRaised"), value: money(metrics.raised), tone: "bg-violet-100 text-[#6549C9]" },
+                  { Icon: Flag, label: t("totalFundraisingTarget"), value: money(metrics.goal), tone: "bg-emerald-100 text-emerald-700" },
+                  { Icon: Megaphone, label: t("campaignsAcceptingDonations"), value: formatNumber(metrics.active), tone: "bg-amber-100 text-amber-700" },
+                  { Icon: Gift, label: t("amountYouDonated"), value: money(metrics.donatedAmount), tone: "bg-sky-100 text-sky-700" },
+                ].map(({ Icon, label, value, tone }, index) => (
                   <motion.div
                     key={label}
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.08 * index }}
                   >
-                    <DashboardMetricCard icon={Icon} label={label} value={value} note={note} tone={tone} loading={loading} />
+                    <DashboardMetricCard icon={Icon} label={label} value={value} tone={tone} loading={loading} />
                   </motion.div>
                 ))}
               </section>
