@@ -316,6 +316,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
   const paymentStatus = {
     paid: [t("paymentPaid"), "bg-emerald-100 text-emerald-700"],
     pending: [t("paymentPending"), "bg-amber-100 text-amber-800"],
+    submitted: [t("paymentSubmitted"), "bg-sky-100 text-sky-700"],
     failed: [t("paymentFailed"), "bg-rose-100 text-rose-700"],
     cancelled: [t("paymentCancelled"), "bg-slate-100 text-slate-700"],
     expired: [t("paymentExpired"), "bg-orange-100 text-orange-700"],

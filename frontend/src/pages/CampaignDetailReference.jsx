@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Copy,
   FileImage,
   Heart,
   LockKeyhole,
   Paperclip,
+  QrCode,
   Send,
   Share2,
+  ShieldCheck,
   Sparkles,
+  Upload,
   X,
 } from "lucide-react";
 import api from "../api/axios";
@@ -25,6 +29,7 @@ export default function CampaignDetailReference() {
   const { language, t, formatKyat, formatDate } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loadedAt] = useState(() => Date.now());
   const [campaign, setCampaign] = useState(null);
   const [donors, setDonors] = useState([]);
@@ -113,21 +118,26 @@ export default function CampaignDetailReference() {
       setBusy(false);
     }
   };
-  const completePayment = async () => {
+  const submitPaymentProof = async ({ walletTransactionId, receiptFile }) => {
     setBusy(true);
+    const form = new FormData();
+    if (walletTransactionId.trim()) form.append("wallet_transaction_id", walletTransactionId.trim());
+    if (receiptFile) form.append("receipt", receiptFile);
     try {
       const { data } = await api.post(
-        `/donations/demo-checkout/${checkout.id}/simulate/`,
-        { outcome: "success" },
+        `/donations/demo-checkout/${checkout.id}/proof/`,
+        form,
       );
       setCheckout(null);
       setReceipt(data);
       setAmount("");
       setMessage("");
       setAnonymous(false);
-      await load();
-    } catch {
-      setError(t("paymentCompleteError"));
+    } catch (requestError) {
+      throw new Error(
+        (language === "en" && requestError.response?.data?.detail) || t("paymentProofError"),
+        { cause: requestError },
+      );
     } finally {
       setBusy(false);
     }
@@ -215,7 +225,7 @@ export default function CampaignDetailReference() {
       <main className="mx-auto max-w-[1280px] px-5 py-8 sm:px-8">
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(location.state?.campaignReturnTo || "/campaigns")}
           className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#6F52D9]"
         >
           ← {t("back")}
@@ -404,7 +414,7 @@ export default function CampaignDetailReference() {
           checkout={checkout}
           busy={busy}
           onClose={() => setCheckout(null)}
-          onComplete={completePayment}
+          onSubmit={submitPaymentProof}
         />
       )}
       {receipt && (
@@ -765,11 +775,10 @@ function DonationCard({
             <p className="text-xs font-extrabold uppercase tracking-wide text-slate-400">
               {t("payWith")}
             </p>
-            <div className="mt-2 grid grid-cols-3 gap-2">
+            <div className="mt-2 grid grid-cols-2 gap-2">
               {[
                 ["kbzpay", "KBZPay"],
-                ["wave", "Wave"],
-                ["mmqr", "MMQR"],
+                ["wave", "WavePay"],
               ].map(([key, label]) => (
                 <button
                   key={key}
@@ -818,7 +827,7 @@ function DonationCard({
           <Share2 size={15} /> {t("shareCampaign")}
         </button>
         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-400">
-          <LockKeyhole size={12} /> {t("demoOnly")}
+          <LockKeyhole size={12} /> {t("manualVerification")}
         </span>
       </div>
     </div>
@@ -942,15 +951,32 @@ function AdminReportForm({ form, setForm, onSubmit, error }) {
     </form>
   );
 }
-function Checkout({ checkout, busy, onClose, onComplete }) {
+function Checkout({ checkout, busy, onClose, onSubmit }) {
   const { t, formatKyat } = useLanguage();
+  const [walletTransactionId, setWalletTransactionId] = useState("");
+  const [receiptFile, setReceiptFile] = useState(null);
+  const [proofError, setProofError] = useState("");
+  const [qrUnavailable, setQrUnavailable] = useState(false);
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setProofError("");
+    if (!walletTransactionId.trim() && !receiptFile) {
+      setProofError(t("proofRequired"));
+      return;
+    }
+    try {
+      await onSubmit({ walletTransactionId, receiptFile });
+    } catch (error) {
+      setProofError(error.message);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/50 p-4 backdrop-blur-sm">
+      <form onSubmit={submit} className="mx-auto my-6 w-full max-w-lg rounded-[28px] bg-white p-6 shadow-2xl">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-extrabold text-slate-900">
-            {t("demoPayment")}
-          </p>
+          <div><p className="text-xs font-extrabold uppercase tracking-[.16em] text-[#6F52D9]">{t("walletTransfer")}</p><p className="mt-1 text-xl font-extrabold text-slate-900">{checkout.provider_label}</p></div>
           <button
             type="button"
             onClick={onClose}
@@ -959,29 +985,41 @@ function Checkout({ checkout, busy, onClose, onComplete }) {
             <X size={20} />
           </button>
         </div>
-        <div className="mt-5 rounded-xl bg-[#F0ECFF] p-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#6F52D9]">
-            {checkout.provider_label}
-          </p>
-          <p className="mt-2 text-3xl font-extrabold text-slate-900">
+        <div className="mt-5 text-center">
+          {qrUnavailable ? (
+            <div className="mx-auto grid h-52 w-52 place-items-center rounded-3xl border-2 border-dashed border-[#D8CFFA] bg-[#F8F6FF] text-[#6F52D9]"><div><QrCode className="mx-auto" size={52} /><p className="mt-2 text-xs font-bold">{t("qrUnavailable")}</p></div></div>
+          ) : (
+            <img src={mediaUrl(checkout.qr_code_url)} onError={() => setQrUnavailable(true)} alt={`${checkout.provider_label} QR`} className="mx-auto h-52 w-52 rounded-3xl border border-slate-200 object-contain p-2 shadow-sm" />
+          )}
+          <p className="mt-4 text-3xl font-extrabold text-slate-900">
             {formatKyat(checkout.amount)}
           </p>
-          <p className="mt-2 font-mono text-xs font-bold text-slate-500">
-            {checkout.transaction_reference}
-          </p>
         </div>
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-[#F5F2FF] px-4 py-3">
+          <div><p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{t("paymentReference")}</p><p className="mt-1 font-mono text-xs font-extrabold text-slate-700">{checkout.transaction_reference}</p></div>
+          <button type="button" onClick={() => navigator.clipboard?.writeText(checkout.transaction_reference)} className="rounded-lg bg-white p-2 text-[#6549C9] shadow-sm" aria-label={t("copyReference")}><Copy size={16} /></button>
+        </div>
+        <div className="mt-4 rounded-2xl bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="flex items-center gap-2 font-extrabold"><ShieldCheck size={17} /> {t("beforeSubmit")}</p>
+          <p className="mt-1 leading-6">{t("transferInstructions")}</p>
+        </div>
+        <label className="mt-5 block text-sm font-extrabold text-slate-800">{t("walletTransactionNumber")}
+          <input value={walletTransactionId} onChange={(event) => setWalletTransactionId(event.target.value)} maxLength={100} placeholder={t("transactionPlaceholder")} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-mono text-sm outline-none focus:border-[#6F52D9]" />
+        </label>
+        <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-[#CFC3F7] bg-[#FAF8FF] p-4">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#EEE9FF] text-[#6549C9]"><Upload size={18} /></span>
+          <span className="min-w-0"><strong className="block text-sm text-slate-800">{t("uploadReceipt")}</strong><span className="block truncate text-xs text-slate-400">{receiptFile?.name || t("receiptFileHelp")}</span></span>
+          <input type="file" accept="image/*" onChange={(event) => setReceiptFile(event.target.files?.[0] || null)} className="sr-only" />
+        </label>
+        {proofError && <p className="mt-4 rounded-xl bg-rose-50 p-3 text-sm font-bold text-rose-700">{proofError}</p>}
         <button
           disabled={busy}
-          onClick={onComplete}
-          className="mt-5 w-full rounded-lg bg-[#6F52D9] py-3 font-bold text-white"
+          className="mt-5 w-full rounded-xl bg-[#6F52D9] py-3.5 font-bold text-white disabled:opacity-60"
         >
           <CheckCircle2 className="mr-2 inline" size={18} />{" "}
-          {busy ? t("completing") : t("confirmDemo")}
+          {busy ? t("submittingProof") : t("submitVerification")}
         </button>
-        <p className="mt-3 text-center text-xs text-slate-400">
-          {t("noRealFunds")}
-        </p>
-      </div>
+      </form>
     </div>
   );
 }
@@ -992,7 +1030,7 @@ function Receipt({ receipt, onClose }) {
       <div className="w-full max-w-sm rounded-2xl bg-white p-7 text-center shadow-2xl">
         <CheckCircle2 className="mx-auto text-emerald-600" size={42} />
         <h3 className="mt-4 text-2xl font-extrabold">
-          {t("donationCompleted")}
+          {t("proofReceived")}
         </h3>
         <p className="mt-2 text-sm text-slate-500">
           {formatKyat(receipt.amount)} {t("via")} {receipt.provider_label}
@@ -1000,6 +1038,7 @@ function Receipt({ receipt, onClose }) {
         <p className="mt-3 font-mono text-xs font-bold text-slate-600">
           {receipt.transaction_reference}
         </p>
+        <p className="mt-4 text-sm leading-6 text-slate-500">{t("pendingVerificationText")}</p>
         <button
           onClick={onClose}
           className="mt-6 w-full rounded-lg bg-[#6F52D9] py-3 font-bold text-white"

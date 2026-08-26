@@ -95,7 +95,7 @@ class CampaignWritingAssistantTests(APITestCase):
 
 class GiveraHelpTests(APITestCase):
     @override_settings(GROQ_API_KEY="")
-    def test_public_visitor_can_ask_about_demo_payments(self):
+    def test_public_visitor_can_ask_about_wallet_payments(self):
         response = self.client.post(
             reverse("givera-help"),
             {"message": "Are the KBZPay payments real?", "language": "en", "history": []},
@@ -104,8 +104,8 @@ class GiveraHelpTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["provider"], "demo")
-        self.assertIn("demo flow", response.data["answer"])
-        self.assertIn("No real money", response.data["answer"])
+        self.assertIn("real KBZPay or WavePay", response.data["answer"])
+        self.assertIn("administrator must verify", response.data["answer"])
 
     @override_settings(GROQ_API_KEY="")
     def test_unrelated_question_is_kept_inside_givera_scope(self):

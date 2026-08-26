@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import {
-  ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, CircleDollarSign, FileImage,
-  Heart, MapPin, MessageCircleHeart, ReceiptText, Send, ShieldCheck, Smartphone,
-  Sparkles, UsersRound, X,
+  ArrowLeft, CalendarDays, CheckCircle2, Copy, FileImage, Heart, MapPin,
+  MessageCircleHeart, QrCode, ReceiptText, Send, ShieldCheck, Sparkles,
+  Upload, UsersRound, X,
 } from "lucide-react";
 
 import api from "../api/axios";
@@ -46,7 +46,6 @@ export default function CampaignDetail() {
   const [provider, setProvider] = useState("kbzpay");
   const [checkout, setCheckout] = useState(null);
   const [receipt, setReceipt] = useState(null);
-  const [secondsRemaining, setSecondsRemaining] = useState(0);
   const [donating, setDonating] = useState(false);
   const [donationMessage, setDonationMessage] = useState("");
   const [updateTitle, setUpdateTitle] = useState("");
@@ -56,31 +55,29 @@ export default function CampaignDetail() {
   const [utilizationForm, setUtilizationForm] = useState({ title: "", description: "", amount_spent: "", spent_on: "", evidence: null });
   const [utilizationError, setUtilizationError] = useState("");
   const [submittingUtilization, setSubmittingUtilization] = useState(false);
+  const [loadedAt] = useState(() => Date.now());
   
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const isLoggedIn = Boolean(localStorage.getItem("access"));
 
-  const loadCampaign = async () => {
-    const [campaignResponse, updatesResponse, donorsResponse, utilizationResponse] = await Promise.all([
-      api.get(`/campaigns/${id}/`), 
-      api.get(`/campaigns/${id}/updates/`), 
-      api.get(`/campaigns/${id}/donors/`), 
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      api.get(`/campaigns/${id}/`),
+      api.get(`/campaigns/${id}/updates/`),
+      api.get(`/campaigns/${id}/donors/`),
       api.get(`/campaigns/${id}/fund-utilization/`),
-    ]);
-    setCampaign(campaignResponse.data); 
-    setUpdates(updatesResponse.data); 
-    setDonors(donorsResponse.data); 
-    setUtilizations(utilizationResponse.data);
-  };
-
-  useEffect(() => { loadCampaign().catch(() => setError("This campaign could not be found.")); }, [id]);
-  useEffect(() => { 
-    if (!checkout?.expires_at) return undefined; 
-    const tick = () => setSecondsRemaining(Math.max(0, Math.ceil((new Date(checkout.expires_at).getTime() - Date.now()) / 1000))); 
-    tick(); 
-    const timer = window.setInterval(tick, 1000); 
-    return () => window.clearInterval(timer); 
-  }, [checkout]);
+    ]).then(([campaignResponse, updatesResponse, donorsResponse, utilizationResponse]) => {
+      if (!active) return;
+      setCampaign(campaignResponse.data);
+      setUpdates(updatesResponse.data);
+      setDonors(donorsResponse.data);
+      setUtilizations(utilizationResponse.data);
+    }).catch(() => {
+      if (active) setError("This campaign could not be found.");
+    });
+    return () => { active = false; };
+  }, [id]);
 
   const publishUpdate = async (event) => { 
     event.preventDefault(); 
@@ -115,26 +112,24 @@ export default function CampaignDetail() {
     } 
   };
 
-  const simulatePayment = async (outcome) => { 
-    if (!checkout) return; 
-    setDonating(true); 
-    try { 
-      const { data } = await api.post(`/donations/demo-checkout/${checkout.id}/simulate/`, { outcome }); 
-      if (outcome !== "success") { 
-        setCheckout(null); 
-        return setDonationMessage(data.failure_reason || "Demo payment did not complete."); 
-      } 
-      await loadCampaign(); 
-      setReceipt(data); 
-      setCheckout(null); 
-      setAmount(""); 
-      setMessage(""); 
-      setAnonymous(false); 
-    } catch (requestError) { 
-      setDonationMessage(requestError.response?.data?.detail || "Demo payment could not be completed."); 
-    } finally { 
-      setDonating(false); 
-    } 
+  const submitPaymentProof = async ({ walletTransactionId, receiptFile }) => {
+    if (!checkout) return;
+    setDonating(true);
+    const proof = new FormData();
+    if (walletTransactionId.trim()) proof.append("wallet_transaction_id", walletTransactionId.trim());
+    if (receiptFile) proof.append("receipt", receiptFile);
+    try {
+      const { data } = await api.post(`/donations/demo-checkout/${checkout.id}/proof/`, proof);
+      setReceipt(data);
+      setCheckout(null);
+      setAmount("");
+      setMessage("");
+      setAnonymous(false);
+    } catch (requestError) {
+      throw new Error(requestError.response?.data?.detail || "Payment proof could not be submitted.", { cause: requestError });
+    } finally {
+      setDonating(false);
+    }
   };
 
   const submitUtilization = async (event) => { 
@@ -161,7 +156,7 @@ export default function CampaignDetail() {
   const progress = Math.min(Number(campaign.progress_percentage || 0), 100);
   const isOrganizer = user?.id === campaign.owner;
   const isAdmin = user?.role === "admin" || user?.is_staff;
-  const days = Math.max(0, Math.ceil((new Date(campaign.deadline).getTime() - Date.now()) / 86400000));
+  const days = Math.max(0, Math.ceil((new Date(campaign.deadline).getTime() - loadedAt) / 86400000));
   const returnTo = location.state?.campaignReturnTo || "/campaigns";
   const returnLabelKey = location.state?.campaignReturnLabelKey || "backToCampaigns";
 
@@ -304,7 +299,7 @@ export default function CampaignDetail() {
             <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_15px_35px_rgba(41,35,74,.08)]">
               <p className="text-xs font-bold uppercase tracking-[.16em] text-[#7451E8]">Support this cause</p>
               <h2 className="mt-2 text-2xl font-extrabold">Make an impact today</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">Choose an amount and experience the secure Myanmar wallet checkout demo.</p>
+              <p className="mt-2 text-sm leading-6 text-slate-500">Choose an amount, transfer with your Myanmar wallet, and submit proof for verification.</p>
               {isLoggedIn ? (
                 <form onSubmit={startDonation} className="mt-6">
                   <label className="text-sm font-bold">Donation amount</label>
@@ -324,9 +319,9 @@ export default function CampaignDetail() {
                     <input type="checkbox" checked={anonymous} onChange={(event) => setAnonymous(event.target.checked)} className="accent-[#7451E8]" /> Donate anonymously
                   </label>
                   <fieldset className="mt-5">
-                    <legend className="text-sm font-bold">Demo payment method</legend>
-                    <div className="mt-2 grid grid-cols-3 gap-2">
-                      {[["kbzpay", "KBZPay"], ["wave", "Wave"], ["mmqr", "MMQR"]].map(([value, label]) => (
+                    <legend className="text-sm font-bold">Pay with</legend>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {[["kbzpay", "KBZPay"], ["wave", "WavePay"]].map(([value, label]) => (
                         <label key={value} className={`cursor-pointer rounded-xl border px-2 py-2.5 text-center text-xs font-extrabold ${provider === value ? "border-[#7451E8] bg-[#F1EDFF] text-[#6549C9]" : "border-slate-200 text-slate-500"}`}>
                           <input type="radio" value={value} checked={provider === value} onChange={(event) => setProvider(event.target.value)} className="sr-only" />{label}
                         </label>
@@ -335,9 +330,9 @@ export default function CampaignDetail() {
                   </fieldset>
                   {donationMessage && <p className="mt-4 rounded-xl bg-rose-50 p-3 text-sm font-medium text-rose-700">{donationMessage}</p>}
                   <button disabled={donating} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#7451E8] px-4 py-4 font-bold text-white shadow-lg shadow-violet-300/40 disabled:opacity-60">
-                    <Heart size={18} /> {donating ? "Opening checkout…" : "Continue to payment"}
+                    <Heart size={18} /> {donating ? "Preparing transfer…" : "Show payment QR"}
                   </button>
-                  <p className="mt-3 text-center text-xs leading-5 text-slate-400">Demo only. No wallet, QR code, or money is connected.</p>
+                  <p className="mt-3 text-center text-xs leading-5 text-slate-400">Your donation is counted only after an administrator verifies the transfer.</p>
                 </form>
               ) : (
                 <div className="mt-6">
@@ -373,7 +368,7 @@ export default function CampaignDetail() {
       </main>
 
       {/* Modals */}
-      {checkout && <Checkout checkout={checkout} campaign={campaign} seconds={secondsRemaining} busy={donating} onClose={() => setCheckout(null)} onPay={() => simulatePayment("success")} onFail={() => simulatePayment("failed")} onCancel={() => simulatePayment("cancelled")} />}
+      {checkout && <Checkout checkout={checkout} campaign={campaign} busy={donating} onClose={() => setCheckout(null)} onSubmit={submitPaymentProof} />}
       {receipt && <Receipt receipt={receipt} onClose={() => setReceipt(null)} />}
     </div>
   );
@@ -381,42 +376,71 @@ export default function CampaignDetail() {
 
 function Empty({ label }) { return <div className="mt-6 rounded-2xl bg-slate-50 px-5 py-8 text-center text-sm text-slate-400">{label}</div>; }
 
-function Checkout({ checkout, campaign, seconds, busy, onClose, onPay, onFail, onCancel }) { 
+function Checkout({ checkout, campaign, busy, onClose, onSubmit }) {
+  const [walletTransactionId, setWalletTransactionId] = useState("");
+  const [receiptFile, setReceiptFile] = useState(null);
+  const [proofError, setProofError] = useState("");
+  const [qrUnavailable, setQrUnavailable] = useState(false);
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setProofError("");
+    if (!walletTransactionId.trim() && !receiptFile) {
+      setProofError("Enter the wallet transaction number or upload a receipt screenshot.");
+      return;
+    }
+    try {
+      await onSubmit({ walletTransactionId, receiptFile });
+    } catch (error) {
+      setProofError(error.message);
+    }
+  };
+
+  const copyReference = () => navigator.clipboard?.writeText(checkout.transaction_reference);
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-[#17112E]/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md overflow-hidden rounded-[28px] bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#17112E]/60 p-4 backdrop-blur-sm">
+      <div className="mx-auto my-6 w-full max-w-lg overflow-hidden rounded-[28px] bg-white shadow-2xl">
         <div className="flex items-start justify-between bg-[#25194B] px-6 py-5 text-white">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[.18em] text-[#D7C8FF]">Sandbox checkout</p>
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-[#FFD66B]">Wallet transfer</p>
             <h2 className="mt-1 text-xl font-extrabold">{checkout.provider_label}</h2>
           </div>
           <button type="button" onClick={onClose} disabled={busy} className="rounded-xl p-2 hover:bg-white/10"><X size={20} /></button>
         </div>
-        <div className="p-6 text-center">
-          <div className="mx-auto grid h-24 w-24 grid-cols-3 gap-1 rounded-2xl bg-[#F1EDFF] p-3">
-            {Array.from({ length: 9 }, (_, index) => <span key={index} className={`rounded-sm ${[0, 1, 3, 4, 8].includes(index) ? "bg-[#7451E8]" : "bg-[#CFC2FF]"}`} />)}
+        <form onSubmit={submit} className="p-6">
+          <div className="text-center">
+            {qrUnavailable ? (
+              <div className="mx-auto grid h-52 w-52 place-items-center rounded-3xl border-2 border-dashed border-[#D8CFFA] bg-[#F8F6FF] text-[#6F52D9]">
+                <div><QrCode className="mx-auto" size={54} /><p className="mt-3 text-xs font-bold">QR image needs to be configured</p></div>
+              </div>
+            ) : (
+              <img src={mediaUrl(checkout.qr_code_url)} onError={() => setQrUnavailable(true)} alt={`${checkout.provider_label} payment QR`} className="mx-auto h-52 w-52 rounded-3xl border border-slate-200 bg-white object-contain p-2 shadow-sm" />
+            )}
           </div>
-          <p className="mt-5 text-3xl font-extrabold">{kyat(checkout.amount)}</p>
-          <p className="mt-1 text-sm text-slate-500">to {campaign.title}</p>
-          <div className="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-left text-xs">
-            <p className="text-slate-400">Reference ID</p>
-            <p className="mt-1 font-mono font-extrabold text-slate-700">{checkout.transaction_reference}</p>
+          <p className="mt-5 text-center text-3xl font-extrabold">{kyat(checkout.amount)}</p>
+          <p className="mt-1 text-center text-sm text-slate-500">for {campaign.title}</p>
+          <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3 text-left text-xs">
+            <div><p className="text-slate-400">Givera reference</p><p className="mt-1 font-mono font-extrabold text-slate-700">{checkout.transaction_reference}</p></div>
+            <button type="button" onClick={copyReference} className="rounded-lg bg-white p-2 text-[#6549C9] shadow-sm" aria-label="Copy reference"><Copy size={16} /></button>
           </div>
-          <p className={`mt-3 text-xs font-bold ${seconds ? "text-slate-500" : "text-rose-600"}`}>
-            {seconds ? `Session expires in ${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}` : "Demo session expired"}
-          </p>
           <div className="mt-5 rounded-2xl bg-amber-50 p-4 text-left text-sm text-amber-900">
-            <p className="flex items-center gap-2 font-extrabold"><ShieldCheck size={18} /> No real payment</p>
-            <p className="mt-1 leading-5">This is a non-scannable demonstration of the wallet return process.</p>
+            <p className="flex items-center gap-2 font-extrabold"><ShieldCheck size={18} /> Before you submit</p>
+            <p className="mt-1 leading-5">Transfer the exact amount shown above. Your donation remains pending until Givera confirms that the money arrived.</p>
           </div>
-          <button type="button" onClick={onPay} disabled={busy || !seconds} className="mt-5 w-full rounded-xl bg-[#7451E8] px-4 py-3.5 font-bold text-white disabled:opacity-50">
-            <CheckCircle2 className="mr-2 inline" size={18} /> {busy ? "Completing…" : "Simulate successful payment"}
+          <label className="mt-5 block text-sm font-bold text-slate-700">Wallet transaction number <span className="font-normal text-slate-400">(receipt may be used instead)</span>
+            <input value={walletTransactionId} onChange={(event) => setWalletTransactionId(event.target.value)} maxLength={100} placeholder="Enter KBZPay or WavePay transaction number" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-mono text-sm outline-none focus:border-[#7451E8]" />
+          </label>
+          <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-[#CFC3F7] bg-[#FAF8FF] p-4 text-sm text-slate-600">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#EEE9FF] text-[#6549C9]"><Upload size={18} /></span>
+            <span className="min-w-0"><strong className="block text-slate-800">Upload receipt screenshot</strong><span className="block truncate text-xs text-slate-400">{receiptFile?.name || "JPG, PNG or WebP · maximum 5 MB"}</span></span>
+            <input type="file" accept="image/*" onChange={(event) => setReceiptFile(event.target.files?.[0] || null)} className="sr-only" />
+          </label>
+          {proofError && <p className="mt-4 rounded-xl bg-rose-50 p-3 text-sm font-bold text-rose-700">{proofError}</p>}
+          <button disabled={busy} className="mt-5 w-full rounded-xl bg-[#7451E8] px-4 py-3.5 font-bold text-white disabled:opacity-50">
+            <CheckCircle2 className="mr-2 inline" size={18} /> {busy ? "Submitting…" : "Done — submit for verification"}
           </button>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <button type="button" onClick={onFail} disabled={busy || !seconds} className="rounded-xl bg-rose-50 px-3 py-2.5 text-xs font-bold text-rose-700 disabled:opacity-50">Simulate failure</button>
-            <button type="button" onClick={onCancel} disabled={busy} className="rounded-xl bg-slate-100 px-3 py-2.5 text-xs font-bold text-slate-600">Cancel</button>
-          </div>
-        </div>
+        </form>
       </div>
     </div>
   ); 
@@ -427,15 +451,15 @@ function Receipt({ receipt, onClose }) {
     <div className="fixed inset-0 z-50 grid place-items-center bg-[#17112E]/60 p-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-[28px] bg-white p-7 text-center shadow-2xl">
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-100 text-emerald-700"><CheckCircle2 size={34} /></div>
-        <p className="mt-5 text-xs font-bold uppercase tracking-[.18em] text-[#7451E8]">Demo receipt</p>
-        <h2 className="mt-2 text-2xl font-extrabold">Donation completed</h2>
+        <p className="mt-5 text-xs font-bold uppercase tracking-[.18em] text-[#7451E8]">Proof received</p>
+        <h2 className="mt-2 text-2xl font-extrabold">Pending verification</h2>
         <div className="mt-6 space-y-3 rounded-2xl bg-slate-50 p-5 text-left text-sm">
           <Line label="Amount" value={kyat(receipt.amount)} />
           <Line label="Method" value={receipt.provider_label} />
           <Line label="Reference" value={receipt.transaction_reference} />
-          <Line label="Status" value="Completed" />
+          <Line label="Status" value="Pending verification" />
         </div>
-        <p className="mt-5 text-xs text-slate-400">DEMO PAYMENT — no funds were transferred.</p>
+        <p className="mt-5 text-sm leading-6 text-slate-500">Givera will check the receiving wallet. The campaign total and your certificate will unlock only after approval.</p>
         <button type="button" onClick={onClose} className="mt-5 w-full rounded-xl bg-[#7451E8] px-4 py-3 font-bold text-white">Done</button>
       </div>
     </div>

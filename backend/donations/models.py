@@ -35,12 +35,7 @@ class Donation(models.Model):
 
 
 class DemoPayment(models.Model):
-    """A non-monetary checkout record used to demonstrate the wallet flow.
-
-    This model deliberately contains no provider credentials, QR payloads, or
-    card/wallet information.  It can later be replaced by a real provider
-    transaction once Givera has a merchant account and webhook integration.
-    """
+    """A wallet transfer submitted by a donor for manual verification."""
 
     class Provider(models.TextChoices):
         KBZPAY = "kbzpay", "KBZPay"
@@ -48,10 +43,11 @@ class DemoPayment(models.Model):
         MMQR = "mmqr", "MMQR (any supported wallet)"
 
     class Status(models.TextChoices):
-        PENDING = "pending", "Pending"
-        PAID = "paid", "Demo payment completed"
+        PENDING = "pending", "Awaiting payment proof"
+        SUBMITTED = "submitted", "Pending verification"
+        PAID = "paid", "Verified"
         CANCELLED = "cancelled", "Cancelled"
-        FAILED = "failed", "Failed"
+        FAILED = "failed", "Rejected"
         EXPIRED = "expired", "Expired"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -63,8 +59,19 @@ class DemoPayment(models.Model):
     is_anonymous = models.BooleanField(default=False)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     transaction_reference = models.CharField(max_length=32, unique=True)
+    wallet_transaction_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    receipt = models.ImageField(upload_to="donation-receipts/", null=True, blank=True)
+    proof_submitted_at = models.DateTimeField(null=True, blank=True)
     failure_reason = models.CharField(max_length=160, blank=True)
     donation = models.OneToOneField(Donation, on_delete=models.SET_NULL, null=True, blank=True, related_name="demo_payment")
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="wallet_payments_reviewed",
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField()
@@ -73,4 +80,4 @@ class DemoPayment(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Demo {self.provider} payment {self.id}"
+        return f"{self.get_provider_display()} transfer {self.transaction_reference}"

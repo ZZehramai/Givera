@@ -26,6 +26,7 @@ import {
   Pencil,
   Plus,
   RotateCcw,
+  ReceiptText,
   Save,
   Search,
   Settings,
@@ -570,6 +571,7 @@ function Transactions({
   search,
   onSearch,
   onPageChange,
+  onReview,
 }) {
   const { t } = useLanguage();
   const pages = Math.max(1, Math.ceil(meta.count / 10));
@@ -593,7 +595,7 @@ function Transactions({
         </label>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1130px] text-left text-sm">
+        <table className="w-full min-w-[1500px] text-left text-sm">
           <thead className="border-y border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400">
             <tr>
               <th className="px-5 py-3">{t("donorDetails")}</th>
@@ -601,8 +603,11 @@ function Transactions({
               <th className="px-5 py-3">{t("amount")}</th>
               <th className="px-5 py-3">{t("method")}</th>
               <th className="px-5 py-3">{t("referenceId")}</th>
+              <th className="px-5 py-3">Wallet transaction</th>
+              <th className="px-5 py-3">Receipt</th>
               <th className="px-5 py-3">{t("status")}</th>
               <th className="px-5 py-3">{t("dateTime")}</th>
+              <th className="px-5 py-3 text-right">{t("action")}</th>
             </tr>
           </thead>
           <tbody>
@@ -642,26 +647,47 @@ function Transactions({
                   <td className="px-5 py-4 font-mono text-xs font-bold text-slate-600">
                     {donation.payment_reference}
                   </td>
+                  <td className="px-5 py-4 font-mono text-xs font-bold text-slate-600">
+                    {donation.wallet_transaction_id || "—"}
+                  </td>
+                  <td className="px-5 py-4">
+                    {donation.receipt_url ? (
+                      <a href={donation.receipt_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-[#F0ECFF] px-3 py-2 text-xs font-bold text-[#6549C9]">
+                        <ReceiptText size={15} /> View receipt
+                      </a>
+                    ) : <span className="text-slate-400">—</span>}
+                  </td>
                   <td className="px-5 py-4">
                     <StatusBadge
                       status={
                         donation.payment_status === "paid" ||
                         donation.payment_status === "recorded"
                           ? "approved"
-                          : "pending"
+                          : donation.payment_status === "failed"
+                            ? "rejected"
+                            : "pending"
                       }
                       label={t(`payment${donation.payment_status?.charAt(0).toUpperCase()}${donation.payment_status?.slice(1)}`)}
                     />
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap text-xs text-slate-500">
-                    {dateTime(donation.created_at)}
+                    <span className="block">{dateTime(donation.created_at)}</span>
+                    {donation.proof_submitted_at && <span className="mt-1 block text-[10px] text-slate-400">Proof: {dateTime(donation.proof_submitted_at)}</span>}
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    {donation.payment_status === "submitted" ? (
+                      <div className="flex justify-end gap-2">
+                        <button type="button" onClick={() => onReview(donation, "verify")} className="rounded-xl bg-emerald-100 px-3 py-2 text-xs font-extrabold text-emerald-700">Verify</button>
+                        <button type="button" onClick={() => onReview(donation, "reject")} className="rounded-xl bg-rose-100 px-3 py-2 text-xs font-extrabold text-rose-700">Reject</button>
+                      </div>
+                    ) : donation.failure_reason ? <span className="text-xs text-rose-600">{donation.failure_reason}</span> : <span className="text-slate-300">—</span>}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="10"
                   className="px-5 py-14 text-center text-sm text-slate-400"
                 >
                   {t("noTransactionsMatch")}
@@ -2101,7 +2127,7 @@ export default function AdminDashboard() {
     });
     if (donationSearch.trim()) params.set("q", donationSearch.trim());
     api
-      .get(`/donations/admin/all/?${params}`)
+      .get(`/donations/admin/payments/?${params}`)
       .then(({ data }) => {
         setDonations(data.results || []);
         setDonationMeta({
@@ -2211,6 +2237,26 @@ export default function AdminDashboard() {
       setNotice((language === "en" && requestError.response?.data?.action?.[0]) || t("campaignActionError"));
     }
   };
+  const reviewPayment = useCallback(async (payment, decision) => {
+    let reason = "";
+    if (decision === "verify") {
+      if (!window.confirm(`Verify ${payment.payment_reference} after confirming the money arrived?`)) return;
+    } else {
+      reason = window.prompt("Why was this transfer rejected?")?.trim() || "";
+      if (!reason) return;
+    }
+    try {
+      const { data } = await api.post(`/donations/admin/payments/${payment.id}/review/`, { decision, reason });
+      setDonations((items) => items.map((item) => item.id === data.id ? data : item));
+      setNotice(decision === "verify" ? "Transfer verified and donation recorded." : "Transfer rejected.");
+      if (decision === "verify") {
+        const { data: refreshedReport } = await api.get("/reports/dashboard/");
+        setReport(refreshedReport);
+      }
+    } catch (requestError) {
+      setNotice(requestError.response?.data?.detail || "The transaction status could not be updated.");
+    }
+  }, []);
   const editCampaign = (campaign) => {
     setSelectedCampaign(null);
     setEditingCampaign(campaign);
@@ -2286,6 +2332,7 @@ export default function AdminDashboard() {
             setDonationPage(1);
           }}
           onPageChange={setDonationPage}
+          onReview={reviewPayment}
         />
       ),
       users: (
@@ -2334,6 +2381,7 @@ export default function AdminDashboard() {
       user,
       viewUser,
       changeUser,
+      reviewPayment,
     ],
   );
   return (
