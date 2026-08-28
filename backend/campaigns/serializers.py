@@ -219,7 +219,7 @@ class FundUtilizationReviewSerializer(serializers.Serializer):
             raise serializers.ValidationError({"review_note": "Explain what needs to be changed."})
         return attrs
 
-class CommentSerializer(serializers.ModelSerializer):
+"""class CommentSerializer(serializers.ModelSerializer):
     author = serializers.CharField(
         source='user.username',
         read_only=True
@@ -243,3 +243,37 @@ class CommentSerializer(serializers.ModelSerializer):
             'author',
             'created_at',
         ]
+    def get_replies(self, obj):
+        if obj.replies.exists():
+            return CommentSerializer(obj.replies.all(), many=True).data
+        return [] """
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.CharField(source="user.username", read_only=True)
+    content = serializers.CharField(source="comment_text")
+    replies = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = [
+            "id",
+            "campaign",
+            "author",
+            "content",
+            "parent",
+            "replies",
+            "created_at",
+        ]
+        read_only_fields = [
+            "id",
+            "campaign",
+            "author",
+            "created_at",
+        ]
+
+    def get_replies(self, obj):
+        if obj.replies.exists():
+            return CommentSerializer(obj.replies.all(), many=True).data
+        return []
+
+    
