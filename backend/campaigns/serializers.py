@@ -220,9 +220,26 @@ class FundUtilizationReviewSerializer(serializers.Serializer):
         return attrs
 
 class CommentSerializer(serializers.ModelSerializer):
-    author_name = serializers.ReadOnlyField(source='author.username')
+    author = serializers.CharField(
+        source='user.username',
+        read_only=True
+    )
+    content = serializers.CharField(
+        source='comment_text'
+    )
 
     class Meta:
         model = Comment
-        fields = ['id', 'campaign', 'author', 'author_name', 'content', 'created_at']
-        read_only_fields = ['author', 'campaign']
+        fields = [
+            'id',
+            'campaign',
+            'author',
+            'content',
+            'created_at',
+        ]
+        read_only_fields = [
+            'id',
+            'campaign',
+            'author',
+            'created_at',
+        ]

@@ -501,3 +501,18 @@ class CommentListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         campaign_id = self.kwargs['campaign_id']
         serializer.save(author=self.request.user, campaign_id=campaign_id)
+
+class CampaignCommentListCreateView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        # Match 'pk' from your URL pattern <uuid:pk>
+        return Comment.objects.filter(campaign_id=self.kwargs['pk'])
+
+    def perform_create(self, serializer):
+        # Automatically attach the logged-in user and campaign
+        serializer.save(
+            user=self.request.user,
+            campaign_id=self.kwargs['pk']
+        )
