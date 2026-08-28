@@ -1,10 +1,16 @@
 from unittest.mock import Mock, patch
+from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from campaigns.models import Campaign
+
+from .models import CampaignTrustAssessment
 
 
 User = get_user_model()
@@ -64,11 +70,23 @@ class CampaignWritingAssistantTests(APITestCase):
         self.assertEqual(request_options["headers"]["Authorization"], "Bearer test-groq-key")
 
     @override_settings(GROQ_API_KEY="")
-    def test_empty_title_is_rejected_without_modifying_campaign_data(self):
+    def test_empty_title_can_be_drafted_from_campaign_context(self):
         self.client.force_authenticate(self.user)
         response = self.client.post(
             reverse("campaign-writing"),
             {**self.payload, "field": "title", "content": ""},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["suggestion"])
+
+    @override_settings(GROQ_API_KEY="")
+    def test_empty_field_without_campaign_context_is_rejected(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.post(
+            reverse("campaign-writing"),
+            {"field": "title", "content": "", "language": "en"},
             format="json",
         )
 
@@ -77,7 +95,7 @@ class CampaignWritingAssistantTests(APITestCase):
 
 class GiveraHelpTests(APITestCase):
     @override_settings(GROQ_API_KEY="")
-    def test_public_visitor_can_ask_about_demo_payments(self):
+    def test_public_visitor_can_ask_about_wallet_payments(self):
         response = self.client.post(
             reverse("givera-help"),
             {"message": "Are the KBZPay payments real?", "language": "en", "history": []},
@@ -86,8 +104,8 @@ class GiveraHelpTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["provider"], "demo")
-        self.assertIn("demo flow", response.data["answer"])
-        self.assertIn("No real money", response.data["answer"])
+        self.assertIn("real KBZPay or WavePay", response.data["answer"])
+        self.assertIn("administrator must verify", response.data["answer"])
 
     @override_settings(GROQ_API_KEY="")
     def test_unrelated_question_is_kept_inside_givera_scope(self):
@@ -110,3 +128,77 @@ class GiveraHelpTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("စီမံခန့်ခွဲသူ", response.data["answer"])
+
+
+class CampaignTrustAssessmentTests(APITestCase):
+    def setUp(self):
+        self.organizer = User.objects.create_user(
+            email="organizer@example.com",
+            username="organizer",
+            password="StrongPassword123!",
+        )
+        self.admin = User.objects.create_user(
+            email="reviewer@example.com",
+            username="reviewer",
+            password="StrongPassword123!",
+            role=User.Role.ADMIN,
+        )
+        self.campaign = Campaign.objects.create(
+            owner=self.organizer,
+            title="Community reading room",
+            summary="Help local children access a safe place to read and study after school.",
+            story=(
+                "Children in our neighborhood need a safe reading space. We will use the funds to purchase "
+                "books, shelves, study tables, and basic learning supplies. Progress and major expenses will "
+                "be documented for supporters throughout the campaign."
+            ),
+            category=Campaign.Category.EDUCATION,
+            beneficiary="Local children",
+            location="Yangon",
+            goal_amount="5000000.00",
+            deadline=timezone.localdate() + timedelta(days=30),
+            status=Campaign.Status.PENDING,
+        )
+
+    @override_settings(GROQ_API_KEY="")
+    def test_admin_can_generate_advisory_assessment(self):
+        self.client.force_authenticate(self.admin)
+
+        response = self.client.get(reverse("campaign-trust", kwargs={"pk": self.campaign.pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(response.data["risk_level"], ["low", "medium", "high"])
+        self.assertEqual(response.data["provider"], "demo")
+        self.assertTrue(response.data["suggested_checks"])
+        self.assertTrue(CampaignTrustAssessment.objects.filter(campaign=self.campaign).exists())
+
+    @override_settings(GROQ_API_KEY="")
+    def test_regular_donor_cannot_access_admin_assessment(self):
+        self.client.force_authenticate(self.organizer)
+
+        response = self.client.get(reverse("campaign-trust", kwargs={"pk": self.campaign.pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @override_settings(GROQ_API_KEY="test-groq-key", GROQ_WRITING_MODEL="openai/gpt-oss-20b")
+    @patch("ai.services.requests.post")
+    def test_admin_can_refresh_assessment_with_groq(self, mock_post):
+        provider_response = Mock()
+        provider_response.json.return_value = {
+            "output": [{
+                "content": [{
+                    "type": "output_text",
+                    "text": '{"risk_level":"medium","summary":"Verify the cost plan.","flags":[],"missing_information":["Detailed budget"],"suggested_checks":["Confirm supplier estimates"]}',
+                }],
+            }],
+        }
+        provider_response.raise_for_status.return_value = None
+        mock_post.return_value = provider_response
+        self.client.force_authenticate(self.admin)
+
+        response = self.client.post(reverse("campaign-trust", kwargs={"pk": self.campaign.pk}), {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["provider"], "groq")
+        self.assertEqual(response.data["risk_level"], "medium")
+        self.assertEqual(response.data["missing_information"], ["Detailed budget"])

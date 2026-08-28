@@ -16,6 +16,8 @@ api.interceptors.request.use((config) => {
         "/auth/login/",
         "/auth/register/",
         "/auth/google/",
+        "/auth/forgot-password/",
+        "/auth/reset-password/",
         "/auth/token/refresh/",
     ];
 
@@ -90,13 +92,12 @@ api.interceptors.response.use(
 );
 
 export const getComments = async (campaignId) => {
-  // Check casing: Use API (or api) matching whatever variable you defined above
-  const response = await API.get(`/campaigns/${campaignId}/comments/`);
+  const response = await api.get(`/campaigns/${campaignId}/comments/`);
   return response.data;
 };
 
 export const postComment = async (campaignId, content) => {
-  const response = await API.post(`/campaigns/${campaignId}/comments/`, { content });
+  const response = await api.post(`/campaigns/${campaignId}/comments/`, { content });
   return response.data;
 };
 export default api;

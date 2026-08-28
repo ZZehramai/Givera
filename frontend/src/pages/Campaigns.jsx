@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 import api from "../api/axios";
 import AppHeader from "../components/AppHeader";
@@ -16,6 +17,8 @@ const categories = [
   ["animals", "animals"],
   ["other", "other"],
 ];
+
+const CAMPAIGNS_PER_PAGE = 6;
 
 function LoadingGrid() {
   return (
@@ -50,9 +53,12 @@ function EmptyState({ searching }) {
 
 export default function Campaigns() {
   const { t } = useLanguage();
+  const location = useLocation();
+  const initialParams = new URLSearchParams(location.search);
   const [campaigns, setCampaigns] = useState([]);
-  const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [query, setQuery] = useState(initialParams.get("q") || "");
+  const [selectedCategory, setSelectedCategory] = useState(initialParams.get("category") || "all");
+  const [page, setPage] = useState(Math.max(1, Number(initialParams.get("page")) || 1));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -80,6 +86,24 @@ export default function Campaigns() {
     if (selectedCategory === "all") return campaigns;
     return campaigns.filter((c) => c.category === selectedCategory);
   }, [campaigns, selectedCategory]);
+  const totalPages = Math.max(1, Math.ceil(filteredCampaigns.length / CAMPAIGNS_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const visibleCampaigns = filteredCampaigns.slice(
+    (currentPage - 1) * CAMPAIGNS_PER_PAGE,
+    currentPage * CAMPAIGNS_PER_PAGE,
+  );
+
+  const returnParams = new URLSearchParams({
+    ...(query ? { q: query } : {}),
+    ...(selectedCategory !== "all" ? { category: selectedCategory } : {}),
+    ...(currentPage > 1 ? { page: String(currentPage) } : {}),
+  });
+  const campaignReturnTo = `/campaigns${returnParams.size ? `?${returnParams.toString()}` : ""}`;
+
+  const changePage = (nextPage) => {
+    setPage(nextPage);
+    document.getElementById("campaign-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -91,22 +115,28 @@ export default function Campaigns() {
             <span className="rounded-full bg-[#FFF1A8] px-3 py-1.5 text-xs font-extrabold text-[#655000]">
               {t("verifiedCampaigns")}
             </span>
-            <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-[#201A36] md:text-5xl">
+            <h3 className="mt-4 text-3xl font-extrabold text-[#201A36] md:text-5xl">
               {t("discoverCampaigns")}
-            </h1>
+            </h3>
 
             <div className="mt-6 flex w-full max-w-xl items-center gap-3 rounded-full border border-slate-300 bg-white px-5 py-3.5 shadow-sm transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
               <Search className="h-5 w-5 shrink-0 text-slate-400" />
               <input
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setPage(1);
+                }}
                 placeholder={t("searchCampaigns")}
                 className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none"
               />
               {query && (
                 <button
                   type="button"
-                  onClick={() => setQuery("")}
+                  onClick={() => {
+                    setQuery("");
+                    setPage(1);
+                  }}
                   aria-label={t("clearSearch")}
                   className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                 >
@@ -118,7 +148,7 @@ export default function Campaigns() {
         </section>
 
         {/* Category Selector Pills */}
-        <section className="border-b border-slate-100 px-6 py-6">
+        <section className="px-6 py-6">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-2">
             {categories.map(([value, labelKey]) => {
               const isActive = selectedCategory === value;
@@ -126,7 +156,10 @@ export default function Campaigns() {
                 <button
                   key={value}
                   type="button"
-                  onClick={() => setSelectedCategory(value)}
+                  onClick={() => {
+                    setSelectedCategory(value);
+                    setPage(1);
+                  }}
                   className={`rounded-full px-5 py-2.5 text-sm font-bold transition-all ${
                     isActive
                       ? "bg-[#6F52D9] text-white shadow-md"
@@ -141,7 +174,7 @@ export default function Campaigns() {
         </section>
 
         {/* Campaigns Grid */}
-        <section className="mx-auto max-w-6xl px-6 py-12">
+        <section id="campaign-grid" className="mx-auto max-w-6xl scroll-mt-6 px-6 py-12">
           {error && (
             <div className="mb-8 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700">
               {error}
@@ -151,10 +184,35 @@ export default function Campaigns() {
           {loading ? (
             <LoadingGrid />
           ) : filteredCampaigns.length > 0 ? (
-            <div className="grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
-              {filteredCampaigns.map((campaign) => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
-              ))}
+            <div>
+              <div className="grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
+                {visibleCampaigns.map((campaign) => (
+                  <CampaignCard key={campaign.id} campaign={campaign} returnTo={campaignReturnTo} returnLabelKey="backToCampaigns" />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <nav aria-label={t("pagination")} className="mt-12 flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => changePage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    aria-label={t("previousCampaigns")}
+                    className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-[#6549C9] shadow-sm transition hover:border-[#CFC3FA] hover:bg-[#F7F4FF] disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    <ChevronLeft size={21} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => changePage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    aria-label={t("nextCampaigns")}
+                    className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-[#6549C9] shadow-sm transition hover:border-[#CFC3FA] hover:bg-[#F7F4FF] disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    <ChevronRight size={21} />
+                  </button>
+                </nav>
+              )}
             </div>
           ) : (
             <EmptyState searching={Boolean(query || selectedCategory !== "all")} />

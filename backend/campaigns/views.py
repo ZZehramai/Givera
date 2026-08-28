@@ -1,3 +1,5 @@
+import logging
+
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -8,12 +10,27 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import Notification
+from accounts.notifications import notify_active_admins
 from accounts.permissions import IsAdmin
 
 from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization, Comment
 from .serializers import AdminCampaignSerializer, CampaignManagementSerializer, CampaignMediaSerializer, CampaignRecommendationRequestSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer, MAX_CAMPAIGN_MEDIA_FILES, validate_campaign_cover_upload, validate_campaign_media_upload, CommentSerializer
 from .recommendations import recommend_campaigns
 from .services import complete_campaign_if_due, complete_due_campaigns
+
+
+logger = logging.getLogger(__name__)
+
+
+def create_campaign_trust_assessment(campaign):
+    """Create an advisory assessment without ever blocking campaign submission."""
+    try:
+        from ai.services import assess_campaign_trust
+        # Keep submission fast and reliable. Admins can refresh with Groq from
+        # the review modal when an external provider is configured.
+        assess_campaign_trust(campaign, force=True, use_provider=False)
+    except Exception:
+        logger.exception("Could not create trust assessment for campaign %s", campaign.pk)
 
 
 class CampaignListCreateView(generics.ListCreateAPIView):
@@ -68,6 +85,14 @@ class CampaignListCreateView(generics.ListCreateAPIView):
                 )
                 for upload, media_type in zip(files, media_types)
             ])
+        if campaign.status == Campaign.Status.PENDING:
+            create_campaign_trust_assessment(campaign)
+            notify_active_admins(
+                notification_type=Notification.Type.CAMPAIGN_PENDING_REVIEW,
+                title="New campaign request",
+                message=f'{campaign.owner.username} submitted “{campaign.title}” for review.',
+                link="/dashboard?section=campaigns",
+            )
         return Response(self.get_serializer(campaign).data, status=status.HTTP_201_CREATED)
 
 
@@ -110,6 +135,7 @@ class CampaignDetailView(generics.RetrieveUpdateDestroyAPIView):
         media_types = [validate_campaign_cover_upload(upload) for upload in files]
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
+        previous_status = instance.status
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
@@ -124,6 +150,15 @@ class CampaignDetailView(generics.RetrieveUpdateDestroyAPIView):
                 )
                 for upload, media_type in zip(files, media_types)
             ])
+        if instance.status == Campaign.Status.PENDING:
+            create_campaign_trust_assessment(instance)
+            if previous_status != Campaign.Status.PENDING:
+                notify_active_admins(
+                    notification_type=Notification.Type.CAMPAIGN_PENDING_REVIEW,
+                    title="Campaign resubmitted",
+                    message=f'{instance.owner.username} resubmitted “{instance.title}” for review.',
+                    link="/dashboard?section=campaigns",
+                )
         return Response(self.get_serializer(instance).data)
 
     def perform_destroy(self, instance):
@@ -309,17 +344,20 @@ class CampaignUpdateListCreateView(generics.ListCreateAPIView):
             raise ValidationError("Updates can only be published for approved or completed campaigns.")
 
         update = serializer.save(campaign=campaign, author=self.request.user)
-        recipient_ids = campaign.donations.values_list("donor_id", flat=True).distinct()
+        recipient_ids = campaign.donations.filter(
+            donor__campaign_notifications_enabled=True,
+        ).exclude(
+            donor_id=campaign.owner_id,
+        ).order_by().values_list("donor_id", flat=True).distinct()
         notifications = [
             Notification(
                 recipient_id=recipient_id,
                 type=Notification.Type.CAMPAIGN_UPDATE,
                 title=f"New update: {campaign.title}",
                 message=update.title,
-                link=f"/campaigns/{campaign.pk}",
+                link=f"/campaigns/{campaign.pk}#latest-updates",
             )
             for recipient_id in recipient_ids
-            if recipient_id != campaign.owner_id
         ]
         Notification.objects.bulk_create(notifications)
 
@@ -465,12 +503,25 @@ class FundUtilizationListCreateView(generics.ListCreateAPIView):
         campaign = self.get_campaign()
         if campaign.status not in {Campaign.Status.APPROVED, Campaign.Status.COMPLETED}:
             raise ValidationError("Spending reports can only be added to an approved or completed campaign.")
-        serializer.save(
+        report = serializer.save(
             campaign=campaign,
             submitted_by=self.request.user,
             status=FundUtilization.Status.APPROVED,
             reviewed_at=timezone.now(),
         )
+        recipient_ids = campaign.donations.filter(
+            donor__campaign_notifications_enabled=True,
+        ).order_by().values_list("donor_id", flat=True).distinct()
+        Notification.objects.bulk_create([
+            Notification(
+                recipient_id=recipient_id,
+                type=Notification.Type.FUND_UTILIZATION,
+                title=f"New spending report: {campaign.title}",
+                message=report.title,
+                link=f"/campaigns/{campaign.pk}#fund-utilization",
+            )
+            for recipient_id in recipient_ids
+        ])
 
 
 class FundUtilizationReviewView(APIView):

@@ -32,7 +32,7 @@ def _date(value, include_time=False):
 
 
 def _money(value):
-    return f"{float(value or 0):,.2f} Ks"
+    return f"{float(value or 0):,.2f} MMK"
 
 
 def _name(user):

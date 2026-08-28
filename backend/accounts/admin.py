@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import AdminUserAction, User, PasswordResetOTP, Notification
+from .models import AdminUserAction, User, PasswordResetOTP, NewsletterSubscriber, Notification
 
 
 @admin.register(User)
@@ -29,6 +29,13 @@ class NotificationAdmin(admin.ModelAdmin):
     list_display = ["recipient", "type", "title", "is_read", "created_at"]
     list_filter = ["type", "is_read", "created_at"]
     search_fields = ["recipient__email", "title", "message"]
+
+
+@admin.register(NewsletterSubscriber)
+class NewsletterSubscriberAdmin(admin.ModelAdmin):
+    list_display = ["email", "language", "is_active", "subscribed_at"]
+    list_filter = ["language", "is_active", "subscribed_at"]
+    search_fields = ["email"]
 
 
 @admin.register(AdminUserAction)

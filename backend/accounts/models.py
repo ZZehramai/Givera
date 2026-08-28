@@ -27,6 +27,7 @@ class User(AbstractUser):
     profile_picture = models.URLField(blank=True, null=True)
     country = models.CharField(max_length=100, blank=True)
     bio = models.TextField(blank=True)
+    campaign_notifications_enabled = models.BooleanField(default=True)
     
 
     is_email_verified = models.BooleanField(default=False)
@@ -69,11 +70,32 @@ class PasswordResetOTP(models.Model):
         return f'OTP for {self.user.email}'
 
 
+class NewsletterSubscriber(models.Model):
+    """Email address that opted in to Givera platform updates."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    email = models.EmailField(unique=True)
+    language = models.CharField(max_length=2, choices=[("en", "English"), ("my", "Myanmar")], default="en")
+    is_active = models.BooleanField(default=True)
+    subscribed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-subscribed_at"]
+
+    def __str__(self):
+        return self.email
+
+
 class Notification(models.Model):
     class Type(models.TextChoices):
         CAMPAIGN_UPDATE = "campaign_update", "Campaign update"
+        FUND_UTILIZATION = "fund_utilization", "Fund utilization report"
         CAMPAIGN_APPROVED = "campaign_approved", "Campaign approved"
         CAMPAIGN_REJECTED = "campaign_rejected", "Campaign rejected"
+        PAYMENT_VERIFIED = "payment_verified", "Payment verified"
+        PAYMENT_REJECTED = "payment_rejected", "Payment rejected"
+        CAMPAIGN_PENDING_REVIEW = "campaign_pending_review", "Campaign pending review"
+        PAYMENT_PENDING_REVIEW = "payment_pending_review", "Payment pending review"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     recipient = models.ForeignKey(

@@ -4,6 +4,7 @@ import {
   Archive,
   ArrowUpRight,
   BarChart3,
+  Brain,
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
@@ -25,6 +26,7 @@ import {
   Pencil,
   Plus,
   RotateCcw,
+  ReceiptText,
   Save,
   Search,
   Settings,
@@ -39,11 +41,13 @@ import {
 import api from "../api/axios";
 import { logout } from "../services/authService";
 import LanguageSwitch from "../components/LanguageSwitch";
+import PasswordInput from "../components/PasswordInput";
+import DashboardNotifications from "../components/DashboardNotifications";
 import { useLanguage } from "../i18n/LanguageContext";
 import CreateCampaign from "./CreateCampaign";
 
 const activeLocale = () => localStorage.getItem("givera-language") === "my" ? "my-MM" : "en-US";
-const kyat = (value) => `${Number(value || 0).toLocaleString(activeLocale())} ${activeLocale() === "my-MM" ? "ကျပ်" : "Ks"}`;
+const kyat = (value) => `${Number(value || 0).toLocaleString(activeLocale())} ${activeLocale() === "my-MM" ? "ကျပ်" : "MMK"}`;
 const dateTime = (value) => (value ? new Date(value).toLocaleString(activeLocale()) : "—");
 const campaignTone = {
   approved: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -79,19 +83,18 @@ function Sidebar({ section, onSection, user, onLogout, pending }) {
     <aside className="flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_18px_45px_rgba(41,35,80,.09)] lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:self-start">
       <div className="border-b border-slate-100 px-6 py-6">
         <Link to="/" aria-label={t("goGiveraHome")} className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F52D9]/30">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">
+          {/* <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">
             G
-          </div>
+          </div> */}
           <div>
-            <p className="text-xl font-extrabold tracking-tight text-[#24184a]">
+            <h3 className="text-3xl font-extrabold text-[#6F52D9]">
               Givera
-            </p>
+            </h3>
             <p className="text-xs font-medium text-slate-400">
               {t("adminWorkspace")}
             </p>
           </div>
         </Link>
-        <div className="mt-4"><LanguageSwitch /></div>
       </div>
       <nav className="space-y-1 px-3 py-4">
         {items.map(([key, label, Icon]) => (
@@ -124,6 +127,7 @@ function Sidebar({ section, onSection, user, onLogout, pending }) {
             </p>
             <p className="text-xs text-slate-400">{t("platformAdmin")}</p>
           </div>
+          <LanguageSwitch sidebar />
         </div>
         <button
           type="button"
@@ -160,6 +164,49 @@ function MetricCard({ icon: Icon, label, value, note, tone }) {
 function ReviewModal({ campaign, onClose, onReview, onEdit, onManage }) {
   const { t, formatDate, formatKyat } = useLanguage();
   const [reason, setReason] = useState("");
+  const [assessment, setAssessment] = useState(null);
+  const [assessmentLoading, setAssessmentLoading] = useState(campaign.status === "pending");
+  const [assessmentError, setAssessmentError] = useState("");
+
+  const loadAssessment = useCallback(async (refresh = false) => {
+    if (campaign.status !== "pending") return;
+    setAssessmentLoading(true);
+    setAssessmentError("");
+    try {
+      const { data } = refresh
+        ? await api.post(`/ai/campaign-trust/${campaign.id}/`)
+        : await api.get(`/ai/campaign-trust/${campaign.id}/`);
+      setAssessment(data);
+    } catch {
+      setAssessmentError(t("trustAssessmentError"));
+    } finally {
+      setAssessmentLoading(false);
+    }
+  }, [campaign.id, campaign.status, t]);
+
+  useEffect(() => {
+    if (campaign.status !== "pending") return undefined;
+    let active = true;
+    api.get(`/ai/campaign-trust/${campaign.id}/`)
+      .then(({ data }) => {
+        if (active) setAssessment(data);
+      })
+      .catch(() => {
+        if (active) setAssessmentError(t("trustAssessmentError"));
+      })
+      .finally(() => {
+        if (active) setAssessmentLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [campaign.id, campaign.status, t]);
+
+  const riskTone = {
+    low: "bg-emerald-100 text-emerald-700",
+    medium: "bg-amber-100 text-amber-800",
+    high: "bg-rose-100 text-rose-700",
+  };
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[#17112e]/55 p-4 backdrop-blur-sm">
       <div className="mx-auto my-8 max-w-3xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
@@ -216,6 +263,55 @@ function ReviewModal({ campaign, onClose, onReview, onEdit, onManage }) {
             </div>
           </div>
         </div>
+        {campaign.status === "pending" && (
+          <section className="mx-7 mb-7 overflow-hidden rounded-2xl border border-[#DDD4FB] bg-[#F8F6FF]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E7E0FC] px-5 py-4">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#6F52D9] text-white">
+                  <Brain size={20} />
+                </span>
+                <div>
+                  <h3 className="font-extrabold text-[#24184A]">{t("aiTrustReview")}</h3>
+                  <p className="mt-0.5 text-xs text-slate-500">{t("aiTrustAdvisory")}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {assessment && (
+                  <span className={`rounded-full px-3 py-1.5 text-xs font-extrabold ${riskTone[assessment.risk_level]}`}>
+                    {t(`${assessment.risk_level}Risk`)}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  disabled={assessmentLoading}
+                  onClick={() => loadAssessment(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#D7CCFA] bg-white px-3 py-2 text-xs font-bold text-[#6549C9] disabled:opacity-50"
+                >
+                  <RotateCcw size={14} className={assessmentLoading ? "animate-spin" : ""} />
+                  {t("refreshAssessment")}
+                </button>
+              </div>
+            </div>
+
+            {assessmentLoading ? (
+              <p className="px-5 py-8 text-center text-sm font-semibold text-slate-500">{t("analyzingCampaign")}</p>
+            ) : assessmentError ? (
+              <p className="m-5 rounded-xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{assessmentError}</p>
+            ) : assessment && (
+              <div className="p-5">
+                <p className="text-sm leading-6 text-slate-700">{assessment.summary}</p>
+                <div className="mt-5 grid gap-4 md:grid-cols-3">
+                  <AssessmentList title={t("assessmentFlags")} items={assessment.flags} empty={t("noAssessmentFlags")} tone="rose" />
+                  <AssessmentList title={t("missingInformation")} items={assessment.missing_information} empty={t("noMissingInformation")} tone="amber" />
+                  <AssessmentList title={t("suggestedChecks")} items={assessment.suggested_checks} empty={t("standardReviewApplies")} tone="violet" />
+                </div>
+                <p className="mt-4 text-[11px] font-semibold text-slate-400">
+                  {t("assessmentProvider")}: {assessment.provider === "groq" ? "Groq AI" : t("localSafetyCheck")} · {formatDate(assessment.analyzed_at)}
+                </p>
+              </div>
+            )}
+          </section>
+        )}
         <div className="border-t border-slate-100 bg-slate-50/70 px-7 py-5">
           {campaign.status === "pending" ? (
             <>
@@ -293,6 +389,29 @@ function ReviewModal({ campaign, onClose, onReview, onEdit, onManage }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function AssessmentList({ title, items, empty, tone }) {
+  const dotTone = {
+    rose: "bg-rose-400",
+    amber: "bg-amber-400",
+    violet: "bg-[#7A5BE6]",
+  }[tone];
+  return (
+    <div className="rounded-xl bg-white p-4 shadow-sm">
+      <h4 className="text-xs font-extrabold uppercase tracking-wide text-slate-500">{title}</h4>
+      <ul className="mt-3 space-y-2.5">
+        {items?.length ? items.map((item) => (
+          <li key={item} className="flex gap-2 text-xs leading-5 text-slate-600">
+            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotTone}`} />
+            <span>{item}</span>
+          </li>
+        )) : (
+          <li className="text-xs leading-5 text-slate-400">{empty}</li>
+        )}
+      </ul>
     </div>
   );
 }
@@ -453,6 +572,7 @@ function Transactions({
   search,
   onSearch,
   onPageChange,
+  onReview,
 }) {
   const { t } = useLanguage();
   const pages = Math.max(1, Math.ceil(meta.count / 10));
@@ -476,7 +596,7 @@ function Transactions({
         </label>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1130px] text-left text-sm">
+        <table className="w-full min-w-[1500px] text-left text-sm">
           <thead className="border-y border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400">
             <tr>
               <th className="px-5 py-3">{t("donorDetails")}</th>
@@ -484,8 +604,11 @@ function Transactions({
               <th className="px-5 py-3">{t("amount")}</th>
               <th className="px-5 py-3">{t("method")}</th>
               <th className="px-5 py-3">{t("referenceId")}</th>
+              <th className="px-5 py-3">Wallet transaction</th>
+              <th className="px-5 py-3">Receipt</th>
               <th className="px-5 py-3">{t("status")}</th>
               <th className="px-5 py-3">{t("dateTime")}</th>
+              <th className="px-5 py-3 text-right">{t("action")}</th>
             </tr>
           </thead>
           <tbody>
@@ -525,26 +648,47 @@ function Transactions({
                   <td className="px-5 py-4 font-mono text-xs font-bold text-slate-600">
                     {donation.payment_reference}
                   </td>
+                  <td className="px-5 py-4 font-mono text-xs font-bold text-slate-600">
+                    {donation.wallet_transaction_id || "—"}
+                  </td>
+                  <td className="px-5 py-4">
+                    {donation.receipt_url ? (
+                      <a href={donation.receipt_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-[#F0ECFF] px-3 py-2 text-xs font-bold text-[#6549C9]">
+                        <ReceiptText size={15} /> View receipt
+                      </a>
+                    ) : <span className="text-slate-400">—</span>}
+                  </td>
                   <td className="px-5 py-4">
                     <StatusBadge
                       status={
                         donation.payment_status === "paid" ||
                         donation.payment_status === "recorded"
                           ? "approved"
-                          : "pending"
+                          : donation.payment_status === "failed"
+                            ? "rejected"
+                            : "pending"
                       }
                       label={t(`payment${donation.payment_status?.charAt(0).toUpperCase()}${donation.payment_status?.slice(1)}`)}
                     />
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap text-xs text-slate-500">
-                    {dateTime(donation.created_at)}
+                    <span className="block">{dateTime(donation.created_at)}</span>
+                    {donation.proof_submitted_at && <span className="mt-1 block text-[10px] text-slate-400">Proof: {dateTime(donation.proof_submitted_at)}</span>}
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    {donation.payment_status === "submitted" ? (
+                      <div className="flex justify-end gap-2">
+                        <button type="button" onClick={() => onReview(donation, "verify")} className="rounded-xl bg-emerald-100 px-3 py-2 text-xs font-extrabold text-emerald-700">Verify</button>
+                        <button type="button" onClick={() => onReview(donation, "reject")} className="rounded-xl bg-rose-100 px-3 py-2 text-xs font-extrabold text-rose-700">Reject</button>
+                      </div>
+                    ) : donation.failure_reason ? <span className="text-xs text-rose-600">{donation.failure_reason}</span> : <span className="text-slate-300">—</span>}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="10"
                   className="px-5 py-14 text-center text-sm text-slate-400"
                 >
                   {t("noTransactionsMatch")}
@@ -1879,10 +2023,10 @@ function AdminSettings({ user: sessionUser, onUserChange }) {
             ].map(([label, name]) => (
               <label key={name} className="text-sm font-bold text-slate-700">
                 {label}
-                <input
+                <PasswordInput
                   required
-                  type="password"
                   minLength={8}
+                  leadingIcon={null}
                   autoComplete={
                     name === "old_password"
                       ? "current-password"
@@ -1984,7 +2128,7 @@ export default function AdminDashboard() {
     });
     if (donationSearch.trim()) params.set("q", donationSearch.trim());
     api
-      .get(`/donations/admin/all/?${params}`)
+      .get(`/donations/admin/payments/?${params}`)
       .then(({ data }) => {
         setDonations(data.results || []);
         setDonationMeta({
@@ -2094,6 +2238,26 @@ export default function AdminDashboard() {
       setNotice((language === "en" && requestError.response?.data?.action?.[0]) || t("campaignActionError"));
     }
   };
+  const reviewPayment = useCallback(async (payment, decision) => {
+    let reason = "";
+    if (decision === "verify") {
+      if (!window.confirm(`Verify ${payment.payment_reference} after confirming the money arrived?`)) return;
+    } else {
+      reason = window.prompt("Why was this transfer rejected?")?.trim() || "";
+      if (!reason) return;
+    }
+    try {
+      const { data } = await api.post(`/donations/admin/payments/${payment.id}/review/`, { decision, reason });
+      setDonations((items) => items.map((item) => item.id === data.id ? data : item));
+      setNotice(decision === "verify" ? "Transfer verified and donation recorded." : "Transfer rejected.");
+      if (decision === "verify") {
+        const { data: refreshedReport } = await api.get("/reports/dashboard/");
+        setReport(refreshedReport);
+      }
+    } catch (requestError) {
+      setNotice(requestError.response?.data?.detail || "The transaction status could not be updated.");
+    }
+  }, []);
   const editCampaign = (campaign) => {
     setSelectedCampaign(null);
     setEditingCampaign(campaign);
@@ -2150,7 +2314,12 @@ export default function AdminDashboard() {
           page={campaignPage}
           onPageChange={setCampaignPage}
           onReview={setSelectedCampaign}
-          onView={(campaign) => navigate(`/campaigns/${campaign.id}`)}
+          onView={(campaign) => navigate(`/campaigns/${campaign.id}`, {
+            state: {
+              campaignReturnTo: "/dashboard?section=campaigns",
+              campaignReturnLabelKey: "backToAdminCampaigns",
+            },
+          })}
         />
       ),
       donations: (
@@ -2164,6 +2333,7 @@ export default function AdminDashboard() {
             setDonationPage(1);
           }}
           onPageChange={setDonationPage}
+          onReview={reviewPayment}
         />
       ),
       users: (
@@ -2212,6 +2382,7 @@ export default function AdminDashboard() {
       user,
       viewUser,
       changeUser,
+      reviewPayment,
     ],
   );
   return (
@@ -2235,15 +2406,18 @@ export default function AdminDashboard() {
               </h3>
               <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
             </div>
-            {section === "campaigns" && (
-              <button
-                type="button"
-                onClick={() => setCreatingCampaign(true)}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#6F52D9] px-5 py-3 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(111,82,217,.22)] transition hover:bg-[#6045C4]"
-              >
-                <Plus size={18} /> {t("createCampaign")}
-              </button>
-            )}
+            <div className="flex items-center justify-end gap-2">
+              <DashboardNotifications />
+              {section === "campaigns" && (
+                <button
+                  type="button"
+                  onClick={() => setCreatingCampaign(true)}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#6F52D9] px-5 py-3 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(111,82,217,.22)] transition hover:bg-[#6045C4]"
+                >
+                  <Plus size={18} /> {t("createCampaign")}
+                </button>
+              )}
+            </div>
             {/* <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               <span className="text-sm font-bold text-slate-600">

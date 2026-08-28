@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from .models import CampaignTrustAssessment
+
 
 class CampaignWritingRequestSerializer(serializers.Serializer):
     field = serializers.ChoiceField(
@@ -19,16 +21,12 @@ class CampaignWritingRequestSerializer(serializers.Serializer):
     language = serializers.ChoiceField(choices=["en", "my"], default="en")
 
     def validate(self, attrs):
-        if attrs["field"] != "fund_usage" and not attrs["content"].strip():
-            raise serializers.ValidationError(
-                {"content": "Add some text before asking for an improvement."}
-            )
-        if attrs["field"] == "fund_usage" and not any(
+        if not attrs["content"].strip() and not any(
             str(attrs.get(key, "")).strip()
-            for key in ["content", "title", "summary", "beneficiary"]
+            for key in ["title", "summary", "beneficiary", "location"]
         ):
             raise serializers.ValidationError(
-                {"content": "Add campaign details before drafting fund usage."}
+                {"content": "Add some campaign details before asking for a draft."}
             )
         return attrs
 
@@ -45,3 +43,18 @@ class GiveraHelpRequestSerializer(serializers.Serializer):
 
     def validate_history(self, value):
         return value[-8:]
+
+
+class CampaignTrustAssessmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CampaignTrustAssessment
+        fields = [
+            "risk_level",
+            "summary",
+            "flags",
+            "missing_information",
+            "suggested_checks",
+            "provider",
+            "analyzed_at",
+        ]
+        read_only_fields = fields

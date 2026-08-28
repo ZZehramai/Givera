@@ -3,30 +3,30 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   BarChart3,
-  ArrowUpRight,
-  CircleDollarSign,
+  Bell,
   Compass,
   Edit3,
   Heart,
   History,
   LayoutDashboard,
+  LockKeyhole,
   LogOut,
   Mail,
   MapPin,
   Megaphone,
   Phone,
-  Plus,
   Search,
   Settings,
   ShieldCheck,
-  Sparkles,
-  Target,
   UserRound,
   Check,
   X,
   Bookmark,
   CreditCard,
   Download,
+  Flag,
+  Gift,
+  Wallet,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -36,11 +36,13 @@ import CampaignCard from "../components/CampaignCard";
 import { logout } from "../services/authService";
 import AdminDashboard from "./AdminDashboard";
 import LanguageSwitch from "../components/LanguageSwitch";
+import PasswordInput from "../components/PasswordInput";
+import DashboardNotifications from "../components/DashboardNotifications";
 import { useLanguage } from "../i18n/LanguageContext";
 
 const money = (value) => {
   const myanmar = localStorage.getItem("givera-language") === "my";
-  return `${new Intl.NumberFormat(myanmar ? "my-MM" : "en-US", { maximumFractionDigits: 0 }).format(Number(value || 0))} ${myanmar ? "ကျပ်" : "Ks"}`;
+  return `${new Intl.NumberFormat(myanmar ? "my-MM" : "en-US", { maximumFractionDigits: 0 }).format(Number(value || 0))} ${myanmar ? "ကျပ်" : "MMK"}`;
 };
 const CAMPAIGNS_PER_PAGE = 6;
 
@@ -62,9 +64,9 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts, us
         {/* LOGO */}
         <div className="border-b border-slate-100 px-6 py-6">
           <Link to="/" aria-label={t("goGiveraHome")} className="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F52D9]/30">
-            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">G</div>
+            {/* <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6F52D9] text-lg font-black text-white">G</div> */}
             <div>
-              <p className="text-xl font-extrabold tracking-tight text-[#24184a]">Givera</p>
+              <h3 className="text-3xl font-extrabold text-[#6F52D9]">Givera</h3>
               <p className="text-xs font-medium text-slate-400">{t("userWorkspace")}</p>
             </div>
           </Link>
@@ -123,11 +125,7 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts, us
               <p className="truncate text-sm font-bold text-slate-800">{user?.username || t("user")}</p>
               <p className="text-xs text-slate-400">{t("userWorkspace")}</p>
             </div>
-          </div>
-
-          {/* MOVED LANGUAGE SWITCH HERE */}
-          <div className="px-1">
-            <LanguageSwitch />
+            <LanguageSwitch sidebar />
           </div>
 
           <button
@@ -143,18 +141,14 @@ function DashboardSidebar({ onLogout, activeSection, onSectionChange, counts, us
   );
 }
 
-function DashboardMetricCard({ icon: Icon, label, value, note, tone, loading }) {
+function DashboardMetricCard({ icon: Icon, label, value, tone, loading }) {
   return (
     <article className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-      <div className="flex items-start justify-between">
-        <span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}>
-          <Icon size={21} />
-        </span>
-        <ArrowUpRight size={18} className="text-slate-300" />
-      </div>
-      <p className="mt-5 text-2xl font-extrabold tracking-tight text-slate-900">{loading ? "—" : value}</p>
-      <p className="mt-1 text-sm font-bold text-slate-700">{label}</p>
-      <p className="mt-1 text-xs text-slate-400">{note}</p>
+      <span className={`grid h-11 w-11 place-items-center rounded-2xl ${tone}`}>
+        <Icon size={21} />
+      </span>
+      <p className="mt-5 text-sm text-slate-500 pb-1">{label}</p>
+      <p className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">{loading ? "—" : value}</p>
     </article>
   );
 }
@@ -176,7 +170,7 @@ function RecommendationsPanel({ recommendations, loading, onBrowse }) {
         <div className="flex items-start gap-3">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[.16em] text-[#6F52D9]">{t("pickedForYou")}</p>
-            <h2 className="mt-1 text-xl font-extrabold text-slate-900">{t("recommendedCampaigns")}</h2>
+            <h3 className="mt-2 text-2xl font-extrabold text-slate-900">{t("recommendedCampaigns")}</h3>
           </div>
         </div>
         <button type="button" onClick={onBrowse} className="rounded-full border border-[#D8CFFA] bg-[#F7F4FF] px-4 py-2 text-sm font-extrabold text-[#6549C9] transition hover:bg-[#EEE9FF]">
@@ -197,7 +191,7 @@ function RecommendationsPanel({ recommendations, loading, onBrowse }) {
                   {t(reasonLabels[campaign.recommendation_reason] || "recommendActiveReason")}
                 </span>
               </div>
-              <CampaignCard campaign={campaign} />
+              <CampaignCard campaign={campaign} returnTo="/dashboard?section=overview" returnLabelKey="backToOverview" />
             </div>
           ))}
         </div>
@@ -259,19 +253,21 @@ function DonutChart({ value, label }) {
 
 function SavedCampaignsPanel() {
   const { t } = useLanguage();
+  const location = useLocation();
+  const initialPage = Math.max(1, Number(new URLSearchParams(location.search).get("page")) || 1);
   const [savedCampaigns, setSavedCampaigns] = useState([]);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
 
   useEffect(() => {
     const loadSaved = () => {
       const items = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
       setSavedCampaigns(items);
-      setPage(1);
+      setPage(initialPage);
     };
     loadSaved();
     window.addEventListener("savedCampaignsUpdated", loadSaved);
     return () => window.removeEventListener("savedCampaignsUpdated", loadSaved);
-  }, []);
+  }, [initialPage]);
   const pages = Math.max(1, Math.ceil(savedCampaigns.length / CAMPAIGNS_PER_PAGE));
   const safePage = Math.min(page, pages);
   const visibleCampaigns = savedCampaigns.slice((safePage - 1) * CAMPAIGNS_PER_PAGE, safePage * CAMPAIGNS_PER_PAGE);
@@ -284,13 +280,13 @@ function SavedCampaignsPanel() {
             <CampaignPagination page={safePage} pages={pages} onPageChange={setPage} className="mb-4" />
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {visibleCampaigns.map((campaign) => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
+                <CampaignCard key={campaign.id} campaign={campaign} returnTo={`/dashboard?section=saved-campaigns${safePage > 1 ? `&page=${safePage}` : ""}`} returnLabelKey="backToSavedCampaigns" />
               ))}
             </div>
           </>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-            <h2 className="text-2xl font-bold text-slate-800">{t("noSaved")}</h2>
+            <h3 className="text-2xl font-bold text-slate-900">{t("noSaved")}</h3>
             <p className="mt-2 text-slate-500">{t("noSavedText")}</p>
           </div>
         )}
@@ -316,6 +312,7 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
   const paymentStatus = {
     paid: [t("paymentPaid"), "bg-emerald-100 text-emerald-700"],
     pending: [t("paymentPending"), "bg-amber-100 text-amber-800"],
+    submitted: [t("paymentSubmitted"), "bg-sky-100 text-sky-700"],
     failed: [t("paymentFailed"), "bg-rose-100 text-rose-700"],
     cancelled: [t("paymentCancelled"), "bg-slate-100 text-slate-700"],
     expired: [t("paymentExpired"), "bg-orange-100 text-orange-700"],
@@ -382,9 +379,9 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+          <h3 className="flex items-center gap-2 text-2xl font-extrabold text-slate-900">
             <Megaphone size={18} className="text-[#6F52D9]" /> {t("createdCampaigns")}
-          </h2>
+          </h3>
           {campaigns.length > 0 && <CampaignPagination page={safeCampaignPage} pages={campaignPages} onPageChange={setCampaignPage} />}
         </div>
           {campaigns.length ? (
@@ -419,9 +416,9 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+          <h3 className="flex items-center gap-2 text-2xl font-extrabold text-slate-900">
             <CreditCard size={18} className="text-[#6F52D9]" /> {t("paymentActivity")}
-          </h2>
+          </h3>
           {demoPayments.length > 0 && <CampaignPagination page={safePaymentPage} pages={paymentPages} onPageChange={setPaymentPage} />}
         </div>
         {demoPayments.length ? (
@@ -447,7 +444,11 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
                     </td>
                     <td className="min-w-56 px-5 py-4">
                       {payment.campaign_id ? (
-                        <Link to={`/campaigns/${payment.campaign_id}`} className="line-clamp-2 font-bold text-slate-900 hover:text-[#6549C9]">
+                        <Link
+                          to={`/campaigns/${payment.campaign_id}`}
+                          state={{ campaignReturnTo: "/dashboard?section=history", campaignReturnLabelKey: "backToHistory" }}
+                          className="line-clamp-2 font-bold text-slate-900 hover:text-[#6549C9]"
+                        >
                           {payment.campaign_title || payment.donation?.campaign?.title || t("supportedCampaign")}
                         </Link>
                       ) : (
@@ -496,9 +497,11 @@ function HistoryPanel({ donations, campaigns, demoPayments }) {
 
 function BrowseCampaigns({ campaigns, loading }) {
   const { t } = useLanguage();
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("");
-  const [page, setPage] = useState(1);
+  const location = useLocation();
+  const browseParams = new URLSearchParams(location.search);
+  const [query, setQuery] = useState(browseParams.get("q") || "");
+  const [category, setCategory] = useState(browseParams.get("category") || "");
+  const [page, setPage] = useState(Math.max(1, Number(browseParams.get("page")) || 1));
 
   const filteredCampaigns = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -513,6 +516,12 @@ function BrowseCampaigns({ campaigns, loading }) {
   const pages = Math.max(1, Math.ceil(filteredCampaigns.length / CAMPAIGNS_PER_PAGE));
   const safePage = Math.min(page, pages);
   const visibleCampaigns = filteredCampaigns.slice((safePage - 1) * CAMPAIGNS_PER_PAGE, safePage * CAMPAIGNS_PER_PAGE);
+  const browseReturnTo = `/dashboard?${new URLSearchParams({
+    section: "browse",
+    ...(query ? { q: query } : {}),
+    ...(category ? { category } : {}),
+    ...(safePage > 1 ? { page: String(safePage) } : {}),
+  }).toString()}`;
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -543,13 +552,13 @@ function BrowseCampaigns({ campaigns, loading }) {
             <CampaignPagination page={safePage} pages={pages} onPageChange={setPage} className="mb-4" />
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {visibleCampaigns.map((campaign) => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
+                <CampaignCard key={campaign.id} campaign={campaign} returnTo={browseReturnTo} returnLabelKey="backToBrowseCampaigns" />
               ))}
             </div>
           </>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-            <h2 className="text-2xl font-bold text-slate-800">{t("noCampaigns")}</h2>
+            <h3 className="text-2xl font-extrabold text-slate-900">{t("noCampaigns")}</h3>
             <p className="mt-2 text-slate-500">{t("tryAnother")}</p>
           </div>
         )}
@@ -558,59 +567,66 @@ function BrowseCampaigns({ campaigns, loading }) {
   );
 }
 
-function MyCampaignsPanel({
-  campaigns,
-  loading,
-  submittedId,
-  submissionMessage,
-  campaignTitle,
-  onDismissSubmission,
-}) {
+function SubmissionSuccessModal({ title, message, onClose }) {
   const { t } = useLanguage();
-  const [page, setPage] = useState(1);
-  const submittedCampaign = campaigns.find(
-    (campaign) => String(campaign.id) === String(submittedId)
+  return (
+    <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="submission-success-title"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/45 px-5 py-8 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 24 }}
+        className="relative w-full max-w-lg rounded-[2rem] bg-white p-7 text-center shadow-2xl sm:p-9"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t("dismissConfirmation")}
+          className="absolute right-5 top-5 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+        >
+          <X size={19} />
+        </button>
+        <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+          <Check size={30} strokeWidth={3} />
+        </span>
+        <p className="mt-6 text-sm font-bold uppercase tracking-[0.14em] text-emerald-700">{t("requestReceived")}</p>
+        <h3 id="submission-success-title" className="mt-2 text-2xl font-extrabold text-slate-950 sm:text-3xl">
+          {message || t("submittedSuccess")}
+        </h3>
+        <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-slate-600">
+          <strong className="text-slate-900">{title || t("yourCampaign")}</strong> {t("pendingReviewMessage")}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-7 w-full rounded-full bg-[#6F52D9] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#6044C8]"
+        >
+          {t("done")}
+        </button>
+      </motion.div>
+    </motion.div>
   );
+}
+
+function MyCampaignsPanel({ campaigns, loading }) {
+  const { t } = useLanguage();
+  const location = useLocation();
+  const [page, setPage] = useState(Math.max(1, Number(new URLSearchParams(location.search).get("page")) || 1));
   const pages = Math.max(1, Math.ceil(campaigns.length / CAMPAIGNS_PER_PAGE));
   const safePage = Math.min(page, pages);
   const visibleCampaigns = campaigns.slice((safePage - 1) * CAMPAIGNS_PER_PAGE, safePage * CAMPAIGNS_PER_PAGE);
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      {submittedId && (
-        <motion.section
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-3xl border border-emerald-200 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)] md:p-7"
-        >
-          <button
-            type="button"
-            onClick={onDismissSubmission}
-            aria-label={t("dismissConfirmation")}
-            className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-          >
-            <X size={18} />
-          </button>
-          <div className="flex gap-4 pr-10">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700">
-              <Check size={24} strokeWidth={3} />
-            </span>
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.14em] text-emerald-700">
-                {t("requestReceived")}
-              </p>
-              <h2 className="mt-1 text-2xl font-extrabold text-slate-900">
-                {submissionMessage || t("submittedSuccess")}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                <strong>{submittedCampaign?.title || campaignTitle || t("yourCampaign")}</strong> {t("pendingReviewMessage")}
-              </p>
-            </div>
-          </div>
-        </motion.section>
-      )}
-
-      <div className={submittedId ? "mt-6" : ""}>
+      <div>
         {loading ? (
           <p className="py-20 text-center text-slate-500">{t("loadingCampaigns")}</p>
         ) : campaigns.length ? (
@@ -619,7 +635,7 @@ function MyCampaignsPanel({
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {visibleCampaigns.map((campaign) => (
                 <div key={campaign.id} className="relative">
-                  <CampaignCard campaign={campaign} />
+                  <CampaignCard campaign={campaign} returnTo={`/dashboard?section=my-campaigns${safePage > 1 ? `&page=${safePage}` : ""}`} returnLabelKey="backToMyCampaigns" />
 
                   {campaign.rejection_reason && (
                     <div className="mt-3 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
@@ -640,9 +656,9 @@ function MyCampaignsPanel({
           </>
         ) : (
           <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
-            <h2 className="text-2xl font-bold text-slate-800">
+            <h3 className="text-2xl font-extrabold text-slate-900">
               {t("noSubmittedCampaign")}
-            </h2>
+            </h3>
             <p className="mt-2 text-slate-500">
               {t("tellStory")}
             </p>
@@ -654,12 +670,21 @@ function MyCampaignsPanel({
 }
 
 function ProfilePanel() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [user, setUser] = useState(null);
   const [form, setForm] = useState({ username: "", email: "", phone_number: "", country: "" });
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [passwords, setPasswords] = useState({
+    old_password: "",
+    new_password: "",
+    confirm_password: "",
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordNotice, setPasswordNotice] = useState({ text: "", success: false });
+  const [notificationSaving, setNotificationSaving] = useState(false);
+  const [notificationNotice, setNotificationNotice] = useState("");
 
   useEffect(() => {
     api.get("/auth/profile/")
@@ -692,6 +717,52 @@ function ProfilePanel() {
     }
   };
 
+  const changePassword = async (event) => {
+    event.preventDefault();
+    setPasswordNotice({ text: "", success: false });
+    if (passwords.new_password !== passwords.confirm_password) {
+      setPasswordNotice({ text: t("passwordMismatch"), success: false });
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      await api.post("/auth/change-password/", {
+        old_password: passwords.old_password,
+        new_password: passwords.new_password,
+      });
+      setPasswords({ old_password: "", new_password: "", confirm_password: "" });
+      setPasswordNotice({ text: t("passwordUpdated"), success: true });
+    } catch (error) {
+      const data = error.response?.data;
+      const detail = data?.old_password || data?.detail || data?.new_password?.[0];
+      setPasswordNotice({
+        text: language === "en" && typeof detail === "string" ? detail : t("passwordUpdateError"),
+        success: false,
+      });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const toggleCampaignNotifications = async () => {
+    const enabled = !user.campaign_notifications_enabled;
+    setNotificationSaving(true);
+    setNotificationNotice("");
+    try {
+      const response = await api.patch("/auth/profile/", {
+        campaign_notifications_enabled: enabled,
+      });
+      setUser(response.data);
+      localStorage.setItem("user", JSON.stringify(response.data));
+      setNotificationNotice(t("notificationPreferenceSaved"));
+    } catch {
+      setNotificationNotice(t("notificationPreferenceError"));
+    } finally {
+      setNotificationSaving(false);
+    }
+  };
+
   if (!user) return <p className="py-20 text-center text-slate-500">{message || t("loadingProfile")}</p>;
   const fields = [
     [t("name"), "username", "text", UserRound],
@@ -721,15 +792,16 @@ function ProfilePanel() {
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#6F52D9] text-2xl font-extrabold text-white">
               {initial}
             </div>
-            <h2 className="mt-4 truncate text-lg font-extrabold text-slate-900">{user.username}</h2>
+            <h3 className="mt-4 truncate text-2xl font-extrabold text-slate-900">{user.username}</h3>
             <p className="mt-1 truncate text-sm text-slate-500">{user.email}</p>
           </div>
         </aside>
 
+        <div className="space-y-6">
         <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
           <div className="flex flex-col gap-3 border-b border-slate-100 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-extrabold text-slate-800">{t("personalInformation")}</h2>
+              <h3 className="text-2xl font-extrabold text-slate-900">{t("personalInformation")}</h3>
             </div>
             <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
               <ShieldCheck size={15} /> {t("accountVerified")}
@@ -765,6 +837,94 @@ function ProfilePanel() {
             </div>
           )}
         </section>
+        <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
+          <div className="flex items-center justify-between gap-5">
+            <div className="flex min-w-0 items-start gap-4">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#F1EDFF] text-[#6F52D9]">
+                <Bell size={20} />
+              </span>
+              <div>
+                <h3 className="text-2xl font-extrabold text-slate-900">{t("campaignNotifications")}</h3>
+                <p className="mt-1 text-sm leading-6 text-slate-500">{t("campaignNotificationsHelp")}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={user.campaign_notifications_enabled}
+              aria-label={t("campaignNotifications")}
+              disabled={notificationSaving}
+              onClick={toggleCampaignNotifications}
+              className={`relative h-8 w-14 shrink-0 rounded-full transition disabled:opacity-50 ${user.campaign_notifications_enabled ? "bg-[#6F52D9]" : "bg-slate-300"}`}
+            >
+              <span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-sm transition ${user.campaign_notifications_enabled ? "left-7" : "left-1"}`} />
+            </button>
+          </div>
+          {notificationNotice && (
+            <p role="status" className="mt-4 rounded-xl bg-[#F8F6FF] px-4 py-3 text-sm font-bold text-[#6549C9]">
+              {notificationNotice}
+            </p>
+          )}
+        </section>
+        <form
+          onSubmit={changePassword}
+          className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.14em] text-[#6F52D9]">{t("security")}</p>
+              <h3 className="mt-2 text-2xl font-extrabold text-slate-900">{t("changePassword")}</h3>
+              <p className="mt-1 text-sm text-slate-500">{t("strongPassword")}</p>
+            </div>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#FFF4C8] text-amber-700">
+              <LockKeyhole size={20} />
+            </span>
+          </div>
+
+          {user.auth_provider === "google" && (
+            <p className="mt-5 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {t("googlePasswordInfo")} {" "}
+              <Link to="/forgot-password" className="font-bold underline">{t("requestNewLink")}</Link>
+            </p>
+          )}
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {[
+              [t("currentPassword"), "old_password", "current-password"],
+              [t("newPassword"), "new_password", "new-password"],
+              [t("confirmNewPassword"), "confirm_password", "new-password"],
+            ].map(([label, name, autoComplete]) => (
+              <label key={name} className="block text-sm font-bold text-slate-700">
+                <span className="mb-2 block">{label}</span>
+                <PasswordInput
+                  required
+                  minLength={8}
+                  leadingIcon={null}
+                  autoComplete={autoComplete}
+                  value={passwords[name]}
+                  onChange={(event) => setPasswords((current) => ({ ...current, [name]: event.target.value }))}
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-normal outline-none focus:border-[#7A5BE6] focus:ring-2 focus:ring-violet-100"
+                />
+              </label>
+            ))}
+          </div>
+
+          {passwordNotice.text && (
+            <p role="status" className={`mt-4 rounded-xl px-4 py-3 text-sm font-bold ${passwordNotice.success ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+              {passwordNotice.text}
+            </p>
+          )}
+
+          <div className="mt-5 flex justify-end">
+            <button
+              disabled={changingPassword}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#6F52D9] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <LockKeyhole size={17} /> {changingPassword ? t("updating") : t("updatePassword")}
+            </button>
+          </div>
+        </form>
+        </div>
       </div>
     </motion.section>
   );
@@ -853,6 +1013,7 @@ function UserDashboard() {
 
   const handleSectionChange = (section) => {
     setActiveSection(section);
+    navigate(`/dashboard?section=${section}`, { replace: true });
     if (section !== "my-campaigns") setShowSubmissionSuccess(false);
   };
 
@@ -888,21 +1049,19 @@ function UserDashboard() {
         <main className="min-w-0 py-6 lg:py-4">
           <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="mt-2 text-3xl font-extrabold text-[#7A5BE6] md:text-4xl">{pageTitle}</h1>
+              <h3 className="mt-2 text-3xl font-extrabold text-[#7A5BE6] md:text-4xl">{pageTitle}</h3>
               <p className="mt-2 max-w-2xl text-sm text-slate-500">{pageSubtitle}</p>
             </div>
-            {(activeSection === "overview" || activeSection === "my-campaigns") && (
-              <div className="flex flex-wrap gap-2">
-                {activeSection === "overview" && (
-                  <button type="button" onClick={() => setActiveSection("browse")} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-[#6549C9] shadow-sm">
-                    <Compass size={17} /> {t("browse")}
-                  </button>
-                )}
-                <Link to="/campaigns/create" className="inline-flex items-center gap-2 rounded-2xl bg-[#FFD66B] px-4 py-2.5 text-sm font-extrabold text-[#2b1d52] shadow-sm">
-                  <Plus size={17} /> {t("requestCampaignShort")}
-                </Link>
-              </div>
-            )}
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {activeSection === "overview" && <DashboardNotifications />}
+              {(activeSection === "overview" || activeSection === "my-campaigns") && (
+                <div className="flex flex-wrap gap-2">
+                  <Link to="/campaigns/create" className="inline-flex items-center gap-2 rounded-2xl bg-[#FFD66B] px-4 py-2.5 text-sm font-extrabold text-black-800 shadow-sm">
+                     {t("requestCampaignShort")}
+                  </Link>
+                </div>
+              )}
+            </div>
           </header>
           {activeSection === "browse" ? (
             <BrowseCampaigns campaigns={discover} loading={loading} />
@@ -910,10 +1069,6 @@ function UserDashboard() {
             <MyCampaignsPanel
               campaigns={owned}
               loading={loading}
-              submittedId={showSubmissionSuccess ? submittedId : null}
-              submissionMessage={location.state?.submissionMessage}
-              campaignTitle={location.state?.campaignTitle}
-              onDismissSubmission={clearSubmissionConfirmation}
             />
           ) : activeSection === "saved-campaigns" ? (
             <SavedCampaignsPanel />
@@ -925,18 +1080,18 @@ function UserDashboard() {
             <>
               <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  { Icon: CircleDollarSign, label: t("raisedByCampaigns"), value: money(metrics.raised), note: t("campaignPerformance"), tone: "bg-violet-100 text-[#6549C9]" },
-                  { Icon: Target, label: t("combinedGoals"), value: money(metrics.goal), note: t("overallProgress"), tone: "bg-emerald-100 text-emerald-700" },
-                  { Icon: BarChart3, label: t("activeCampaigns"), value: formatNumber(metrics.active), note: t("acceptingSupport"), tone: "bg-amber-100 text-amber-700" },
-                  { Icon: Heart, label: t("yourDonations"), value: money(metrics.donatedAmount), note: t("activityHistoryText"), tone: "bg-sky-100 text-sky-700" },
-                ].map(({ Icon, label, value, note, tone }, index) => (
+                  { Icon: Wallet, label: t("fundsYourCampaignsRaised"), value: money(metrics.raised), tone: "bg-violet-100 text-[#6549C9]" },
+                  { Icon: Flag, label: t("totalFundraisingTarget"), value: money(metrics.goal), tone: "bg-emerald-100 text-emerald-700" },
+                  { Icon: Megaphone, label: t("campaignsAcceptingDonations"), value: formatNumber(metrics.active), tone: "bg-amber-100 text-amber-700" },
+                  { Icon: Gift, label: t("amountYouDonated"), value: money(metrics.donatedAmount), tone: "bg-sky-100 text-sky-700" },
+                ].map(({ Icon, label, value, tone }, index) => (
                   <motion.div
                     key={label}
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.08 * index }}
                   >
-                    <DashboardMetricCard icon={Icon} label={label} value={value} note={note} tone={tone} loading={loading} />
+                    <DashboardMetricCard icon={Icon} label={label} value={value} tone={tone} loading={loading} />
                   </motion.div>
                 ))}
               </section>
@@ -944,7 +1099,7 @@ function UserDashboard() {
               <RecommendationsPanel
                 recommendations={recommendations}
                 loading={recommendationsLoading}
-                onBrowse={() => setActiveSection("browse")}
+                onBrowse={() => handleSectionChange("browse")}
               />
 
               <section className="mt-6 grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
@@ -952,7 +1107,7 @@ function UserDashboard() {
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[.16em] text-[#6F52D9]">{t("campaignPerformance")}</p>
-                      <h2 className="mt-2 text-xl font-extrabold text-slate-900">{t("fundsRaised")}</h2>
+                      <h3 className="mt-2 text-2xl font-extrabold text-slate-900">{t("fundsRaised")}</h3>
                     </div>
                     <div className="rounded-xl bg-violet-50 p-2.5 text-[#6F52D9]">
                       <BarChart3 size={20} />
@@ -986,7 +1141,7 @@ function UserDashboard() {
                 </article>
                 <article className="flex flex-col items-center justify-center rounded-3xl border border-slate-200/80 bg-white p-6 text-center shadow-[0_12px_30px_rgba(43,37,80,.06)]">
                   <DonutChart value={metrics.progress} label={t("ofGoal")} />
-                  <h2 className="mt-5 text-xl font-extrabold text-slate-900">{t("overallProgress")}</h2>
+                  <h3 className="mt-5 text-2xl font-extrabold text-slate-900">{t("overallProgress")}</h3>
                   <p className="mt-2 text-sm leading-6 text-slate-500">
                     {money(metrics.raised)} {t("raisedAcross")} {formatNumber(owned.length)} {t("campaignWord")}.
                   </p>
@@ -997,7 +1152,7 @@ function UserDashboard() {
                 <article className="rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(43,37,80,.06)]">
                   <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-6 py-5">
                     <div>
-                      <h2 className="text-xl font-extrabold text-slate-900">{t("recentDonations")}</h2>
+                      <h3 className="text-2xl font-extrabold text-slate-900">{t("recentDonations")}</h3>
                       <p className="mt-1 text-sm text-slate-500">{t("recentDonationsOverview")}</p>
                     </div>
                     <button type="button" onClick={() => setActiveSection("history")} className="text-sm font-bold text-[#6F52D9]">
@@ -1027,7 +1182,7 @@ function UserDashboard() {
                 <article className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_30px_rgba(43,37,80,.06)]">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-xl font-extrabold text-slate-900">{t("campaignStatusOverview")}</h2>
+                      <h3 className="text-2xl font-extrabold text-slate-900">{t("campaignStatusOverview")}</h3>
                       <p className="mt-1 text-sm leading-6 text-slate-500">{t("campaignStatusOverviewText")}</p>
                     </div>
                     <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-100 text-amber-700"><Megaphone size={20} /></span>
@@ -1054,6 +1209,13 @@ function UserDashboard() {
           )}
         </main>
       </div>
+      {showSubmissionSuccess && submittedId && (
+        <SubmissionSuccessModal
+          title={owned.find((campaign) => String(campaign.id) === String(submittedId))?.title || location.state?.campaignTitle}
+          message={location.state?.submissionMessage}
+          onClose={clearSubmissionConfirmation}
+        />
+      )}
     </div>
   );
 }

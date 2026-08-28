@@ -32,7 +32,7 @@ def donation_certificate_response(payment):
         bottomMargin=22 * mm,
         title="Givera donation certificate",
         author="Givera",
-        subject=f"Demo donation {payment.transaction_reference}",
+        subject=f"Verified donation {payment.transaction_reference}",
     )
     styles = getSampleStyleSheet()
     brand = ParagraphStyle(
@@ -152,11 +152,11 @@ def donation_certificate_response(payment):
         Paragraph("for supporting the campaign", body),
         Spacer(1, 2 * mm),
         Paragraph(escape(payment.campaign.title), campaign_style),
-        Paragraph(f"{payment.amount:,.2f} Ks", amount_style),
+        Paragraph(f"{payment.amount:,.2f} MMK", amount_style),
         details,
         Spacer(1, 6 * mm),
         Paragraph(
-            "DEMO DONATION CERTIFICATE — This document records a Givera payment simulation. No real funds were transferred.",
+            "This certificate records a wallet transfer manually verified by a Givera administrator.",
             body,
         ),
     ]

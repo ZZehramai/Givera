@@ -83,7 +83,11 @@ export default function MyCampaigns() {
                       {t("fixResubmitShort")}
                     </Link>
                   )}
-                  <Link to={`/campaigns/${campaign.id}`} className="px-2 py-2.5 font-semibold text-primary hover:underline">
+                  <Link
+                    to={`/campaigns/${campaign.id}`}
+                    state={{ campaignReturnTo: "/my-campaigns", campaignReturnLabelKey: "backToMyCampaigns" }}
+                    className="px-2 py-2.5 font-semibold text-primary hover:underline"
+                  >
                     {t("viewDetails")} →
                   </Link>
                 </div>

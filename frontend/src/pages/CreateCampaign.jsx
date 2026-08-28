@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AlignLeft, AlertTriangle, ArrowLeft, BookOpenText, Check, CheckCircle2, Sparkles, Trash2, Type, WalletCards, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, CheckCircle2, RotateCcw, Sparkles, Trash2, X, Bot } from "lucide-react";
 
 import api from "../api/axios";
 import { mediaUrl } from "../utils/mediaUrl";
@@ -41,9 +41,9 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
   const [rejectionReason, setRejectionReason] = useState("");
   const [assistantField, setAssistantField] = useState("");
   const [assistantSuggestion, setAssistantSuggestion] = useState("");
-  const [assistantProvider, setAssistantProvider] = useState("");
   const [assistantLoading, setAssistantLoading] = useState(false);
   const [assistantError, setAssistantError] = useState("");
+  const [assistantAppliedField, setAssistantAppliedField] = useState("");
 
   useEffect(() => {
     if (!isEditing) return;
@@ -120,7 +120,6 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
   const requestWritingSuggestion = async (field) => {
     setAssistantField(field);
     setAssistantSuggestion("");
-    setAssistantProvider("");
     setAssistantError("");
     setAssistantLoading(true);
     try {
@@ -135,7 +134,6 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
         language,
       });
       setAssistantSuggestion(data.suggestion);
-      setAssistantProvider(data.provider);
     } catch (requestError) {
       const responseData = requestError.response?.data;
       const validationMessage = responseData && typeof responseData === "object"
@@ -149,6 +147,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
 
   const applyWritingSuggestion = () => {
     if (!assistantSuggestion) return;
+    const updatedField = assistantField === "fund_usage" ? "story" : assistantField;
     if (assistantField === "fund_usage") {
       setForm((current) => ({
         ...current,
@@ -158,16 +157,45 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
       setForm((current) => ({ ...current, [assistantField]: assistantSuggestion }));
     }
     setAssistantSuggestion("");
-    setAssistantProvider("");
     setAssistantField("");
+    setAssistantAppliedField(updatedField);
+    window.setTimeout(() => setAssistantAppliedField(""), 1800);
   };
 
   const discardWritingSuggestion = () => {
     setAssistantSuggestion("");
-    setAssistantProvider("");
     setAssistantField("");
     setAssistantError("");
   };
+
+  const assistantTargetValue = (field) => field === "fund_usage" ? "" : form[field];
+  const hasAssistantContext = (field) => Boolean(
+    assistantTargetValue(field)?.trim()
+    || form.title.trim()
+    || form.summary.trim()
+    || form.beneficiary.trim()
+    || form.location.trim()
+  );
+  const writingAssistantButton = (field) => {
+    const hasText = Boolean(assistantTargetValue(field)?.trim());
+    return (
+      <button
+        type="button"
+        disabled={assistantLoading || !hasAssistantContext(field)}
+        title={!hasAssistantContext(field) ? t("assistantNeedsContext") : undefined}
+        onClick={() => requestWritingSuggestion(field)}
+      className="inline-flex items-center gap-1.5 rounded-full border border-[#D8CCFF] bg-[#F6F3FF] px-3 py-1.5 text-xs font-extrabold text-[#6549C9] transition hover:border-[#6F52D9] hover:bg-[#EEE9FF] disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        <Sparkles size={14} /> {field === "fund_usage" ? t("draftFundUsage") : hasText ? t("improveWithAI") : t("draftWithAI")}
+      </button>
+    );
+  };
+  const assistantFieldLabel = {
+    title: t("campaignTitle"),
+    summary: t("shortSummary"),
+    story: t("fullStory"),
+    fund_usage: t("fundUsageHeading"),
+  }[assistantField];
 
   const submit = async (event) => {
     event.preventDefault();
@@ -214,6 +242,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
 
   const inputClass =
     "w-full rounded-xl border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/10";
+  const assistedInputClass = (field) => `${inputClass} transition ${assistantAppliedField === field ? "border-[#6F52D9] ring-4 ring-[#E8E1FF]" : ""}`;
 
   const backLink = !embedded && (
         <button
@@ -271,89 +300,111 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
         <form onSubmit={submit} className="mt-10 space-y-6 rounded-3xl bg-white p-8 shadow-sm">
           {error && <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</div>}
 
-          <section className="overflow-hidden rounded-[24px] border border-[#E4DDF8] bg-white shadow-[0_12px_30px_rgba(58,42,112,.08)]">
-            <div className="flex flex-col gap-4 bg-[#271B4D] px-5 py-5 text-white sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#FFD66B] text-[#271B4D]">
-                  <Sparkles size={20} />
-                </span>
-                <div>
-                  <h2 className="text-lg font-extrabold">{t("writingAssistant")}</h2>
-                  <p className="mt-0.5 text-xs leading-5 text-[#DCD4F7]">{t("writingAssistantHelp")}</p>
-                </div>
-              </div>
-              <span className="w-fit rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[.14em] text-[#FFD66B]">
-                Groq AI
-              </span>
-            </div>
-            <div className="p-5">
-              <p className="text-xs font-extrabold uppercase tracking-[.14em] text-slate-400">{t("chooseField")}</p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {[
-                ["title", "improveTitle", Type],
-                ["summary", "improveSummary", AlignLeft],
-                ["story", "improveStory", BookOpenText],
-                ["fund_usage", "draftFundUsage", WalletCards],
-              ].map(([field, label, Icon]) => (
-                <button
-                  key={field}
-                  type="button"
-                  disabled={assistantLoading}
-                  onClick={() => requestWritingSuggestion(field)}
-                  className={`flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left text-sm font-bold transition disabled:opacity-50 ${assistantField === field ? "border-[#6F52D9] bg-[#F0EBFF] text-[#5B3FC0] ring-2 ring-[#DED4FF]" : "border-slate-200 bg-[#FBFAFE] text-slate-700 hover:border-[#CFC2F8] hover:bg-[#F7F4FF]"}`}
-                >
-                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${assistantField === field ? "bg-[#6F52D9] text-white" : "bg-white text-[#6F52D9] shadow-sm"}`}>
-                    <Icon size={17} />
-                  </span>
-                  {assistantLoading && assistantField === field ? t("generatingSuggestion") : t(label)}
-                </button>
-              ))}
-              </div>
-              <p className="mt-3 text-xs leading-5 text-slate-400">{t("aiDataNotice")}</p>
-            {assistantError && <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{assistantError}</p>}
-            {assistantSuggestion && (
-              <div className="mt-5 rounded-2xl border border-[#F1D780] bg-[#FFF9E8] p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[.12em] text-[#5B3FC0]"><Sparkles size={14} /> {t("suggestedVersion")}</p>
-                  <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500 shadow-sm">
-                    {assistantProvider === "groq" ? t("aiGenerated") : t("demoSuggestion")}
-                  </span>
-                </div>
-                <textarea
-                  value={assistantSuggestion}
-                  onChange={(event) => setAssistantSuggestion(event.target.value)}
-                  rows={assistantField === "title" ? 2 : assistantField === "summary" ? 4 : 8}
-                  className="mt-3 w-full rounded-xl border border-[#E8D794] bg-white px-3 py-3 text-sm leading-6 outline-none focus:border-[#6F52D9]"
-                />
-                <p className="mt-2 text-xs text-slate-400">{t("reviewBeforeApply")}</p>
-                <div className="mt-4 flex justify-end gap-2">
-                  <button type="button" onClick={discardWritingSuggestion} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50">
-                    <X size={15} /> {t("discard")}
-                  </button>
-                  <button type="button" onClick={applyWritingSuggestion} className="inline-flex items-center gap-2 rounded-xl bg-[#6F52D9] px-4 py-2 text-sm font-bold text-white">
-                    <Check size={15} /> {t("applySuggestion")}
+          {assistantField && (
+            <div
+              className="fixed inset-0 z-[100] flex items-end bg-slate-950/40 backdrop-blur-[2px] sm:items-stretch sm:justify-end"
+              onClick={discardWritingSuggestion}
+            >
+              <aside
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="writing-assistant-title"
+                className="max-h-[88vh] w-full overflow-y-auto rounded-t-[2rem] bg-white shadow-2xl sm:h-full sm:max-h-none sm:max-w-lg sm:rounded-none"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-6 py-5 backdrop-blur sm:px-8">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#FFD66B] text-[#271B4D]">
+                      <Bot size={20} />
+                    </span>
+                    <div>
+                      <h3 className="text-md font-extrabold uppercase tracking-[.1em] text-[#6F52D9]">{t("writingAssistant")}</h3>
+                      {/* <h2 id="writing-assistant-title" className="mt-1 text-xl font-extrabold text-slate-950">{t("assistantReviewTitle")}</h2> */}
+                    </div>
+                  </div>
+                  <button type="button" onClick={discardWritingSuggestion} aria-label={t("discard")} className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+                    <X size={20} />
                   </button>
                 </div>
-              </div>
-            )}
+
+                <div className="p-6 sm:p-8">
+                  {/* <div className="rounded-2xl bg-[#F6F3FF] px-4 py-3">
+                    <p className="text-xs font-bold uppercase tracking-[.12em] text-slate-400">{t("chooseField")}</p>
+                    <p className="mt-1 font-extrabold text-[#5B3FC0]">{assistantFieldLabel}</p>
+                  </div> */}
+
+                  {assistantLoading && (
+                    <div className="grid min-h-64 place-items-center text-center">
+                      <div>
+                        <span className="mx-auto grid h-14 w-14 animate-pulse place-items-center rounded-full bg-[#EEE9FF] text-[#6F52D9]"><Sparkles size={24} /></span>
+                        <p className="mt-4 font-extrabold text-slate-800">{t("generatingSuggestion")}</p>
+                        <p className="mt-2 text-sm text-slate-500">{t("writingAssistantHelp")}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!assistantLoading && assistantError && (
+                    <div className="mt-5 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm leading-6 text-rose-700">
+                      {assistantError}
+                    </div>
+                  )}
+
+                  {!assistantLoading && assistantSuggestion && (
+                    <div className="mt-5">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[.12em] text-[#5B3FC0]"><Sparkles size={14} /> {t("suggestedVersion")}</p>
+                        <span className="rounded-full bg-[#FFF5CE] px-2.5 py-1 text-[11px] font-bold text-[#765E00]">{t("aiGenerated")}</span>
+                      </div>
+                      <textarea
+                        value={assistantSuggestion}
+                        onChange={(event) => setAssistantSuggestion(event.target.value)}
+                        rows={assistantField === "title" ? 3 : assistantField === "summary" ? 6 : 14}
+                        autoFocus
+                        className="mt-3 w-full resize-y rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm leading-7 text-slate-800 outline-none transition focus:border-[#6F52D9] focus:ring-2 focus:ring-[#EEE9FF]"
+                      />
+                      <p className="mt-3 text-xs leading-5 text-slate-500">{t("reviewBeforeApply")}</p>
+                    </div>
+                  )}
+
+                  <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-xs leading-5 text-slate-500">
+                    {t("aiDataNotice")}
+                  </div>
+
+                  <div className="mt-6 flex flex-wrap justify-end gap-2">
+                    <button type="button" onClick={discardWritingSuggestion} className="rounded-full px-4 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-slate-100">
+                      {t("discard")}
+                    </button>
+                    <button type="button" disabled={assistantLoading} onClick={() => requestWritingSuggestion(assistantField)} className="inline-flex items-center gap-2 rounded-full border border-[#D8CCFF] px-4 py-2.5 text-sm font-bold text-[#6549C9] transition hover:bg-[#F6F3FF] disabled:opacity-50">
+                      <RotateCcw size={15} /> {t("tryAgain")}
+                    </button>
+                    <button type="button" disabled={assistantLoading || !assistantSuggestion} onClick={applyWritingSuggestion} className="inline-flex items-center gap-2 rounded-full bg-[#6F52D9] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#6044C8] disabled:opacity-50">
+                      <Check size={15} /> {t("applySuggestion")}
+                    </button>
+                  </div>
+                </div>
+              </aside>
             </div>
-          </section>
+          )}
 
           <label className="block">
-            <span className="mb-2 block text-sm font-bold">{t("campaignTitle")}</span>
+            <span className="mb-2 flex items-center justify-between gap-3 text-sm font-bold">
+              {t("campaignTitle")} {writingAssistantButton("title")}
+            </span>
             <input
               required
               maxLength="160"
               name="title"
               value={form.title}
               onChange={update}
-              className={inputClass}
+              className={assistedInputClass("title")}
               placeholder={t("campaignTitlePlaceholder")}
             />
           </label>
 
           <label className="block">
-            <span className="mb-2 block text-sm font-bold">{t("shortSummary")}</span>
+            <span className="mb-2 flex items-center justify-between gap-3 text-sm font-bold">
+              {t("shortSummary")} {writingAssistantButton("summary")}
+            </span>
             <textarea
               required
               maxLength="280"
@@ -361,7 +412,7 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
               name="summary"
               value={form.summary}
               onChange={update}
-              className={inputClass}
+              className={assistedInputClass("summary")}
               placeholder={t("summaryPlaceholder")}
             />
             <span className="mt-1 block text-right text-xs text-on-surface-variant">
@@ -370,14 +421,20 @@ export default function CreateCampaign({ embedded = false, onSuccess, campaignId
           </label>
 
           <label className="block">
-            <span className="mb-2 block text-sm font-bold">{t("fullStory")}</span>
+            <span className="mb-2 flex flex-wrap items-center justify-between gap-3 text-sm font-bold">
+              {t("fullStory")}
+              <span className="flex flex-wrap justify-end gap-2">
+                {writingAssistantButton("story")}
+                {writingAssistantButton("fund_usage")}
+              </span>
+            </span>
             <textarea
               required
               rows="8"
               name="story"
               value={form.story}
               onChange={update}
-              className={inputClass}
+              className={assistedInputClass("story")}
               placeholder={t("storyPlaceholder")}
             />
           </label>
