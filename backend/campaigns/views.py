@@ -13,7 +13,7 @@ from accounts.models import Notification
 from accounts.notifications import notify_active_admins
 from accounts.permissions import IsAdmin
 
-from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization, Comment
+from .models import Campaign, CampaignMedia, CampaignUpdate, FundUtilization, SavedCampaign, Comment
 from .serializers import AdminCampaignSerializer, CampaignManagementSerializer, CampaignMediaSerializer, CampaignRecommendationRequestSerializer, CampaignReviewSerializer, CampaignSerializer, CampaignUpdateSerializer, FundUtilizationReviewSerializer, FundUtilizationSerializer, MAX_CAMPAIGN_MEDIA_FILES, validate_campaign_cover_upload, validate_campaign_media_upload, CommentSerializer
 from .recommendations import recommend_campaigns
 from .services import complete_campaign_if_due, complete_due_campaigns
@@ -188,6 +188,40 @@ class MyCampaignListView(generics.ListAPIView):
     def get_queryset(self):
         complete_due_campaigns(Campaign.objects.filter(owner=self.request.user))
         return Campaign.objects.filter(owner=self.request.user).select_related("owner")
+
+
+class SavedCampaignListView(generics.ListAPIView):
+    serializer_class = CampaignSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        complete_due_campaigns()
+        return (
+            Campaign.objects.filter(
+                saved_by__user=self.request.user,
+                status__in=[Campaign.Status.APPROVED, Campaign.Status.COMPLETED],
+            )
+            .select_related("owner")
+            .prefetch_related("media_items")
+            .order_by("-saved_by__created_at")
+        )
+
+
+class CampaignSaveView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        campaign = get_object_or_404(
+            Campaign,
+            pk=pk,
+            status__in=[Campaign.Status.APPROVED, Campaign.Status.COMPLETED],
+        )
+        SavedCampaign.objects.get_or_create(user=request.user, campaign=campaign)
+        return Response({"is_saved": True}, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk):
+        SavedCampaign.objects.filter(user=request.user, campaign_id=pk).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PendingCampaignListView(generics.ListAPIView):

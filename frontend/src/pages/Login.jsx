@@ -17,6 +17,7 @@ export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (event) => {
@@ -44,19 +45,28 @@ export function Login() {
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
-    setLoading(true);
+    if (!credentialResponse.credential) {
+      setError(t("googleSignInError"));
+      return;
+    }
+
+    setGoogleLoading(true);
     setError("");
 
     try {
       await loginWithGoogle(credentialResponse.credential);
       navigate("/dashboard");
     } catch (requestError) {
-      setError(
-        (language === "en" && requestError.response?.data?.detail) ||
-          t("googleSignInError"),
-      );
+      if (requestError.code === "ECONNABORTED" || !requestError.response) {
+        setError(t("googleSignInTimeout"));
+      } else {
+        setError(
+          (language === "en" && requestError.response?.data?.detail) ||
+            t("googleSignInError"),
+        );
+      }
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -142,14 +152,20 @@ export function Login() {
       </div>
 
       <div className="flex min-h-11 justify-center overflow-hidden rounded-full">
-        <GoogleLogin
-          onSuccess={handleGoogleSuccess}
-          onError={() => setError(t("googleSignInCancelled"))}
-          useOneTap={false}
-          shape="pill"
-          size="large"
-          width="320"
-        />
+        {googleLoading ? (
+          <div className="flex h-11 w-80 items-center justify-center rounded-full border border-outline-variant bg-white text-sm font-semibold text-on-surface-variant">
+            {t("googleSigningIn")}
+          </div>
+        ) : (
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError(t("googleSignInCancelled"))}
+            useOneTap={false}
+            shape="pill"
+            size="large"
+            width="320"
+          />
+        )}
       </div>
 
         <p className="mt-8 text-center text-sm text-on-surface-variant">

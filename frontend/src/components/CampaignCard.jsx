@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CalendarDays, MapPin, Bookmark } from "lucide-react";
 import { mediaUrl } from "../utils/mediaUrl";
 import { useLanguage } from "../i18n/LanguageContext";
+import api from "../api/axios";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80";
@@ -10,28 +11,35 @@ const fallbackImage =
 export default function CampaignCard({ campaign, returnTo, returnLabelKey }) {
   const { t, formatKyat, formatNumber } = useLanguage();
   const location = useLocation();
-  const [isSaved, setIsSaved] = useState(() => {
-    const savedCampaigns = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
-    return savedCampaigns.some((item) => item.id === campaign.id);
-  });
+  const navigate = useNavigate();
+  const [isSaved, setIsSaved] = useState(Boolean(campaign.is_saved));
+  const [saving, setSaving] = useState(false);
   const [loadedAt] = useState(() => Date.now());
 
-  const toggleSave = (e) => {
-    e.preventDefault(); // Link နှိပ်သလို ဖြစ်သွားတာကို တားဆီးရန်
-    const savedCampaigns = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
-    
-    let updated;
-    if (isSaved) {
-      updated = savedCampaigns.filter((item) => item.id !== campaign.id);
-    } else {
-      updated = [...savedCampaigns, campaign];
-    }
+  useEffect(() => {
+    setIsSaved(Boolean(campaign.is_saved));
+  }, [campaign.id, campaign.is_saved]);
 
-    localStorage.setItem("saved_campaigns", JSON.stringify(updated));
-    setIsSaved(!isSaved);
-    
-    // Dashboard သို့မဟုတ် အခြားနေရာများတွင် သိမ်းဆည်းထားသည်ကို သိရှိစေရန် Event ပို့ပေးခြင်း
-    window.dispatchEvent(new Event("savedCampaignsUpdated"));
+  const toggleSave = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!localStorage.getItem("access")) {
+      navigate("/login", { state: { from: `${location.pathname}${location.search}` } });
+      return;
+    }
+    if (saving) return;
+    setSaving(true);
+    try {
+      if (isSaved) {
+        await api.delete(`/campaigns/${campaign.id}/save/`);
+      } else {
+        await api.post(`/campaigns/${campaign.id}/save/`);
+      }
+      setIsSaved((current) => !current);
+      window.dispatchEvent(new Event("savedCampaignsUpdated"));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const amountRaised = Number(campaign.amount_raised || 0);
@@ -81,7 +89,9 @@ export default function CampaignCard({ campaign, returnTo, returnLabelKey }) {
           <button 
             type="button" 
             onClick={toggleSave}
-            className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-slate-700 shadow-md backdrop-blur-md transition hover:bg-white"
+            disabled={saving}
+            aria-label={isSaved ? t("removeSavedCampaign") : t("saveCampaign")}
+            className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-slate-700 shadow-md backdrop-blur-md transition hover:bg-white disabled:cursor-wait disabled:opacity-60"
           >
             <Bookmark 
               size={18} 

@@ -259,10 +259,14 @@ function SavedCampaignsPanel() {
   const [page, setPage] = useState(initialPage);
 
   useEffect(() => {
-    const loadSaved = () => {
-      const items = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
-      setSavedCampaigns(items);
-      setPage(initialPage);
+    const loadSaved = async () => {
+      try {
+        const { data } = await api.get("/campaigns/saved/");
+        setSavedCampaigns(data);
+        setPage(initialPage);
+      } catch {
+        setSavedCampaigns([]);
+      }
     };
     loadSaved();
     window.addEventListener("savedCampaignsUpdated", loadSaved);
@@ -950,16 +954,17 @@ function UserDashboard() {
 
   useEffect(() => {
     const updateSavedData = async () => {
-      const items = JSON.parse(localStorage.getItem("saved_campaigns") || "[]");
-      setSavedCount(items.length);
       setRecommendationsLoading(true);
       try {
-        const savedCampaignIds = Array.isArray(items) ? items.map((item) => item.id).filter(Boolean) : [];
+        const { data: savedCampaigns } = await api.get("/campaigns/saved/");
+        setSavedCount(savedCampaigns.length);
+        const savedCampaignIds = savedCampaigns.map((item) => item.id).filter(Boolean);
         const { data } = await api.post("/campaigns/recommendations/", {
           saved_campaign_ids: savedCampaignIds,
         });
         setRecommendations(data.results || []);
       } catch {
+        setSavedCount(0);
         setRecommendations([]);
       } finally {
         setRecommendationsLoading(false);

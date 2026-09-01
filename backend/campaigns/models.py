@@ -88,6 +88,34 @@ class Campaign(models.Model):
         self.save(update_fields=["status", "rejection_reason", "approved_at", "updated_at"])
 
 
+class SavedCampaign(models.Model):
+    """A campaign bookmark owned by one authenticated user."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_campaigns",
+    )
+    campaign = models.ForeignKey(
+        Campaign,
+        on_delete=models.CASCADE,
+        related_name="saved_by",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "campaign"],
+                name="unique_saved_campaign_per_user",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user}: {self.campaign.title}"
+
+
 class CampaignUpdate(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="updates")

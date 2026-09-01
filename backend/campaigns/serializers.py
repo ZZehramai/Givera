@@ -52,6 +52,7 @@ class CampaignSerializer(serializers.ModelSerializer):
     status_label = serializers.CharField(source="get_status_display", read_only=True)
     gallery_media = serializers.SerializerMethodField()
     cover_media = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
 
     class Meta:
         model = Campaign
@@ -73,6 +74,7 @@ class CampaignSerializer(serializers.ModelSerializer):
             "cover_image",
             "gallery_media",
             "cover_media",
+            "is_saved",
             "deadline",
             "status",
             "status_label",
@@ -102,6 +104,12 @@ class CampaignSerializer(serializers.ModelSerializer):
     def get_cover_media(self, obj):
         items = obj.media_items.filter(update__isnull=True, purpose=CampaignMedia.Purpose.COVER)
         return CampaignMediaSerializer(items, many=True, context=self.context).data
+
+    def get_is_saved(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.saved_by.filter(user=request.user).exists()
 
     def validate_cover_image(self, value):
         if value and value.size > 5 * 1024 * 1024:
@@ -276,4 +284,3 @@ class CommentSerializer(serializers.ModelSerializer):
             return CommentSerializer(obj.replies.all(), many=True).data
         return []
 
-    

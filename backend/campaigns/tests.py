@@ -11,7 +11,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Campaign, CampaignMedia, FundUtilization
+from .models import Campaign, CampaignMedia, FundUtilization, SavedCampaign
 from accounts.models import Notification
 from ai.models import CampaignTrustAssessment
 from donations.models import Donation
@@ -184,6 +184,56 @@ class CampaignApiTests(APITestCase):
         self.assertCountEqual(
             [campaign["title"] for campaign in response.data],
             ["Owner campaign", "Community campaign"],
+        )
+
+    def test_saved_campaigns_are_private_to_each_user(self):
+        other_user = User.objects.create_user(
+            email="other-donor@example.com",
+            username="other-donor",
+            password="StrongPassword123!",
+        )
+        campaign = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "Campaign to save"},
+        )
+        self.client.force_authenticate(self.owner)
+
+        save_response = self.client.post(
+            reverse("campaign-save", kwargs={"pk": campaign.pk})
+        )
+        owner_list = self.client.get(reverse("saved-campaigns"))
+
+        self.assertEqual(save_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(owner_list.status_code, status.HTTP_200_OK)
+        self.assertEqual([item["id"] for item in owner_list.data], [str(campaign.pk)])
+        self.assertTrue(owner_list.data[0]["is_saved"])
+        self.assertTrue(
+            SavedCampaign.objects.filter(user=self.owner, campaign=campaign).exists()
+        )
+
+        self.client.force_authenticate(other_user)
+        other_list = self.client.get(reverse("saved-campaigns"))
+
+        self.assertEqual(other_list.status_code, status.HTTP_200_OK)
+        self.assertEqual(other_list.data, [])
+
+    def test_user_can_remove_own_saved_campaign(self):
+        campaign = Campaign.objects.create(
+            owner=self.admin,
+            status=Campaign.Status.APPROVED,
+            **{**self.payload, "title": "Campaign to remove"},
+        )
+        SavedCampaign.objects.create(user=self.owner, campaign=campaign)
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.delete(
+            reverse("campaign-save", kwargs={"pk": campaign.pk})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            SavedCampaign.objects.filter(user=self.owner, campaign=campaign).exists()
         )
 
     def test_recommendations_prioritize_categories_the_donor_supported(self):
