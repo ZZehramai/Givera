@@ -818,7 +818,7 @@ function DonationCard({
           <Heart size={17} /> {t("donateNow")}
         </Link>
       )}
-      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+      {/* <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
         <button
           type="button"
           onClick={() => navigator.clipboard?.writeText(window.location.href)}
@@ -829,7 +829,7 @@ function DonationCard({
         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-400">
           <LockKeyhole size={12} /> {t("manualVerification")}
         </span>
-      </div>
+      </div> */}
     </div>
   );
 }

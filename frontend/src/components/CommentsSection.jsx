@@ -4,7 +4,7 @@ import api from "../api/axios";
 import { useLanguage } from "../i18n/LanguageContext";
 
 export default function CommentsSection({ campaignId }) {
-  const { formatDate } = useLanguage();
+  const { formatDate, t } = useLanguage();
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ export default function CommentsSection({ campaignId }) {
       setComments((prev) => [data, ...prev]);
       setText("");
     } catch (err) {
-      setError("Failed to post comment. Please try again.");
+      setError(t("commentPostError"));
       console.log(err)
     } finally {
       setSubmitting(false);
@@ -147,7 +147,7 @@ import api from "../api/axios";
 import { useLanguage } from "../i18n/LanguageContext";
 
 export default function CommentsSection({ campaignId }) {
-  const { formatDate } = useLanguage();
+  const { formatDate, t } = useLanguage();
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
@@ -174,7 +174,21 @@ export default function CommentsSection({ campaignId }) {
   };
 
   useEffect(() => {
-    if (campaignId) fetchComments();
+    if (!campaignId) return undefined;
+    let active = true;
+    api.get(`/campaigns/${campaignId}/comments/`)
+      .then(({ data }) => {
+        if (active) setComments(data);
+      })
+      .catch((err) => {
+        console.error("Failed to load comments:", err);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [campaignId]);
 
   // Submit top-level comment
@@ -205,6 +219,7 @@ export default function CommentsSection({ campaignId }) {
     if (!replyText.trim()) return;
 
     setReplySubmitting(true);
+    setError("");
     try {
       await api.post(`/campaigns/${campaignId}/comments/`, {
         content: replyText.trim(),
@@ -214,6 +229,7 @@ export default function CommentsSection({ campaignId }) {
       setReplyToId(null);
       fetchComments();
     } catch (err) {
+      setError(t("replyPostError"));
       console.error("Failed to post reply:", err);
     } finally {
       setReplySubmitting(false);
@@ -222,22 +238,22 @@ export default function CommentsSection({ campaignId }) {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
+      <div className="flex items-center gap-2.5 pb-2">
         <MessageSquare className="text-[#6F52D9]" size={22} />
         <h3 className="text-xl font-bold text-slate-800">
-          Comments ({comments.length})
+          {t("comments")} ({comments.length})
         </h3>
       </div>
 
       {/* Interactive Comment Box */}
       {isLoggedIn ? (
         <form onSubmit={handleSubmit} className="mt-5">
-          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 transition-within focus-within:border-[#6F52D9] focus-within:bg-white focus-within:ring-1 focus-within:ring-[#6F52D9]">
+          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 transition-within">
             <textarea
               rows={3}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Leave a comment or word of support..."
+              placeholder={t("commentPlaceholder")}
               maxLength={500}
               className="w-full resize-none bg-transparent text-sm text-slate-800 placeholder-slate-400 outline-none"
             />
@@ -254,11 +270,11 @@ export default function CommentsSection({ campaignId }) {
               >
                 {submitting ? (
                   <>
-                    <Loader2 size={14} className="animate-spin" /> Posting...
+                    <Loader2 size={14} className="animate-spin" /> {t("postingComment")}
                   </>
                 ) : (
                   <>
-                    <Send size={13} /> Post Comment
+                    <Send size={13} /> {t("postComment")}
                   </>
                 )}
               </button>
@@ -269,7 +285,7 @@ export default function CommentsSection({ campaignId }) {
       ) : (
         <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center">
           <p className="text-xs font-medium text-slate-500">
-            Please log in to share your support and join the conversation.
+            {t("loginToComment")}
           </p>
         </div>
       )}
@@ -290,7 +306,7 @@ export default function CommentsSection({ campaignId }) {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-bold text-slate-800">
-                      {item.author || item.author_name || item.user || "Supporter"}
+                      {item.author || item.author_name || item.user || t("supporter")}
                     </p>
                     <span className="text-[11px] font-medium text-slate-400">
                       {formatDate ? formatDate(item.created_at) : new Date(item.created_at).toLocaleDateString()}
@@ -309,7 +325,7 @@ export default function CommentsSection({ campaignId }) {
                       }}
                       className="mt-2 text-xs font-bold text-[#6F52D9] hover:underline"
                     >
-                      {replyToId === item.id ? "Cancel" : "Reply"}
+                      {replyToId === item.id ? t("cancel") : t("reply")}
                     </button>
                   )}
 
@@ -321,7 +337,7 @@ export default function CommentsSection({ campaignId }) {
                           type="text"
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
-                          placeholder={`Reply to ${item.author || "user"}...`}
+                          placeholder={`${t("replyTo")} ${item.author || t("user")}...`}
                           className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs outline-none focus:border-[#6F52D9]"
                         />
                         <button
@@ -329,7 +345,7 @@ export default function CommentsSection({ campaignId }) {
                           disabled={replySubmitting || !replyText.trim()}
                           className="inline-flex items-center gap-1 rounded-lg bg-[#6F52D9] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
                         >
-                          {replySubmitting ? <Loader2 size={12} className="animate-spin" /> : "Reply"}
+                          {replySubmitting ? <Loader2 size={12} className="animate-spin" /> : t("reply")}
                         </button>
                       </div>
                     </form>
@@ -346,7 +362,7 @@ export default function CommentsSection({ campaignId }) {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <p className="text-xs font-bold text-slate-800">
-                            {reply.author || reply.author_name || reply.user || "Supporter"}
+                            {reply.author || reply.author_name || reply.user || t("supporter")}
                           </p>
                           <span className="text-[10px] text-slate-400">
                             {formatDate ? formatDate(reply.created_at) : new Date(reply.created_at).toLocaleDateString()}
@@ -362,7 +378,7 @@ export default function CommentsSection({ campaignId }) {
           ))
         ) : (
           <p className="py-4 text-center text-xs font-medium text-slate-400">
-            No comments yet. Be the first to leave a message!
+            {t("noCommentsYet")}
           </p>
         )}
       </div>
