@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from .views import CommentListCreateView
+from .views import CampaignCommentListCreateView 
 
 urlpatterns = [
     path("", views.CampaignListCreateView.as_view(), name="campaign-list"),
@@ -18,5 +18,5 @@ urlpatterns = [
     path("<uuid:pk>/fund-utilization/<uuid:utilization_pk>/review/", views.FundUtilizationReviewView.as_view(), name="fund-utilization-review"),
     path("<uuid:pk>/review/", views.CampaignReviewView.as_view(), name="campaign-review"),
     path("<uuid:pk>/manage/", views.CampaignManagementView.as_view(), name="campaign-management"),
-    path('campaigns/<str:campaign_id>/comments/', CommentListCreateView.as_view(), name='campaign-comments'),
+    path('<uuid:pk>/comments/', CampaignCommentListCreateView.as_view(), name='campaign-comments'),
 ]

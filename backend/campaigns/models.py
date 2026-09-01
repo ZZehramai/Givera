@@ -172,17 +172,27 @@ class FundUtilization(models.Model):
 
 class Comment(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE, 
-        related_name='comments'
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="comments",
     )
     campaign = models.ForeignKey(
-        'Campaign', 
-        on_delete=models.CASCADE, 
-        related_name='comments'
+        "Campaign", on_delete=models.CASCADE, related_name="comments"
+    )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="replies",
     )
     comment_text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ["created_at"]
+
     def __str__(self):
+        if self.parent:
+            return f"Reply by {self.user} to Comment #{self.parent.id}"
         return f"Comment by {self.user} on {self.campaign}"

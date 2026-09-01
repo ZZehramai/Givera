@@ -818,7 +818,7 @@ function DonationCard({
           <Heart size={17} /> {t("donateNow")}
         </Link>
       )}
-      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+      {/* <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
         <button
           type="button"
           onClick={() => navigator.clipboard?.writeText(window.location.href)}
@@ -829,7 +829,7 @@ function DonationCard({
         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-400">
           <LockKeyhole size={12} /> {t("manualVerification")}
         </span>
-      </div>
+      </div> */}
     </div>
   );
 }
@@ -900,9 +900,9 @@ function AdminReportForm({ form, setForm, onSubmit, error }) {
   return (
     <form
       onSubmit={onSubmit}
-      className="mt-5 rounded-xl border border-[#DDD3FF] bg-[#F4F1FF] p-5"
+      className="mt-5 rounded-xl bg-[#F4F1FF] p-5"
     >
-      <p className="text-sm font-extrabold text-[#6549C9]">
+      <p className="text-md font-extrabold text-[#6549C9]">
         {t("adminPublishReport")}
       </p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">

@@ -537,7 +537,7 @@ class FundUtilizationReviewView(APIView):
         utilization.save(update_fields=["status", "review_note", "reviewed_at", "updated_at"])
         return Response(FundUtilizationSerializer(utilization).data)
 
-class CommentListCreateView(generics.ListCreateAPIView):
+"""class CommentListCreateView(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
 
     def get_permissions(self):
@@ -552,3 +552,49 @@ class CommentListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         campaign_id = self.kwargs['campaign_id']
         serializer.save(author=self.request.user, campaign_id=campaign_id)
+
+class CampaignCommentListCreateView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        # Match 'pk' from your URL pattern <uuid:pk>
+        return Comment.objects.filter(campaign_id=self.kwargs['pk'])
+
+    def perform_create(self, serializer):
+        # Automatically attach the logged-in user and campaign
+        serializer.save(
+            user=self.request.user,
+            campaign_id=self.kwargs['pk']
+        )"""""
+
+class CommentListCreateView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        campaign_id = self.kwargs['campaign_id']
+        return Comment.objects.filter(campaign_id=campaign_id, parent__isnull=True)
+
+    def perform_create(self, serializer):
+        campaign_id = self.kwargs['campaign_id']
+        serializer.save(user=self.request.user, campaign_id=campaign_id)
+
+class CampaignCommentListCreateView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        # Match 'pk' from your URL pattern <uuid:pk>
+        return Comment.objects.filter(campaign_id=self.kwargs['pk'], parent__isnull=True)
+
+    def perform_create(self, serializer):
+        # Automatically attach the logged-in user and campaign
+        serializer.save(
+            user=self.request.user,
+            campaign_id=self.kwargs['pk']
+        )
