@@ -900,9 +900,9 @@ function AdminReportForm({ form, setForm, onSubmit, error }) {
   return (
     <form
       onSubmit={onSubmit}
-      className="mt-5 rounded-xl border border-[#DDD3FF] bg-[#F4F1FF] p-5"
+      className="mt-5 rounded-xl bg-[#F4F1FF] p-5"
     >
-      <p className="text-sm font-extrabold text-[#6549C9]">
+      <p className="text-md font-extrabold text-[#6549C9]">
         {t("adminPublishReport")}
       </p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
