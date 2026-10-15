@@ -1,177 +1,180 @@
-import { useState } from "react";
-import api from "../api/axios";
-import { useNavigate } from "react-router-dom";
-
 import { GoogleLogin } from "@react-oauth/google";
-import { loginWithGoogle } from "../services/authService";
+import { ArrowLeft, Mail } from "lucide-react";
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
+import { login, loginWithGoogle } from "../services/authService";
+import { useLanguage } from "../i18n/LanguageContext";
+import PasswordInput from "../components/PasswordInput";
+
+const inputClass =
+  "w-full rounded-2xl border border-outline-variant bg-white py-3.5 pl-12 pr-4 text-on-surface outline-none transition placeholder:text-on-surface-variant/55 focus:border-primary focus:ring-4 focus:ring-primary/10";
 
 export function Login() {
-    const navigate = useNavigate();
+  const { language, t } = useLanguage();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState("");
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    try {
+      await login(email, password);
+      navigate("/dashboard");
+    } catch (requestError) {
+      const data = requestError.response?.data;
+      if (language === "my") {
+        setError(t("signInError"));
+      } else if (data?.non_field_errors) {
+        setError(data.non_field_errors[0]);
+      } else if (typeof data === "string") {
+        setError(data);
+      } else {
+        setError(t("signInError"));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const login = async () => {
+  const handleGoogleSuccess = async (credentialResponse) => {
+    if (!credentialResponse.credential) {
+      setError(t("googleSignInError"));
+      return;
+    }
 
-        setLoading(true);
-        setError("");
+    setGoogleLoading(true);
+    setError("");
 
-        try {
+    try {
+      await loginWithGoogle(credentialResponse.credential);
+      navigate("/dashboard");
+    } catch (requestError) {
+      if (requestError.code === "ECONNABORTED" || !requestError.response) {
+        setError(t("googleSignInTimeout"));
+      } else {
+        setError(
+          (language === "en" && requestError.response?.data?.detail) ||
+            t("googleSignInError"),
+        );
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
-            const response = await api.post("/auth/login/", {
-                email,
-                password,
-            });
+  return (
+    <main className="min-h-screen bg-surface px-4 py-6 text-on-surface sm:px-6 sm:py-8">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm font-bold text-on-surface-variant transition hover:text-primary">
+          <ArrowLeft size={17} aria-hidden="true" />
+          {t("backHome")}
+        </Link>
+        {/* <Link to="/" className="inline-flex items-center gap-2 text-xl font-extrabold text-primary">
+          <Heart size={21} fill="currentColor" aria-hidden="true" />
+          Givera
+        </Link> */}
+      </header>
 
-            localStorage.setItem("access", response.data.access);
-            localStorage.setItem("refresh", response.data.refresh);
-            localStorage.setItem(
-                "user",
-                JSON.stringify(response.data.user)
-            );
-
-            navigate("/profile");
-
-        } catch (err) {
-
-            console.log(err.response?.data);
-
-            if (err.response?.data?.non_field_errors) {
-                setError(err.response.data.non_field_errors[0]);
-            } else if (typeof err.response?.data === "string") {
-                setError(err.response.data);
-            } else {
-                setError("Invalid email or password.");
-            }
-
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleGoogleSuccess = async (credentialResponse) => {
-        setLoading(true);
-        setError("");
-
-        try {
-            await loginWithGoogle(credentialResponse.credential);
-            navigate("/profile");
-        } catch (err) {
-            console.error(err.response?.data);
-            setError(
-            err.response?.data?.detail ||
-            "Google login failed. Please try again."
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-purple-100 flex items-center justify-center px-4">
-
-            <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8">
-
-                <div className="text-center mb-8">
-
-                    <h1 className="text-4xl font-bold text-gray-800">
-                        Welcome Back!
-                    </h1>
-
-                    <p className="text-gray-500 mt-2">
-                        Sign in to continue
-                    </p>
-
-                </div>
-
-                <div className="space-y-5">
-
-                    <div>
-
-                        <label className="block text-gray-700 mb-2 font-medium">
-                            Email
-                        </label>
-
-                        <input
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-
-                    </div>
-
-                    <div>
-
-                        <label className="block text-gray-700 mb-2 font-medium">
-                            Password
-                        </label>
-
-                        <input
-                            type="password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-
-                    </div>
-
-                    {error && (
-                        <div className="text-red-500 text-sm">
-                            {error}
-                        </div>
-                    )}
-
-                    <button
-                        onClick={login}
-                        disabled={loading}
-                        className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-semibold py-3 rounded-xl transition"
-                    >
-                        {loading ? "Signing In..." : "Login"}
-                    </button>
-
-                    <div className="flex items-center">
-
-                        <div className="flex-grow border-t"></div>
-
-                        <span className="mx-4 text-gray-400">
-                            OR
-                        </span>
-
-                        <div className="flex-grow border-t"></div>
-
-                    </div>
-<div className="flex justify-center">
-  <GoogleLogin
-    onSuccess={handleGoogleSuccess}
-    onError={() => setError("Google login was cancelled or failed.")}
-    useOneTap={false}
-    width="368"
-  />
-</div>
-
-                    <p className="text-center text-gray-600">
-
-                        Don't have an account?
-
-                        <span
-                            onClick={() => navigate("/register")}
-                            className="ml-1 text-purple-600 font-semibold cursor-pointer hover:underline"
-                        >
-                            Register
-                        </span>
-
-                    </p>
-
-                </div>
-
-            </div>
-
+      <section className="mx-auto mt-10 w-full max-w-lg rounded-[2rem] border border-outline-variant/70 bg-white p-6 shadow-xl shadow-primary/10 sm:mt-14 sm:p-10">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.1em] text-primary">{t("welcomeBack")}</p>
+          <h3 className="mt-2 text-4xl font-extrabold">{t("signInGivera")}</h3>
+          <p className="mt-3 leading-7 text-on-surface-variant">
+            {t("signInDescription")}
+          </p>
         </div>
-    );
+
+      {location.state?.message && (
+        <div className="mt-6 rounded-2xl bg-tertiary-container px-4 py-3 text-sm font-semibold text-tertiary">
+          {location.state.message}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <label className="block">
+          <span className="mb-2 block text-sm font-bold">{t("email")}</span>
+          <span className="relative block">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" size={19} aria-hidden="true" />
+            <input
+              required
+              autoComplete="email"
+              type="email"
+              placeholder={t("emailPlaceholder")}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className={inputClass}
+            />
+          </span>
+        </label>
+
+        <label className="block">
+          <span className="mb-2 flex items-center justify-between gap-3">
+            <span className="text-sm font-bold">{t("password")}</span>
+            <Link to="/forgot-password" className="text-xs font-bold text-primary transition hover:underline">{t("forgotPassword")}</Link>
+          </span>
+          <PasswordInput
+            required
+            autoComplete="current-password"
+            placeholder={t("enterPassword")}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className={inputClass}
+          />
+        </label>
+
+        {error && (
+          <div role="alert" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-2xl bg-primary px-6 py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-55"
+        >
+          {loading ? t("signingIn") : t("signInLower")}
+        </button>
+      </form>
+
+      <div className="my-6 flex items-center gap-4">
+        <div className="h-px flex-1 bg-outline-variant" />
+        <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t("continueWith")}</span>
+        <div className="h-px flex-1 bg-outline-variant" />
+      </div>
+
+      <div className="flex min-h-11 justify-center overflow-hidden rounded-full">
+        {googleLoading ? (
+          <div className="flex h-11 w-80 items-center justify-center rounded-full border border-outline-variant bg-white text-sm font-semibold text-on-surface-variant">
+            {t("googleSigningIn")}
+          </div>
+        ) : (
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError(t("googleSignInCancelled"))}
+            useOneTap={false}
+            shape="pill"
+            size="large"
+            width="320"
+          />
+        )}
+      </div>
+
+        <p className="mt-8 text-center text-sm text-on-surface-variant">
+          {t("newToGivera")}{" "}
+          <Link to="/register" className="font-bold text-primary hover:underline">
+            {t("createAccount")}
+          </Link>
+        </p>
+      </section>
+    </main>
+  );
 }

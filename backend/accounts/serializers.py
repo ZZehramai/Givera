@@ -3,7 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User
+from .models import AdminUserAction, NewsletterSubscriber, Notification, User
 
 
 def tokens_for_user(user):
@@ -20,9 +20,80 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name', 'role',
             'auth_provider', 'phone_number', 'profile_picture', 'country',
-            'bio', 'is_email_verified', 'created_at',
+            'bio', 'campaign_notifications_enabled', 'is_email_verified',
+            'is_staff', 'created_at'
         ]
-        read_only_fields = ['id', 'role', 'auth_provider', 'is_email_verified', 'created_at']
+        read_only_fields = [
+            'id', 'role', 'auth_provider', 'is_email_verified', 'is_staff', 'created_at'
+        ]
+
+
+class AdminUserActionSerializer(serializers.ModelSerializer):
+    actor_name = serializers.CharField(source="actor.username", read_only=True)
+    action_label = serializers.CharField(source="get_action_display", read_only=True)
+
+    class Meta:
+        model = AdminUserAction
+        fields = ["id", "actor_name", "action", "action_label", "previous_value", "new_value", "created_at"]
+        read_only_fields = fields
+
+
+class AdminUserSerializer(UserSerializer):
+    campaign_count = serializers.IntegerField(read_only=True)
+    donation_count = serializers.IntegerField(read_only=True)
+    total_donated = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + ["is_active", "campaign_count", "donation_count", "total_donated"]
+        read_only_fields = fields
+
+
+class AdminUserDetailSerializer(AdminUserSerializer):
+    recent_admin_actions = serializers.SerializerMethodField()
+
+    class Meta(AdminUserSerializer.Meta):
+        fields = AdminUserSerializer.Meta.fields + ["recent_admin_actions"]
+
+    def get_recent_admin_actions(self, obj):
+        return AdminUserActionSerializer(obj.admin_actions_received.select_related("actor")[:8], many=True).data
+
+
+class AdminUserUpdateSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=User.Role.choices, required=False)
+    is_active = serializers.BooleanField(required=False)
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError("Choose a role or account-status change.")
+        return attrs
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ["id", "type", "title", "message", "link", "is_read", "created_at"]
+        read_only_fields = fields
+
+
+class NewsletterSubscriptionSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254)
+    language = serializers.ChoiceField(choices=["en", "my"], default="en")
+
+    def validate_email(self, value):
+        return value.strip().lower()
+
+    def create(self, validated_data):
+        subscriber = NewsletterSubscriber.objects.filter(
+            email__iexact=validated_data["email"],
+        ).first()
+        if subscriber:
+            subscriber.language = validated_data["language"]
+            subscriber.is_active = True
+            subscriber.save(update_fields=["language", "is_active"])
+            self.already_subscribed = True
+            return subscriber
+        self.already_subscribed = False
+        return NewsletterSubscriber.objects.create(**validated_data)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -77,6 +148,12 @@ class ForgotPasswordSerializer(serializers.Serializer):
 
 
 class ResetPasswordSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    code = serializers.CharField(max_length=6)
+    uid = serializers.CharField()
+    token = serializers.CharField()
     new_password = serializers.CharField(validators=[validate_password])
+    new_password2 = serializers.CharField()
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password2']:
+            raise serializers.ValidationError({'new_password2': "Passwords don't match."})
+        return attrs

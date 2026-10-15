@@ -17,9 +17,11 @@ export const login = async (email, password) => {
 };
 
 export const loginWithGoogle = async (credential) => {
-  const response = await api.post("/auth/google/", {
-    id_token: credential,
-  });
+  const response = await api.post(
+    "/auth/google/",
+    { id_token: credential },
+    { timeout: 30000 },
+  );
 
   saveSession(response.data);
   return response.data;

@@ -1,0 +1,224 @@
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import { useLocation } from "react-router-dom";
+
+import api from "../api/axios";
+import AppHeader from "../components/AppHeader";
+import CampaignCard from "../components/CampaignCard";
+import { useLanguage } from "../i18n/LanguageContext";
+
+const categories = [
+  ["all", "allCauses"],
+  ["education", "education"],
+  ["medical", "medical"],
+  ["emergency", "emergency"],
+  ["community", "community"],
+  ["environment", "environment"],
+  ["animals", "animals"],
+  ["other", "other"],
+];
+
+const CAMPAIGNS_PER_PAGE = 6;
+
+function LoadingGrid() {
+  return (
+    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {[1, 2, 3, 4, 5, 6].map((item) => (
+        <div key={item} className="flex animate-pulse flex-col gap-3">
+          <div className="aspect-[16/10] w-full rounded-2xl bg-slate-200" />
+          <div className="h-5 w-3/4 rounded bg-slate-200" />
+          <div className="mt-2 h-2 w-full rounded-full bg-slate-200" />
+          <div className="h-4 w-1/3 rounded bg-slate-200" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EmptyState({ searching }) {
+  const { t } = useLanguage();
+  return (
+    <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-20 text-center">
+      <h2 className="text-xl font-extrabold text-slate-800">
+        {searching ? t("noMatching") : t("noCampaigns")}
+      </h2>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+        {searching
+          ? t("differentSearch")
+          : t("campaignsLater")}
+      </p>
+    </div>
+  );
+}
+
+export default function Campaigns() {
+  const { t } = useLanguage();
+  const location = useLocation();
+  const initialParams = new URLSearchParams(location.search);
+  const [campaigns, setCampaigns] = useState([]);
+  const [query, setQuery] = useState(initialParams.get("q") || "");
+  const [selectedCategory, setSelectedCategory] = useState(initialParams.get("category") || "all");
+  const [page, setPage] = useState(Math.max(1, Number(initialParams.get("page")) || 1));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await api.get("/campaigns/", {
+          params: { q: query.trim() },
+        });
+        setCampaigns(response.data);
+      } catch {
+        setError(t("campaignsLoadError"));
+      } finally {
+        setLoading(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [query, t]);
+
+  // Filter campaigns by selected category pill
+  const filteredCampaigns = useMemo(() => {
+    if (selectedCategory === "all") return campaigns;
+    return campaigns.filter((c) => c.category === selectedCategory);
+  }, [campaigns, selectedCategory]);
+  const totalPages = Math.max(1, Math.ceil(filteredCampaigns.length / CAMPAIGNS_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const visibleCampaigns = filteredCampaigns.slice(
+    (currentPage - 1) * CAMPAIGNS_PER_PAGE,
+    currentPage * CAMPAIGNS_PER_PAGE,
+  );
+
+  const returnParams = new URLSearchParams({
+    ...(query ? { q: query } : {}),
+    ...(selectedCategory !== "all" ? { category: selectedCategory } : {}),
+    ...(currentPage > 1 ? { page: String(currentPage) } : {}),
+  });
+  const campaignReturnTo = `/campaigns${returnParams.size ? `?${returnParams.toString()}` : ""}`;
+
+  const changePage = (nextPage) => {
+    setPage(nextPage);
+    document.getElementById("campaign-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  return (
+    <div className="min-h-screen bg-white text-slate-900">
+      <AppHeader minimal />
+      <main>
+        {/* Search Header */}
+        <section className="border-b border-slate-100 bg-purple-100 px-6 py-12 md:py-16">
+          <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
+            <span className="rounded-full bg-[#FFF1A8] px-3 py-1.5 text-xs font-extrabold text-[#655000]">
+              {t("verifiedCampaigns")}
+            </span>
+            <h3 className="mt-4 text-3xl font-extrabold text-[#201A36] md:text-5xl">
+              {t("discoverCampaigns")}
+            </h3>
+
+            <div className="mt-6 flex w-full max-w-xl items-center gap-3 rounded-full border border-slate-300 bg-white px-5 py-3.5 shadow-sm transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+              <Search className="h-5 w-5 shrink-0 text-slate-400" />
+              <input
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setPage(1);
+                }}
+                placeholder={t("searchCampaigns")}
+                className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery("");
+                    setPage(1);
+                  }}
+                  aria-label={t("clearSearch")}
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Category Selector Pills */}
+        <section className="px-6 py-6">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-2">
+            {categories.map(([value, labelKey]) => {
+              const isActive = selectedCategory === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(value);
+                    setPage(1);
+                  }}
+                  className={`rounded-full px-5 py-2.5 text-sm font-bold transition-all ${
+                    isActive
+                      ? "bg-[#6F52D9] text-white shadow-md"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {t(labelKey)}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Campaigns Grid */}
+        <section id="campaign-grid" className="mx-auto max-w-6xl scroll-mt-6 px-6 py-12">
+          {error && (
+            <div className="mb-8 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <LoadingGrid />
+          ) : filteredCampaigns.length > 0 ? (
+            <div>
+              <div className="grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
+                {visibleCampaigns.map((campaign) => (
+                  <CampaignCard key={campaign.id} campaign={campaign} returnTo={campaignReturnTo} returnLabelKey="backToCampaigns" />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <nav aria-label={t("pagination")} className="mt-12 flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => changePage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    aria-label={t("previousCampaigns")}
+                    className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-[#6549C9] shadow-sm transition hover:border-[#CFC3FA] hover:bg-[#F7F4FF] disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    <ChevronLeft size={21} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => changePage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    aria-label={t("nextCampaigns")}
+                    className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-[#6549C9] shadow-sm transition hover:border-[#CFC3FA] hover:bg-[#F7F4FF] disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    <ChevronRight size={21} />
+                  </button>
+                </nav>
+              )}
+            </div>
+          ) : (
+            <EmptyState searching={Boolean(query || selectedCategory !== "all")} />
+          )}
+        </section>
+      </main>
+    </div>
+  );
+}

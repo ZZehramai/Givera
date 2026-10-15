@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const apiBaseUrl = (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
+
 const api = axios.create({
-    baseURL: "http://127.0.0.1:8000/api",
+    baseURL: apiBaseUrl,
 });
 
 
@@ -14,6 +16,8 @@ api.interceptors.request.use((config) => {
         "/auth/login/",
         "/auth/register/",
         "/auth/google/",
+        "/auth/forgot-password/",
+        "/auth/reset-password/",
         "/auth/token/refresh/",
     ];
 
@@ -53,7 +57,7 @@ api.interceptors.response.use(
             try {
 
                 const response = await axios.post(
-                    "http://127.0.0.1:8000/api/auth/token/refresh/",
+                    `${apiBaseUrl}/auth/token/refresh/`,
                     {
                         refresh,
                     }
@@ -73,7 +77,9 @@ api.interceptors.response.use(
 
             } catch (refreshError) {
 
-                localStorage.clear();
+                localStorage.removeItem("access");
+                localStorage.removeItem("refresh");
+                localStorage.removeItem("user");
 
                 window.location.href = "/login";
 
@@ -85,4 +91,13 @@ api.interceptors.response.use(
     }
 );
 
+export const getComments = async (campaignId) => {
+  const response = await api.get(`/campaigns/${campaignId}/comments/`);
+  return response.data;
+};
+
+export const postComment = async (campaignId, content) => {
+  const response = await api.post(`/campaigns/${campaignId}/comments/`, { content });
+  return response.data;
+};
 export default api;
